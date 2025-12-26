@@ -1,0 +1,14 @@
+project_name: "Rent a Tool"
+default_status: "To Do"
+statuses: ["To Do", "In Progress", "Done"]
+labels: ["backend", "frontend", "admin", "database", "ui", "seo", "integration"]
+milestones: ["M1-Osnova", "M2-Admin", "M3-Katalog", "M4-Korpa-Checkout", "M5-Rezervacije", "M6-Frontend-Polish", "M7-Integracije"]
+date_format: yyyy-mm-dd
+max_column_width: 20
+auto_open_browser: true
+default_port: 6420
+remote_operations: true
+auto_commit: false
+bypass_git_hooks: false
+check_active_branches: true
+active_branch_days: 30

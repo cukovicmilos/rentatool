@@ -1,0 +1,63 @@
+# RentATool - Git Ignore
+
+# Database
+database/*.db
+database/*.sqlite
+database/*.sqlite3
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploaded files
+uploads/*
+!uploads/.gitkeep
+uploads/tools/*
+!uploads/tools/.gitkeep
+
+# PHP Cache
+*.cache
+
+# Logs
+*.log
+logs/
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.sublime-project
+.sublime-workspace
+
+# Environment files
+.env
+.env.local
+config.local.php
+
+# Composer
+vendor/
+composer.phar
+
+# NPM (if used later)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Backups
+*.bak
+*.backup
+*~
+
+# Session files
+sessions/

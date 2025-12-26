@@ -1,0 +1,30 @@
+# Robots.txt for Rent a Tool
+# https://labubush.duckdns.org/rentatool/
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://labubush.duckdns.org/rentatool/sitemap.php
+
+# Disallow admin area
+Disallow: /admin/
+
+# Disallow API endpoints
+Disallow: /api/
+
+# Disallow database folder
+Disallow: /database/
+
+# Disallow includes folder
+Disallow: /includes/
+
+# Disallow templates folder
+Disallow: /templates/
+
+# Disallow backlog folder
+Disallow: /backlog/
+
+# Allow assets
+Allow: /assets/
+Allow: /uploads/

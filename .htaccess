@@ -1,0 +1,57 @@
+RewriteEngine On
+RewriteBase /rentatool/
+
+# Redirect to HTTPS (uncomment in production)
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Prevent directory listing
+Options -Indexes
+
+# Protect sensitive files
+<FilesMatch "\.(db|sqlite|log|ini|md)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Protect includes and classes folders
+RewriteRule ^includes/ - [F,L]
+RewriteRule ^classes/ - [F,L]
+
+# Allow direct access to assets and uploads
+RewriteRule ^assets/ - [L]
+RewriteRule ^uploads/ - [L]
+
+# Admin routing
+RewriteRule ^admin$ admin/ [R=301,L]
+RewriteRule ^admin/$ admin/index.php [L]
+RewriteRule ^admin/([a-z-]+)$ admin/$1.php [L]
+RewriteRule ^admin/([a-z-]+)/([0-9]+)$ admin/$1.php?id=$2 [L,QSA]
+RewriteRule ^admin/([a-z-]+)/([a-z-]+)$ admin/$1.php?action=$2 [L,QSA]
+RewriteRule ^admin/([a-z-]+)/([a-z-]+)/([0-9]+)$ admin/$1.php?action=$2&id=$3 [L,QSA]
+
+# API routing
+RewriteRule ^api/([a-z-]+)$ api/$1.php [L,QSA]
+
+# Frontend routing
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([a-z0-9-]+)$ pages/$1.php [L]
+
+# Category pages
+RewriteRule ^kategorija/([a-z0-9-]+)$ pages/kategorija.php?slug=$1 [L,QSA]
+
+# Tool detail pages  
+RewriteRule ^alat/([a-z0-9-]+)$ pages/alat.php?slug=$1 [L,QSA]
+
+# Static pages
+RewriteRule ^stranica/([a-z0-9-]+)$ pages/stranica.php?slug=$1 [L,QSA]
+
+# Reservation cancel/view
+RewriteRule ^rezervacija/([a-zA-Z0-9]+)$ pages/rezervacija.php?code=$1 [L,QSA]
+RewriteRule ^rezervacija/otkazi/([a-zA-Z0-9]+)$ pages/otkazi.php?code=$1 [L,QSA]
+
+# Default index
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^$ index.php [L]
