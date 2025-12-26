@@ -3,6 +3,23 @@
  * Rent a Tool - Configuration
  */
 
+// Load environment variables from .env file
+$envFile = dirname(__DIR__) . '/.env';
+if (file_exists($envFile)) {
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) continue; // Skip comments
+        if (strpos($line, '=') === false) continue;   // Skip invalid lines
+        list($name, $value) = explode('=', $line, 2);
+        $name = trim($name);
+        $value = trim($value);
+        if (!empty($name)) {
+            putenv("$name=$value");
+            $_ENV[$name] = $value;
+        }
+    }
+}
+
 // Error reporting (disable in production)
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -46,9 +63,9 @@ define('DELIVERY_PICKUP', 0);        // Personal pickup
 define('DELIVERY_ONEWAY', 10);       // Delivery only
 define('DELIVERY_ROUNDTRIP', 15);    // Delivery + pickup
 
-// Admin credentials (change in production!)
-define('ADMIN_USERNAME', 'admin');
-define('ADMIN_PASSWORD_HASH', password_hash('admin123', PASSWORD_DEFAULT));
+// Admin credentials (from .env or defaults)
+define('ADMIN_USERNAME', getenv('ADMIN_USERNAME') ?: 'admin');
+define('ADMIN_PASSWORD_HASH', password_hash(getenv('ADMIN_PASSWORD') ?: 'admin123', PASSWORD_DEFAULT));
 
 // Database
 define('DB_PATH', ROOT_PATH . '/database/rentatool.db');
@@ -61,9 +78,9 @@ define('IMAGE_MAX_HEIGHT', 1200);
 define('THUMB_WIDTH', 300);
 define('THUMB_HEIGHT', 300);
 
-// Telegram (configure in production)
-define('TELEGRAM_BOT_TOKEN', '${TELEGRAM_BOT_TOKEN}');
-define('TELEGRAM_CHAT_ID', '${TELEGRAM_CHAT_ID}');
+// Telegram (from .env)
+define('TELEGRAM_BOT_TOKEN', getenv('TELEGRAM_BOT_TOKEN') ?: '');
+define('TELEGRAM_CHAT_ID', getenv('TELEGRAM_CHAT_ID') ?: '');
 
 // Timezone
 date_default_timezone_set('Europe/Belgrade');
