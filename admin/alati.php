@@ -47,6 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim(post('name'));
     $description = trim(post('description'));
     $shortDescription = trim(post('short_description'));
+    $youtubeUrl = trim(post('youtube_url'));
     $price24h = (float) post('price_24h');
     $deposit = (float) post('deposit', 0);
     $status = post('status', 'available');
@@ -79,16 +80,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             if ($action === 'dodaj') {
                 $id = db()->insert(
-                    "INSERT INTO tools (name, slug, description, short_description, price_24h, deposit, status, featured) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                    [$name, $slug, $description, $shortDescription, $price24h, $deposit, $status, $featured]
+                    "INSERT INTO tools (name, slug, description, short_description, youtube_url, price_24h, deposit, status, featured) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    [$name, $slug, $description, $shortDescription, $youtubeUrl, $price24h, $deposit, $status, $featured]
                 );
             } else {
                 db()->execute(
-                    "UPDATE tools SET name = ?, slug = ?, description = ?, short_description = ?, 
+                    "UPDATE tools SET name = ?, slug = ?, description = ?, short_description = ?, youtube_url = ?, 
                      price_24h = ?, deposit = ?, status = ?, featured = ?, updated_at = CURRENT_TIMESTAMP 
                      WHERE id = ?",
-                    [$name, $slug, $description, $shortDescription, $price24h, $deposit, $status, $featured, $id]
+                    [$name, $slug, $description, $shortDescription, $youtubeUrl, $price24h, $deposit, $status, $featured, $id]
                 );
             }
             
@@ -395,6 +396,14 @@ ob_start();
             <div class="form-group">
                 <label for="description" class="form-label">Detaljan opis</label>
                 <textarea id="description" name="description" class="form-control" rows="5"><?= e($tool['description'] ?? post('description')) ?></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="youtube_url" class="form-label">YouTube video link</label>
+                <input type="url" id="youtube_url" name="youtube_url" class="form-control" 
+                       value="<?= e($tool['youtube_url'] ?? post('youtube_url')) ?>"
+                       placeholder="https://www.youtube.com/watch?v=...">
+                <small class="form-text">Unesite pun YouTube URL (npr. https://www.youtube.com/watch?v=dQw4w9WgXcQ)</small>
             </div>
             
             <div class="form-row">

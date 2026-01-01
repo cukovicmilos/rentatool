@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS tools (
     slug TEXT UNIQUE NOT NULL,
     description TEXT,
     short_description TEXT,
+    youtube_url TEXT,
     price_24h REAL NOT NULL,
     deposit REAL DEFAULT 0,
     status TEXT DEFAULT 'available' CHECK(status IN ('available', 'rented', 'maintenance', 'inactive')),

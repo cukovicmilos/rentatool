@@ -469,3 +469,28 @@ function formatReservationTelegramMessage(array $reservation, array $items): str
     
     return $message;
 }
+
+/**
+ * Extract YouTube video ID from URL
+ */
+function getYouTubeVideoId(string $url): ?string {
+    if (empty($url)) {
+        return null;
+    }
+    
+    // Parse different YouTube URL formats
+    $patterns = [
+        '/youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/',      // https://www.youtube.com/watch?v=VIDEO_ID
+        '/youtube\.com\/embed\/([a-zA-Z0-9_-]+)/',        // https://www.youtube.com/embed/VIDEO_ID
+        '/youtu\.be\/([a-zA-Z0-9_-]+)/',                  // https://youtu.be/VIDEO_ID
+        '/youtube\.com\/v\/([a-zA-Z0-9_-]+)/',            // https://www.youtube.com/v/VIDEO_ID
+    ];
+    
+    foreach ($patterns as $pattern) {
+        if (preg_match($pattern, $url, $matches)) {
+            return $matches[1];
+        }
+    }
+    
+    return null;
+}

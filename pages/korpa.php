@@ -121,7 +121,7 @@ ob_start();
             <a href="<?= url('') ?>" class="btn btn-secondary">← Nastavi kupovinu</a>
             <a href="<?= url('korpa?action=clear') ?>" class="btn btn-secondary" 
                onclick="return confirm('Isprazni celu korpu?')">Isprazni korpu</a>
-            <a href="<?= url('checkout') ?>" class="btn btn-primary btn-large">Nastavi na checkout →</a>
+            <a href="<?= url('checkout') ?>" class="btn btn-primary btn-large">Unesi svoje podatke →</a>
         </div>
         
     <?php endif; ?>

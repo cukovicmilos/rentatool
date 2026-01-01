@@ -157,6 +157,12 @@ ob_start();
                 <span>Nema slike</span>
             </div>
             <?php endif; ?>
+            
+            <?php if (!empty($tool['short_description'])): ?>
+            <div class="tool-short-description">
+                <?= nl2br(e($tool['short_description'])) ?>
+            </div>
+            <?php endif; ?>
         </div>
         
         <!-- Info -->
@@ -200,20 +206,41 @@ ob_start();
             <?php if ($tool['status'] === 'available'): ?>
             <!-- Date Selection -->
             <div class="date-selection mt-3">
-                <h3>Izaberite period</h3>
-                <div class="date-inputs">
-                    <div class="form-group">
-                        <label for="date_start" class="form-label">Od:</label>
-                        <input type="date" id="date_start" class="form-control" 
-                               min="<?= date('Y-m-d') ?>" 
-                               max="<?= date('Y-m-d', strtotime('+30 days')) ?>">
+                <h3>Izaberite period iznajmljivanja</h3>
+                
+                <div class="date-calendar-wrapper">
+                    <div class="date-inputs">
+                        <div class="form-group">
+                            <label for="date_start" class="form-label">Od:</label>
+                            <input type="date" id="date_start" class="form-control date-input-start" 
+                                   min="<?= date('Y-m-d') ?>" 
+                                   max="<?= date('Y-m-d', strtotime('+30 days')) ?>">
+                        </div>
+                        <div class="form-group">
+                            <label for="date_end" class="form-label">Do:</label>
+                            <input type="date" id="date_end" class="form-control date-input-end"
+                                   min="<?= date('Y-m-d') ?>" 
+                                   max="<?= date('Y-m-d', strtotime('+30 days')) ?>">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="date_end" class="form-label">Do:</label>
-                        <input type="date" id="date_end" class="form-control"
-                               min="<?= date('Y-m-d') ?>" 
-                               max="<?= date('Y-m-d', strtotime('+30 days')) ?>">
+                    
+                    <?php if (!empty($unavailableDates)): ?>
+                    <div class="calendar-wrapper">
+                        <div id="miniCalendar" class="mini-calendar"></div>
+                        
+                        <!-- Calendar Legend -->
+                        <div class="calendar-legend">
+                            <div class="legend-item">
+                                <span class="legend-color legend-reserved"></span>
+                                <span class="legend-label">Rezervisano</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color legend-selected"></span>
+                                <span class="legend-label">Vaš izbor</span>
+                            </div>
+                        </div>
                     </div>
+                    <?php endif; ?>
                 </div>
                 
                 <div id="priceCalculation" class="price-calculation" style="display: none;">
@@ -247,23 +274,32 @@ ob_start();
                 </p>
             </div>
             <?php endif; ?>
-            
-            <?php if (!empty($categories)): ?>
-            <div class="tool-categories mt-3">
-                <strong>Kategorije:</strong>
-                <?php foreach ($categories as $cat): ?>
-                <a href="<?= url('kategorija/' . $cat['slug']) ?>" class="btn btn-secondary btn-small"><?= e($cat['name']) ?></a>
-                <?php endforeach; ?>
-            </div>
-            <?php endif; ?>
         </div>
     </div>
+    
+    <!-- Video Section (Full Width) -->
+    <?php if (!empty($tool['youtube_url'])): 
+        $videoId = getYouTubeVideoId($tool['youtube_url']);
+        if ($videoId):
+    ?>
+    <div class="tool-video mt-4">
+        <h2>Video</h2>
+        <div class="video-container">
+            <iframe 
+                src="https://www.youtube.com/embed/<?= e($videoId) ?>" 
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen>
+            </iframe>
+        </div>
+    </div>
+    <?php endif; endif; ?>
     
     <!-- Description & Specs -->
     <div class="tool-details-section mt-4">
         <?php if ($tool['description']): ?>
         <div class="tool-description">
-            <h2>Opis</h2>
+            <h2>Detaljnije</h2>
             <div class="description-content">
                 <?= nl2br(e($tool['description'])) ?>
             </div>
@@ -351,6 +387,16 @@ ob_start();
     object-fit: cover;
 }
 
+.tool-short-description {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--color-gray-100);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-base);
+    line-height: 1.6;
+    color: var(--color-gray-600);
+}
+
 .tool-title {
     margin-bottom: var(--spacing-md);
 }
@@ -393,10 +439,121 @@ ob_start();
     border-radius: var(--border-radius);
 }
 
-.date-inputs {
+.calendar-legend {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs);
+    background: var(--color-gray-100);
+    border-radius: var(--border-radius);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.legend-color {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    border: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.legend-reserved {
+    background: #FF9933;
+}
+
+.legend-selected {
+    background: #28A745;
+}
+
+.legend-label {
+    font-size: 10px;
+    color: var(--color-gray-600);
+    white-space: nowrap;
+}
+
+.date-calendar-wrapper {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: auto 1fr;
+    gap: var(--spacing-lg);
+    align-items: start;
+}
+
+.date-inputs {
+    display: flex;
+    flex-direction: column;
     gap: var(--spacing-md);
+}
+
+.calendar-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.date-input-start:focus,
+.date-input-end:focus {
+    border-color: #28A745;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+}
+
+.date-input-start.has-selection,
+.date-input-end.has-selection {
+    border-color: #28A745;
+    background-color: rgba(40, 167, 69, 0.05);
+}
+
+.mini-calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    font-size: var(--font-size-xs);
+    max-width: 140px;
+}
+
+.mini-calendar-day {
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 2px;
+    border: 1px solid var(--border-color);
+    background: var(--color-white);
+    font-size: 9px;
+    padding: 0;
+}
+
+.mini-calendar-day.header {
+    background: var(--color-gray-200);
+    font-weight: 600;
+    border: none;
+}
+
+.mini-calendar-day.reserved {
+    background: #FF9933;
+    color: var(--color-white);
+    font-weight: 600;
+}
+
+.mini-calendar-day.selected {
+    background: #28A745;
+    color: var(--color-white);
+    font-weight: 600;
+}
+
+.mini-calendar-day.today {
+    border-color: var(--color-accent);
+    border-width: 2px;
+}
+
+.mini-calendar-day.outside {
+    background: var(--color-gray-100);
+    color: var(--color-gray-400);
 }
 
 .price-calculation {
@@ -418,6 +575,36 @@ ob_start();
     padding-top: var(--spacing-sm);
     font-weight: 700;
     font-size: 1.2em;
+}
+
+.tool-video {
+    width: 100%;
+    max-width: 100%;
+}
+
+.tool-video h2 {
+    font-size: var(--font-size-large);
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 2px solid var(--color-accent);
+}
+
+.video-container {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    height: 0;
+    overflow: hidden;
+    background: var(--color-gray-100);
+    border-radius: var(--border-radius);
+}
+
+.video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--border-radius);
 }
 
 .tool-details-section {
@@ -455,6 +642,34 @@ ob_start();
     font-weight: 600;
     width: 40%;
 }
+
+@media (max-width: 768px) {
+    .date-calendar-wrapper {
+        grid-template-columns: 1fr;
+    }
+    
+    .date-inputs {
+        gap: var(--spacing-sm);
+    }
+    
+    .calendar-wrapper {
+        margin-top: var(--spacing-md);
+    }
+    
+    .mini-calendar {
+        max-width: 120px;
+    }
+    
+    .mini-calendar-day {
+        width: 16px;
+        height: 16px;
+        font-size: 8px;
+    }
+    
+    .legend-label {
+        font-size: 9px;
+    }
+}
 </style>
 
 <script>
@@ -475,8 +690,120 @@ const unavailableDates = <?= json_encode($unavailableDates) ?>;
 const toolId = <?= $tool['id'] ?>;
 const toolName = <?= json_encode($tool['name']) ?>;
 
-document.getElementById('date_start')?.addEventListener('change', calculatePrice);
-document.getElementById('date_end')?.addEventListener('change', calculatePrice);
+// Helper function to format date as YYYY-MM-DD in local timezone
+function formatLocalDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// Helper function to parse date string to local date
+function parseLocalDate(dateStr) {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+}
+
+// Generate mini calendar
+function generateMiniCalendar() {
+    const calendar = document.getElementById('miniCalendar');
+    if (!calendar) return;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const endDate = new Date(today);
+    endDate.setDate(endDate.getDate() + 30);
+    
+    // Start from the beginning of the current month
+    const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    // Day headers
+    const dayNames = ['N', 'P', 'U', 'S', 'Č', 'P', 'S'];
+    dayNames.forEach(day => {
+        const header = document.createElement('div');
+        header.className = 'mini-calendar-day header';
+        header.textContent = day;
+        calendar.appendChild(header);
+    });
+    
+    // Empty cells before month starts
+    const firstDay = startDate.getDay();
+    const offset = firstDay === 0 ? 6 : firstDay - 1; // Monday = 0
+    for (let i = 0; i < offset; i++) {
+        const empty = document.createElement('div');
+        empty.className = 'mini-calendar-day outside';
+        calendar.appendChild(empty);
+    }
+    
+    // Days
+    let currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+        const dateStr = formatLocalDate(currentDate);
+        const day = document.createElement('div');
+        day.className = 'mini-calendar-day';
+        day.textContent = currentDate.getDate();
+        day.dataset.date = dateStr;
+        
+        // Mark today
+        const todayStr = formatLocalDate(today);
+        if (dateStr === todayStr) {
+            day.classList.add('today');
+        }
+        
+        // Mark reserved dates
+        if (unavailableDates.includes(dateStr)) {
+            day.classList.add('reserved');
+        }
+        
+        // Mark if outside current display range
+        if (currentDate < today) {
+            day.classList.add('outside');
+        }
+        
+        calendar.appendChild(day);
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+}
+
+// Update mini calendar with selected dates
+function updateMiniCalendar(startDateStr, endDateStr) {
+    const calendar = document.getElementById('miniCalendar');
+    if (!calendar) return;
+    
+    // Remove all selected classes
+    calendar.querySelectorAll('.mini-calendar-day.selected').forEach(el => {
+        el.classList.remove('selected');
+    });
+    
+    if (!startDateStr || !endDateStr) return;
+    
+    const start = parseLocalDate(startDateStr);
+    const end = parseLocalDate(endDateStr);
+    
+    let currentDate = new Date(start);
+    while (currentDate <= end) {
+        const dateStr = formatLocalDate(currentDate);
+        const dayEl = calendar.querySelector(`[data-date="${dateStr}"]`);
+        if (dayEl && !dayEl.classList.contains('reserved')) {
+            dayEl.classList.add('selected');
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+}
+
+// Initialize mini calendar
+generateMiniCalendar();
+
+document.getElementById('date_start')?.addEventListener('change', function() {
+    this.classList.add('has-selection');
+    calculatePrice();
+    updateMiniCalendar(this.value, document.getElementById('date_end').value);
+});
+document.getElementById('date_end')?.addEventListener('change', function() {
+    this.classList.add('has-selection');
+    calculatePrice();
+    updateMiniCalendar(document.getElementById('date_start').value, this.value);
+});
 
 function calculatePrice() {
     const startInput = document.getElementById('date_start');
@@ -513,15 +840,27 @@ function calculatePrice() {
     
     // Check for unavailable dates
     let currentDate = new Date(start);
+    let unavailableFound = [];
     while (currentDate <= end) {
         const dateStr = currentDate.toISOString().split('T')[0];
         if (unavailableDates.includes(dateStr)) {
-            alert('Datum ' + dateStr + ' nije dostupan. Molimo izaberite drugi period.');
-            calcDiv.style.display = 'none';
-            addBtn.disabled = true;
-            return;
+            unavailableFound.push(dateStr);
         }
         currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    if (unavailableFound.length > 0) {
+        const dateList = unavailableFound.join(', ');
+        alert('Sledeći datumi su već rezervisani i nisu dostupni: ' + dateList + '\n\nMolimo izaberite drugi period.');
+        calcDiv.style.display = 'none';
+        addBtn.disabled = true;
+        // Reset selection styling
+        startInput.classList.remove('has-selection');
+        endInput.classList.remove('has-selection');
+        startInput.value = '';
+        endInput.value = '';
+        updateMiniCalendar(null, null);
+        return;
     }
     
     // Count weekend days
@@ -590,20 +929,8 @@ document.getElementById('addToCartBtn')?.addEventListener('click', function() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Update cart count in header
-            const cartCount = document.querySelector('.cart-count');
-            if (cartCount) {
-                cartCount.textContent = data.cart_count;
-            } else {
-                const cartLink = document.querySelector('.cart-link');
-                if (cartLink) {
-                    const span = document.createElement('span');
-                    span.className = 'cart-count';
-                    span.textContent = data.cart_count;
-                    cartLink.appendChild(span);
-                }
-            }
-            alert('Alat je dodat u korpu!');
+            // Redirect to cart page immediately
+            window.location.href = '<?= url('korpa') ?>';
         } else {
             alert(data.error || 'Greška pri dodavanju u korpu.');
         }
