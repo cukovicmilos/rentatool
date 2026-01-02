@@ -31,11 +31,11 @@ $cartCount = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
         </nav>
         
         <div class="header-actions">
-            <a href="<?= url('korpa') ?>" class="cart-link">
-                <i class="fas fa-shopping-cart"></i>
+            <a href="<?= url('korpa') ?>" class="cart-link" aria-label="Korpa<?= $cartCount > 0 ? ', ' . $cartCount . ' artikala' : ', prazna' ?>">
+                <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                 <span class="cart-text">Korpa</span>
                 <?php if ($cartCount > 0): ?>
-                <span class="cart-count"><?= $cartCount ?></span>
+                <span class="cart-count" aria-hidden="true"><?= $cartCount ?></span>
                 <?php endif; ?>
             </a>
         </div>

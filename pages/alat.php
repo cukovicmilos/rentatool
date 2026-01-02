@@ -141,16 +141,23 @@ ob_start();
         <div class="tool-gallery">
             <?php if (!empty($images)): ?>
             <div class="gallery-main">
-                <img src="<?= upload('tools/' . $images[0]['filename']) ?>" 
-                     alt="<?= e($tool['name']) ?>" 
-                     id="mainImage">
+                <img src="<?= upload('tools/' . $images[0]['filename']) ?>"
+                     alt="<?= e($tool['name']) ?>"
+                     id="mainImage"
+                     width="800"
+                     height="600"
+                     fetchpriority="high">
             </div>
             <?php if (count($images) > 1): ?>
             <div class="gallery-thumbs">
                 <?php foreach ($images as $i => $img): ?>
-                <div class="gallery-thumb <?= $i === 0 ? 'active' : '' ?>" 
+                <div class="gallery-thumb <?= $i === 0 ? 'active' : '' ?>"
                      onclick="changeImage('<?= upload('tools/' . $img['filename']) ?>', this)">
-                    <img src="<?= upload('tools/' . $img['filename']) ?>" alt="">
+                    <img src="<?= upload('tools/' . $img['filename']) ?>"
+                         alt="<?= e($tool['name']) ?> - slika <?= $i + 1 ?>"
+                         width="80"
+                         height="60"
+                         loading="lazy">
                 </div>
                 <?php endforeach; ?>
             </div>
@@ -208,28 +215,35 @@ ob_start();
             
             <?php if ($tool['status'] === 'available'): ?>
             <!-- Date Selection -->
-            <div class="date-selection mt-3">
-                <h3>Izaberite period iznajmljivanja</h3>
-                
+            <div class="date-selection mt-3" role="group" aria-labelledby="date-selection-heading">
+                <h3 id="date-selection-heading">Izaberite period iznajmljivanja</h3>
+                <p id="date-help" class="sr-only">Izaberite početni i krajnji datum iznajmljivanja. Datumi označeni narandžasto su već rezervisani.</p>
+
                 <div class="date-calendar-wrapper">
                     <div class="date-inputs">
                         <div class="form-group">
                             <label for="date_start" class="form-label">Od:</label>
-                            <input type="date" id="date_start" class="form-control date-input-start" 
-                                   min="<?= date('Y-m-d') ?>" 
-                                   max="<?= date('Y-m-d', strtotime('+30 days')) ?>">
+                            <input type="date" id="date_start" class="form-control date-input-start"
+                                   min="<?= date('Y-m-d') ?>"
+                                   max="<?= date('Y-m-d', strtotime('+30 days')) ?>"
+                                   aria-describedby="date-help"
+                                   aria-label="Datum početka iznajmljivanja"
+                                   required>
                         </div>
                         <div class="form-group">
                             <label for="date_end" class="form-label">Do:</label>
                             <input type="date" id="date_end" class="form-control date-input-end"
-                                   min="<?= date('Y-m-d') ?>" 
-                                   max="<?= date('Y-m-d', strtotime('+30 days')) ?>">
+                                   min="<?= date('Y-m-d') ?>"
+                                   max="<?= date('Y-m-d', strtotime('+30 days')) ?>"
+                                   aria-describedby="date-help"
+                                   aria-label="Datum završetka iznajmljivanja"
+                                   required>
                         </div>
                     </div>
-                    
+
                     <?php if (!empty($unavailableDates)): ?>
                     <div class="calendar-wrapper">
-                        <div id="miniCalendar" class="mini-calendar"></div>
+                        <div id="miniCalendar" class="mini-calendar" role="img" aria-label="Kalendar dostupnosti za narednih 30 dana"></div>
                         
                         <!-- Calendar Legend -->
                         <div class="calendar-legend">
@@ -269,8 +283,11 @@ ob_start();
                     </div>
                 </div>
                 
-                <button type="button" id="addToCartBtn" class="btn btn-primary btn-large btn-block mt-2" disabled>
-                    Dodaj u korpu
+                <button type="button" id="addToCartBtn" class="btn btn-primary btn-large btn-block mt-2" disabled
+                        aria-label="Dodaj <?= e($tool['name']) ?> u korpu"
+                        aria-disabled="true">
+                    <span aria-hidden="true">Dodaj u korpu</span>
+                    <span class="sr-only">Dodaj <?= e($tool['name']) ?> u korpu za izabrani period</span>
                 </button>
                 <p class="text-muted text-center mt-1">
                     <small>Max <?= MAX_RENTAL_DAYS ?> dana, rezervacija do <?= MAX_ADVANCE_DAYS ?> dana unapred</small>
@@ -850,30 +867,33 @@ function calculatePrice() {
     if (!startInput.value || !endInput.value) {
         calcDiv.style.display = 'none';
         addBtn.disabled = true;
+        addBtn.setAttribute('aria-disabled', 'true');
         return;
     }
-    
+
     const start = new Date(startInput.value);
     const end = new Date(endInput.value);
-    
+
     if (end < start) {
         alert('Datum završetka mora biti posle datuma početka.');
         endInput.value = '';
         calcDiv.style.display = 'none';
         addBtn.disabled = true;
+        addBtn.setAttribute('aria-disabled', 'true');
         return;
     }
-    
+
     // Calculate days
     const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-    
+
     if (days > maxDays) {
         alert('Maksimalan period iznajmljivanja je ' + maxDays + ' dana.');
         calcDiv.style.display = 'none';
         addBtn.disabled = true;
+        addBtn.setAttribute('aria-disabled', 'true');
         return;
     }
-    
+
     // Check for unavailable dates
     let currentDate = new Date(start);
     let unavailableFound = [];
@@ -884,12 +904,13 @@ function calculatePrice() {
         }
         currentDate.setDate(currentDate.getDate() + 1);
     }
-    
+
     if (unavailableFound.length > 0) {
         const dateList = unavailableFound.join(', ');
         alert('Sledeći datumi su već rezervisani i nisu dostupni: ' + dateList + '\n\nMolimo izaberite drugi period.');
         calcDiv.style.display = 'none';
         addBtn.disabled = true;
+        addBtn.setAttribute('aria-disabled', 'true');
         // Reset selection styling
         startInput.classList.remove('has-selection');
         endInput.classList.remove('has-selection');
@@ -942,6 +963,7 @@ function calculatePrice() {
     
     calcDiv.style.display = 'block';
     addBtn.disabled = false;
+    addBtn.setAttribute('aria-disabled', 'false');
 }
 
 // Add to cart

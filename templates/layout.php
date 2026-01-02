@@ -63,12 +63,59 @@ $fullImageUrl = $pageImage
     <link rel="canonical" href="<?= e($fullCanonicalUrl) ?>">
     
     <title><?= e($pageTitle) ?></title>
-    
+
+    <!-- Resource Hints for Performance -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="<?= asset('css/style.css') ?>">
     
+    <!-- Organization Schema (Global) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "@id": "<?= $siteUrl ?>/#organization",
+        "name": "<?= e(SITE_NAME) ?>",
+        "description": "<?= e(SITE_DESCRIPTION) ?>",
+        "url": "<?= $siteUrl . BASE_URL ?>",
+        "logo": "<?= $siteUrl . BASE_URL ?>/assets/images/rent-a-tool-logo-full.svg",
+        "image": "<?= $siteUrl . BASE_URL ?>/assets/images/og-default.jpg",
+        "telephone": "<?= e(SITE_PHONE) ?>",
+        "email": "<?= e(SITE_EMAIL) ?>",
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Subotica",
+            "addressRegion": "Vojvodina",
+            "addressCountry": "RS"
+        },
+        "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": "46.1000",
+            "longitude": "19.6667"
+        },
+        "priceRange": "€",
+        "openingHoursSpecification": [
+            {
+                "@type": "OpeningHoursSpecification",
+                "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                "opens": "08:00",
+                "closes": "18:00"
+            },
+            {
+                "@type": "OpeningHoursSpecification",
+                "dayOfWeek": "Saturday",
+                "opens": "09:00",
+                "closes": "14:00"
+            }
+        ],
+        "sameAs": []
+    }
+    </script>
+
     <?php if ($schemaData): ?>
-    <!-- Schema.org JSON-LD -->
+    <!-- Page-specific Schema.org JSON-LD -->
     <script type="application/ld+json">
     <?= json_encode($schemaData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) ?>
     </script>

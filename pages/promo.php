@@ -115,6 +115,26 @@ $pageDescription = 'Završite posao efikasno sa iznajmljenim alatom. Profesional
 $bodyClass = 'promo-page';
 $showSidebar = false;
 
+// Build FAQPage Schema
+$faqSchema = [
+    '@context' => 'https://schema.org',
+    '@type' => 'FAQPage',
+    'mainEntity' => []
+];
+
+foreach ($faqs as $faq) {
+    $faqSchema['mainEntity'][] = [
+        '@type' => 'Question',
+        'name' => $faq['question'],
+        'acceptedAnswer' => [
+            '@type' => 'Answer',
+            'text' => $faq['answer']
+        ]
+    ];
+}
+
+$schemaData = $faqSchema;
+
 ob_start();
 ?>
 

@@ -33,8 +33,10 @@ $weekendPrice = $tool['price_24h'] * (1 + WEEKEND_MARKUP);
     <?php endif; ?>
     <a href="<?= url('alat/' . $tool['slug']) ?>" class="tool-card-link">
         <div class="tool-card-image">
-            <img src="<?= e($imageUrl) ?>" 
-                 alt="<?= e($tool['name']) ?>" 
+            <img src="<?= e($imageUrl) ?>"
+                 alt="<?= e($tool['name']) ?>"
+                 width="400"
+                 height="300"
                  loading="lazy">
         </div>
         
