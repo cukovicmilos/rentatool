@@ -64,11 +64,8 @@ $fullImageUrl = $pageImage
     
     <title><?= e($pageTitle) ?></title>
 
-    <!-- Resource Hints for Performance -->
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Font Awesome (self-hosted - no third-party cookies) -->
+    <link rel="stylesheet" href="<?= asset('fonts/fontawesome/all.min.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/style.css') ?>">
     
     <!-- Organization Schema (Global) -->
