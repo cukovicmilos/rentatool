@@ -24,18 +24,18 @@ $imageUrl = $tool['primary_image']
 $weekendPrice = $tool['price_24h'] * (1 + WEEKEND_MARKUP);
 ?>
 <article class="tool-card">
+    <?php if ($tool['status'] === 'rented'): ?>
+    <span class="tool-badge badge-rented">Iznajmljen</span>
+    <?php elseif ($tool['status'] === 'maintenance'): ?>
+    <span class="tool-badge badge-maintenance">Servis</span>
+    <?php elseif (!empty($tool['featured'])): ?>
+    <span class="tool-badge badge-featured">Preporučeno</span>
+    <?php endif; ?>
     <a href="<?= url('alat/' . $tool['slug']) ?>" class="tool-card-link">
         <div class="tool-card-image">
             <img src="<?= e($imageUrl) ?>" 
                  alt="<?= e($tool['name']) ?>" 
                  loading="lazy">
-            <?php if ($tool['status'] === 'rented'): ?>
-            <span class="tool-badge badge-rented">Iznajmljen</span>
-            <?php elseif ($tool['status'] === 'maintenance'): ?>
-            <span class="tool-badge badge-maintenance">Servis</span>
-            <?php elseif (!empty($tool['featured'])): ?>
-            <span class="tool-badge badge-featured">Preporučeno</span>
-            <?php endif; ?>
         </div>
         
         <div class="tool-card-content">

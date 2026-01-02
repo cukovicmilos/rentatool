@@ -36,6 +36,29 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Dynamic video links
+    const addVideoBtn = document.getElementById('addVideo');
+    const videoList = document.getElementById('videoList');
+    
+    if (addVideoBtn && videoList) {
+        addVideoBtn.addEventListener('click', function() {
+            const row = document.createElement('div');
+            row.className = 'spec-row video-row';
+            row.innerHTML = `
+                <input type="text" name="video_titles[]" class="form-control" placeholder="Naslov (opciono)" style="flex: 1;">
+                <input type="url" name="video_urls[]" class="form-control" placeholder="https://www.youtube.com/watch?v=..." style="flex: 2;">
+                <button type="button" class="btn btn-danger btn-small remove-video">&times;</button>
+            `;
+            videoList.appendChild(row);
+        });
+        
+        videoList.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-video')) {
+                e.target.closest('.video-row').remove();
+            }
+        });
+    }
+    
     // Image preview
     const imageInput = document.getElementById('images');
     const imagePreview = document.getElementById('imagePreview');

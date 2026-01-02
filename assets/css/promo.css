@@ -95,36 +95,19 @@
     align-items: center;
 }
 
-.hero-image-placeholder {
+.hero-logo-container {
     width: 100%;
-    max-width: 400px;
-    aspect-ratio: 1;
-    background: linear-gradient(145deg, #2d2d2d, #1a1a1a);
-    border-radius: var(--border-radius);
+    max-width: 520px;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: var(--spacing-lg);
-    border: 2px solid var(--color-gray-600);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
 }
 
-.hero-icon {
-    font-size: 64px;
-    animation: float 3s ease-in-out infinite;
-}
-
-.hero-icon:nth-child(2) {
-    animation-delay: 0.5s;
-}
-
-.hero-icon:nth-child(3) {
-    animation-delay: 1s;
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+.hero-logo {
+    width: 100%;
+    height: auto;
+    max-width: 455px;
+    filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.3));
 }
 
 /* ==========================================================================
@@ -220,8 +203,13 @@
 }
 
 .benefit-icon {
-    font-size: 40px;
+    font-size: 36px;
     margin-bottom: var(--spacing-md);
+    color: var(--color-accent);
+}
+
+.benefit-icon i {
+    display: inline-block;
 }
 
 .benefit-card h3 {
@@ -348,8 +336,13 @@
 }
 
 .feature-icon {
-    font-size: 36px;
+    font-size: 32px;
     margin-bottom: var(--spacing-md);
+    color: var(--color-accent);
+}
+
+.feature-icon i {
+    display: inline-block;
 }
 
 .feature-card h3 {
@@ -382,6 +375,7 @@
 }
 
 .pricing-card {
+    display: block;
     background: var(--color-white);
     border: 2px solid var(--border-color);
     border-radius: var(--border-radius);
@@ -389,6 +383,9 @@
     text-align: center;
     position: relative;
     transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none !important;
+    color: inherit;
+    cursor: pointer;
 }
 
 .pricing-card:hover {
@@ -412,7 +409,7 @@
     left: 50%;
     transform: translateX(-50%);
     background: var(--color-accent);
-    color: var(--color-black);
+    color: var(--color-white);
     font-size: var(--font-size-xs);
     font-weight: 700;
     padding: var(--spacing-xs) var(--spacing-md);
@@ -443,6 +440,7 @@
 .pricing-image .no-image {
     font-size: 48px;
     opacity: 0.5;
+    color: var(--color-gray-400);
 }
 
 .pricing-title {
@@ -660,14 +658,12 @@
         order: -1;
     }
     
-    .hero-image-placeholder {
+    .hero-logo-container {
         max-width: 280px;
-        aspect-ratio: auto;
-        height: 200px;
     }
     
-    .hero-icon {
-        font-size: 48px;
+    .hero-logo {
+        max-width: 300px;
     }
     
     .promo-cta-group {

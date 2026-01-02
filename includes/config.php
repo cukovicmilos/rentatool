@@ -48,7 +48,7 @@ define('SITE_ADDRESS', 'Subotica, Srbija');
 
 // Currency
 if (!defined('CURRENCY')) define('CURRENCY', 'EUR');
-if (!defined('CURRENCY_SYMBOL')) define('CURRENCY_SYMBOL', '&euro;');
+if (!defined('CURRENCY_SYMBOL')) define('CURRENCY_SYMBOL', '€');
 
 // Pricing rules
 define('WEEKEND_MARKUP', 0.10);      // +10% for weekends

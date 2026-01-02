@@ -64,6 +64,7 @@ $fullImageUrl = $pageImage
     
     <title><?= e($pageTitle) ?></title>
     
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="<?= asset('css/style.css') ?>">
     
     <?php if ($schemaData): ?>
@@ -78,7 +79,7 @@ $fullImageUrl = $pageImage
     <?php endif; ?>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="<?= asset('images/favicon.ico') ?>">
+    <link rel="icon" type="image/png" href="<?= asset('images/favicon.png') ?>">
 </head>
 <body class="<?= e($bodyClass) ?>">
     

@@ -67,6 +67,17 @@ CREATE TABLE IF NOT EXISTS tool_specifications (
     FOREIGN KEY (tool_id) REFERENCES tools(id) ON DELETE CASCADE
 );
 
+-- Tool YouTube videos
+CREATE TABLE IF NOT EXISTS tool_videos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tool_id INTEGER NOT NULL,
+    youtube_url TEXT NOT NULL,
+    title TEXT,
+    sort_order INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (tool_id) REFERENCES tools(id) ON DELETE CASCADE
+);
+
 -- Tool-Category relationship (many-to-many)
 CREATE TABLE IF NOT EXISTS tool_categories (
     tool_id INTEGER NOT NULL,

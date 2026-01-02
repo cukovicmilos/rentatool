@@ -15,9 +15,9 @@
             <h4>Brzi linkovi</h4>
             <ul class="footer-links">
                 <li><a href="<?= url('') ?>">Početna</a></li>
+                <li><a href="<?= url('alati') ?>">Alati</a></li>
                 <li><a href="<?= url('stranica/o-nama') ?>">O nama</a></li>
                 <li><a href="<?= url('stranica/kontakt') ?>">Kontakt</a></li>
-                <li><a href="<?= url('stranica/uslovi-koriscenja') ?>">Uslovi korišćenja</a></li>
             </ul>
         </div>
         

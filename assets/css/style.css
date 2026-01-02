@@ -11,9 +11,9 @@
     /* Colors */
     --color-white: #FFFFFF;
     --color-black: #000000;
-    --color-accent: #FFD700;
-    --color-accent-hover: #E6B800;
-    --color-accent-light: #FFF8DC;
+    --color-accent: #D90060;
+    --color-accent-hover: #B8004F;
+    --color-accent-light: #FFE0EC;
     --color-gray-100: #F5F5F5;
     --color-gray-200: #EEEEEE;
     --color-gray-300: #CCCCCC;
@@ -197,18 +197,15 @@ small {
 .logo a {
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
-    font-size: var(--font-size-large);
-    font-weight: 700;
-    color: var(--color-accent);
 }
 
 .logo a:hover {
     text-decoration: none;
 }
 
-.logo-icon {
-    font-size: 24px;
+.logo-img {
+    height: 40px;
+    width: auto;
 }
 
 /* Navigation */
@@ -242,10 +239,9 @@ small {
     display: flex;
     align-items: center;
     gap: var(--spacing-xs);
-    color: var(--color-white);
     padding: var(--spacing-sm) var(--spacing-md);
     background: var(--color-accent);
-    color: var(--color-black);
+    color: var(--color-white);
     border-radius: var(--border-radius);
     font-weight: 600;
 }
@@ -446,10 +442,10 @@ small {
     width: 100%;
 }
 
-/* Primary button - Yellow */
+/* Primary button - Accent color */
 .btn-primary {
     background: var(--color-accent);
-    color: var(--color-black);
+    color: var(--color-white);
     border-color: var(--color-accent);
 }
 
@@ -676,11 +672,13 @@ select.form-control {
 }
 
 .tool-card {
+    position: relative;
     background: var(--color-white);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
-    overflow: hidden;
+    overflow: visible;
     transition: box-shadow 0.2s;
+    margin-top: 12px;
 }
 
 .tool-card:hover {
@@ -691,6 +689,8 @@ select.form-control {
     display: block;
     text-decoration: none !important;
     color: inherit;
+    border-radius: var(--border-radius);
+    overflow: hidden;
 }
 
 .tool-card-image {
@@ -707,17 +707,20 @@ select.form-control {
 
 .tool-badge {
     position: absolute;
-    top: var(--spacing-sm);
-    left: var(--spacing-sm);
-    padding: var(--spacing-xs) var(--spacing-sm);
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: var(--spacing-xs) var(--spacing-md);
     font-size: var(--font-size-xs);
     font-weight: 600;
-    border-radius: var(--border-radius);
+    border-radius: 50px;
+    z-index: 10;
+    white-space: nowrap;
 }
 
 .badge-featured {
     background: var(--color-accent);
-    color: var(--color-black);
+    color: var(--color-white);
 }
 
 .badge-rented {

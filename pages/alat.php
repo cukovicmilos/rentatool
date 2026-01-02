@@ -29,6 +29,9 @@ $categories = db()->fetchAll("
     WHERE tc.tool_id = ?
 ", [$tool['id']]);
 
+// Get tool videos
+$videos = db()->fetchAll("SELECT * FROM tool_videos WHERE tool_id = ? ORDER BY sort_order", [$tool['id']]);
+
 // Get blocked dates for this tool (next 30 days)
 $blockedDates = db()->fetchAll("
     SELECT blocked_date FROM blocked_dates 
@@ -278,22 +281,31 @@ ob_start();
     </div>
     
     <!-- Video Section (Full Width) -->
-    <?php if (!empty($tool['youtube_url'])): 
-        $videoId = getYouTubeVideoId($tool['youtube_url']);
-        if ($videoId):
-    ?>
-    <div class="tool-video mt-4">
-        <h2>Video</h2>
-        <div class="video-container">
-            <iframe 
-                src="https://www.youtube.com/embed/<?= e($videoId) ?>" 
-                frameborder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowfullscreen>
-            </iframe>
+    <?php if (!empty($videos)): ?>
+    <div class="tool-videos mt-4">
+        <h2>Video materijali</h2>
+        <div class="videos-grid">
+            <?php foreach ($videos as $video): 
+                $videoId = getYouTubeVideoId($video['youtube_url']);
+                if ($videoId):
+            ?>
+            <div class="video-item">
+                <?php if (!empty($video['title'])): ?>
+                <h3 class="video-title"><?= e($video['title']) ?></h3>
+                <?php endif; ?>
+                <div class="video-container">
+                    <iframe 
+                        src="https://www.youtube.com/embed/<?= e($videoId) ?>" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+            <?php endif; endforeach; ?>
         </div>
     </div>
-    <?php endif; endif; ?>
+    <?php endif; ?>
     
     <!-- Description & Specs -->
     <div class="tool-details-section mt-4">
@@ -577,16 +589,36 @@ ob_start();
     font-size: 1.2em;
 }
 
-.tool-video {
+.tool-videos {
     width: 100%;
     max-width: 100%;
 }
 
-.tool-video h2 {
+.tool-videos h2 {
     font-size: var(--font-size-large);
     margin-bottom: var(--spacing-md);
     padding-bottom: var(--spacing-sm);
     border-bottom: 2px solid var(--color-accent);
+}
+
+.videos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.video-item {
+    background: var(--color-gray-100);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.video-title {
+    font-size: var(--font-size-base);
+    padding: var(--spacing-md);
+    margin: 0;
+    background: var(--color-white);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .video-container {
@@ -595,7 +627,6 @@ ob_start();
     height: 0;
     overflow: hidden;
     background: var(--color-gray-100);
-    border-radius: var(--border-radius);
 }
 
 .video-container iframe {
@@ -604,7 +635,12 @@ ob_start();
     left: 0;
     width: 100%;
     height: 100%;
-    border-radius: var(--border-radius);
+}
+
+@media (max-width: 480px) {
+    .videos-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .tool-details-section {

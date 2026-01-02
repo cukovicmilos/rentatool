@@ -55,6 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $categoryIds = post('categories', []);
     $specNames = post('spec_names', []);
     $specValues = post('spec_values', []);
+    $videoUrls = post('video_urls', []);
+    $videoTitles = post('video_titles', []);
     
     // Generate slug
     $slug = slugify($name);
@@ -108,6 +110,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     db()->insert(
                         "INSERT INTO tool_specifications (tool_id, spec_name, spec_value, sort_order) VALUES (?, ?, ?, ?)",
                         [$id, $specName, $specValue, $i]
+                    );
+                }
+            }
+            
+            // Update videos
+            db()->execute("DELETE FROM tool_videos WHERE tool_id = ?", [$id]);
+            foreach ($videoUrls as $i => $videoUrl) {
+                $videoUrl = trim($videoUrl);
+                $videoTitle = trim($videoTitles[$i] ?? '');
+                if (!empty($videoUrl)) {
+                    db()->insert(
+                        "INSERT INTO tool_videos (tool_id, youtube_url, title, sort_order) VALUES (?, ?, ?, ?)",
+                        [$id, $videoUrl, $videoTitle, $i]
                     );
                 }
             }
@@ -179,6 +194,7 @@ $tool = null;
 $toolCategories = [];
 $toolSpecs = [];
 $toolImages = [];
+$toolVideos = [];
 
 if ($action === 'izmeni' && $id) {
     $tool = db()->fetch("SELECT * FROM tools WHERE id = ?", [$id]);
@@ -192,6 +208,7 @@ if ($action === 'izmeni' && $id) {
     
     $toolSpecs = db()->fetchAll("SELECT * FROM tool_specifications WHERE tool_id = ? ORDER BY sort_order", [$id]);
     $toolImages = db()->fetchAll("SELECT * FROM tool_images WHERE tool_id = ? ORDER BY sort_order", [$id]);
+    $toolVideos = db()->fetchAll("SELECT * FROM tool_videos WHERE tool_id = ? ORDER BY sort_order", [$id]);
 }
 
 // Get all categories for select
@@ -398,13 +415,7 @@ ob_start();
                 <textarea id="description" name="description" class="form-control" rows="5"><?= e($tool['description'] ?? post('description')) ?></textarea>
             </div>
             
-            <div class="form-group">
-                <label for="youtube_url" class="form-label">YouTube video link</label>
-                <input type="url" id="youtube_url" name="youtube_url" class="form-control" 
-                       value="<?= e($tool['youtube_url'] ?? post('youtube_url')) ?>"
-                       placeholder="https://www.youtube.com/watch?v=...">
-                <small class="form-text">Unesite pun YouTube URL (npr. https://www.youtube.com/watch?v=dQw4w9WgXcQ)</small>
-            </div>
+            
             
             <div class="form-row">
                 <div class="form-group">
@@ -492,6 +503,30 @@ ob_start();
         </div>
         
         <p class="form-text mt-2">Predlozi: Snaga (W), Težina (kg), Napon (V), Broj obrtaja (min⁻¹), Prečnik diska (mm)</p>
+    </div>
+    
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <h3>YouTube video linkovi</h3>
+            <button type="button" id="addVideo" class="btn btn-secondary btn-small">+ Dodaj video</button>
+        </div>
+        
+        <div id="videoList" class="spec-list">
+            <?php 
+            $videos = !empty($toolVideos) ? $toolVideos : [['youtube_url' => '', 'title' => '']];
+            foreach ($videos as $video): 
+            ?>
+            <div class="spec-row video-row">
+                <input type="text" name="video_titles[]" class="form-control" 
+                       placeholder="Naslov (opciono)" value="<?= e($video['title'] ?? '') ?>" style="flex: 1;">
+                <input type="url" name="video_urls[]" class="form-control" 
+                       placeholder="https://www.youtube.com/watch?v=..." value="<?= e($video['youtube_url'] ?? '') ?>" style="flex: 2;">
+                <button type="button" class="btn btn-danger btn-small remove-video">&times;</button>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        
+        <p class="form-text mt-2">Dodajte YouTube linkove za video uputstva, recenzije ili demonstracije alata.</p>
     </div>
     
     <div class="admin-card">

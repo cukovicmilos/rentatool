@@ -96,9 +96,14 @@ switch ($route) {
         }
         break;
     
-    // Homepage (empty path)
+    // Tools listing page
+    case 'alati':
+        require_once __DIR__ . '/pages/alati.php';
+        break;
+    
+    // Homepage (empty path) - now promo landing
     case '':
-        require_once __DIR__ . '/pages/pocetna.php';
+        require_once __DIR__ . '/pages/promo.php';
         break;
     
     // Try pages folder

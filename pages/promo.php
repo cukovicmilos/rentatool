@@ -124,7 +124,7 @@ ob_start();
         <div class="promo-hero-text">
             <div class="promo-social-proof">
                 <span class="stars">★★★★★</span>
-                <span class="proof-text">500+ zadovoljnih korisnika</span>
+                <span class="proof-text">70+ zadovoljnih korisnika</span>
             </div>
             
             <h1 class="promo-headline">Završite posao efikasno sa iznajmljenim alatom</h1>
@@ -135,36 +135,15 @@ ob_start();
             </p>
             
             <div class="promo-cta-group">
-                <a href="<?= url('') ?>" class="btn btn-primary btn-large">Pregledaj alate</a>
+                <a href="<?= url('alati') ?>" class="btn btn-primary btn-large">Pregledaj alate</a>
                 <a href="#process" class="btn btn-secondary btn-large">Kako funkcioniše?</a>
             </div>
         </div>
         
         <div class="promo-hero-visual">
-            <div class="hero-image-placeholder">
-                <span class="hero-icon">🔧</span>
-                <span class="hero-icon">🔨</span>
-                <span class="hero-icon">⚡</span>
+            <div class="hero-logo-container">
+                <img src="<?= asset('images/rent-a-tool-logo-full.svg') ?>" alt="<?= SITE_NAME ?>" class="hero-logo">
             </div>
-        </div>
-    </div>
-</section>
-
-<!-- TRUST LOGOS (BRENDOVI) -->
-<section class="promo-trust">
-    <p class="trust-label">Brendovi u našoj ponudi</p>
-    <div class="trust-logos">
-        <div class="trust-logo">
-            <span class="brand-name">Metabo</span>
-        </div>
-        <div class="trust-logo">
-            <span class="brand-name">Einhell</span>
-        </div>
-        <div class="trust-logo">
-            <span class="brand-name">Parkside</span>
-        </div>
-        <div class="trust-logo">
-            <span class="brand-name">Womax</span>
         </div>
     </div>
 </section>
@@ -175,37 +154,37 @@ ob_start();
     
     <div class="benefits-grid">
         <div class="benefit-card">
-            <div class="benefit-icon">💰</div>
+            <div class="benefit-icon"><i class="fas fa-piggy-bank"></i></div>
             <h3>Bez kupovine skupog alata</h3>
             <p>Uštedite hiljade dinara - platite samo za dane kada vam alat zaista treba.</p>
         </div>
         
         <div class="benefit-card">
-            <div class="benefit-icon">🏆</div>
+            <div class="benefit-icon"><i class="fas fa-award"></i></div>
             <h3>Profesionalna oprema</h3>
             <p>Kvalitetni brendovi koji garantuju odličan rezultat vašeg projekta.</p>
         </div>
         
         <div class="benefit-card">
-            <div class="benefit-icon">🚚</div>
+            <div class="benefit-icon"><i class="fas fa-truck"></i></div>
             <h3>Dostava na adresu</h3>
             <p>Ne morate dolaziti - dostavljamo alat direktno na vašu adresu.</p>
         </div>
         
         <div class="benefit-card">
-            <div class="benefit-icon">📅</div>
+            <div class="benefit-icon"><i class="fas fa-calendar-alt"></i></div>
             <h3>Fleksibilni rokovi</h3>
             <p>Od jednog dana do 10 dana - iznajmite tačno onoliko koliko vam treba.</p>
         </div>
         
         <div class="benefit-card">
-            <div class="benefit-icon">🛠️</div>
+            <div class="benefit-icon"><i class="fas fa-headset"></i></div>
             <h3>Tehnička podrška</h3>
             <p>Niste sigurni kako koristiti alat? Tu smo da pomognemo i savetujemo.</p>
         </div>
         
         <div class="benefit-card">
-            <div class="benefit-icon">✅</div>
+            <div class="benefit-icon"><i class="fas fa-check-circle"></i></div>
             <h3>Pristupačne cene</h3>
             <p>Transparentne cene bez skrivenih troškova. Znate tačno koliko plaćate.</p>
         </div>
@@ -260,31 +239,31 @@ ob_start();
     
     <div class="features-grid">
         <div class="feature-card">
-            <div class="feature-icon">📦</div>
+            <div class="feature-icon"><i class="fas fa-toolbox"></i></div>
             <h3>Širok izbor alata</h3>
             <p>Od bušilica i brusilica do agregata i kompresora - sve na jednom mestu.</p>
         </div>
         
         <div class="feature-card">
-            <div class="feature-icon">🌐</div>
+            <div class="feature-icon"><i class="fas fa-globe"></i></div>
             <h3>Online rezervacija 24/7</h3>
             <p>Rezervišite bilo kada, sa bilo kog uređaja. Bez čekanja, bez poziva.</p>
         </div>
         
         <div class="feature-card">
-            <div class="feature-icon">🔍</div>
+            <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
             <h3>Garancija ispravnosti</h3>
             <p>Svaki alat je testiran pre izdavanja. Garantujemo ispravan rad.</p>
         </div>
         
         <div class="feature-card">
-            <div class="feature-icon">⏰</div>
+            <div class="feature-icon"><i class="fas fa-clock"></i></div>
             <h3>Fleksibilno trajanje</h3>
             <p>Produžite rezervaciju ako vam treba više vremena - jedan poziv je dovoljan.</p>
         </div>
         
         <div class="feature-card">
-            <div class="feature-icon">💬</div>
+            <div class="feature-icon"><i class="fas fa-comments"></i></div>
             <h3>Stručni saveti</h3>
             <p>Ne znate koji alat vam treba? Pomažemo da odaberete pravi za vaš posao.</p>
         </div>
@@ -299,7 +278,7 @@ ob_start();
     <?php if (!empty($featuredTools)): ?>
     <div class="pricing-grid">
         <?php foreach ($featuredTools as $index => $tool): ?>
-        <div class="pricing-card <?= $index === 1 ? 'featured' : '' ?>">
+        <a href="<?= url('alat/' . $tool['slug']) ?>" class="pricing-card <?= $index === 1 ? 'featured' : '' ?>">
             <?php if ($index === 1): ?>
             <div class="pricing-badge">Popularan izbor</div>
             <?php endif; ?>
@@ -308,7 +287,7 @@ ob_start();
                 <?php if ($tool['primary_image']): ?>
                 <img src="<?= url('uploads/tools/' . $tool['primary_image']) ?>" alt="<?= e($tool['name']) ?>">
                 <?php else: ?>
-                <div class="no-image">🔧</div>
+                <div class="no-image"><i class="fas fa-wrench"></i></div>
                 <?php endif; ?>
             </div>
             
@@ -327,10 +306,10 @@ ob_start();
             <p class="pricing-deposit">Kaucija: <?= formatPrice($tool['deposit']) ?></p>
             <?php endif; ?>
             
-            <a href="<?= url('alat/' . $tool['slug']) ?>" class="btn <?= $index === 1 ? 'btn-primary' : 'btn-secondary' ?> btn-block">
+            <span class="btn <?= $index === 1 ? 'btn-primary' : 'btn-secondary' ?> btn-block">
                 Rezerviši
-            </a>
-        </div>
+            </span>
+        </a>
         <?php endforeach; ?>
     </div>
     <?php else: ?>
@@ -338,7 +317,7 @@ ob_start();
     <?php endif; ?>
     
     <div class="pricing-cta">
-        <a href="<?= url('') ?>" class="btn btn-primary btn-large">Pogledaj sve alate →</a>
+        <a href="<?= url('alati') ?>" class="btn btn-primary btn-large">Pogledaj sve alate →</a>
     </div>
 </section>
 
@@ -387,12 +366,31 @@ ob_start();
     </div>
 </section>
 
+<!-- TRUST LOGOS (BRENDOVI) -->
+<section class="promo-trust">
+    <p class="trust-label">Brendovi u našoj ponudi</p>
+    <div class="trust-logos">
+        <div class="trust-logo">
+            <span class="brand-name">Metabo</span>
+        </div>
+        <div class="trust-logo">
+            <span class="brand-name">Einhell</span>
+        </div>
+        <div class="trust-logo">
+            <span class="brand-name">Parkside</span>
+        </div>
+        <div class="trust-logo">
+            <span class="brand-name">Womax</span>
+        </div>
+    </div>
+</section>
+
 <!-- CTA SECTION -->
 <section class="promo-section promo-cta-section">
     <div class="cta-content">
         <h2>Spremni za vaš sledeći projekat?</h2>
         <p>Pronađite pravi alat i počnite danas. Bez obaveza, bez skrivenih troškova.</p>
-        <a href="<?= url('') ?>" class="btn btn-primary btn-large">Pronađi alat za svoj projekat</a>
+        <a href="<?= url('alati') ?>" class="btn btn-primary btn-large">Pronađi alat za svoj projekat</a>
     </div>
 </section>
 
