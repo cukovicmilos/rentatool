@@ -38,6 +38,10 @@
     align-items: center;
 }
 
+.promo-hero-text {
+    min-height: 280px; /* Prevent CLS from font loading */
+}
+
 .promo-social-proof {
     display: inline-flex;
     align-items: center;
@@ -46,6 +50,7 @@
     padding: var(--spacing-xs) var(--spacing-md);
     border-radius: 50px;
     margin-bottom: var(--spacing-lg);
+    min-height: 32px; /* Prevent CLS */
 }
 
 .promo-social-proof .stars {

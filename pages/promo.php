@@ -162,7 +162,12 @@ ob_start();
         
         <div class="promo-hero-visual">
             <div class="hero-logo-container">
-                <img src="<?= asset('images/rent-a-tool-logo-full.svg') ?>" alt="<?= SITE_NAME ?>" class="hero-logo">
+                <img src="<?= asset('images/rent-a-tool-logo-full.svg') ?>" 
+                     alt="<?= SITE_NAME ?>" 
+                     class="hero-logo"
+                     width="455"
+                     height="455"
+                     fetchpriority="high">
             </div>
         </div>
     </div>
@@ -305,7 +310,11 @@ ob_start();
             
             <div class="pricing-image">
                 <?php if ($tool['primary_image']): ?>
-                <img src="<?= url('uploads/tools/' . $tool['primary_image']) ?>" alt="<?= e($tool['name']) ?>">
+                <img src="<?= url('uploads/tools/' . $tool['primary_image']) ?>" 
+                     alt="<?= e($tool['name']) ?>"
+                     width="280"
+                     height="180"
+                     loading="lazy">
                 <?php else: ?>
                 <div class="no-image"><i class="fas fa-wrench"></i></div>
                 <?php endif; ?>
@@ -417,8 +426,8 @@ ob_start();
 <?php
 $content = ob_get_clean();
 
-// Extra CSS for promo page
-$extraCss = '<link rel="stylesheet" href="' . asset('css/promo.css') . '">';
+// Extra CSS for promo page - use minified version with defer loading
+$extraCss = '<link rel="stylesheet" href="' . asset('css/promo.min.css') . '" media="print" onload="this.media=\'all\'"><noscript><link rel="stylesheet" href="' . asset('css/promo.min.css') . '"></noscript>';
 
 // Extra JS for FAQ accordion
 $extraJs = '

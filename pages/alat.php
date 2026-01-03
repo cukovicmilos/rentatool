@@ -314,6 +314,7 @@ ob_start();
                     <iframe 
                         src="https://www.youtube.com/embed/<?= e($videoId) ?>" 
                         frameborder="0" 
+                        loading="lazy"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                         allowfullscreen>
                     </iframe>

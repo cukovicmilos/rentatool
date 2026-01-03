@@ -18,9 +18,10 @@ Options -Indexes
 RewriteRule ^includes/ - [F,L]
 RewriteRule ^classes/ - [F,L]
 
-# Allow direct access to assets and uploads
-RewriteRule ^assets/ - [L]
-RewriteRule ^uploads/ - [L]
+# Allow direct access to assets and uploads (headers still apply)
+RewriteCond %{REQUEST_URI} ^/rentatool/assets/ [OR]
+RewriteCond %{REQUEST_URI} ^/rentatool/uploads/
+RewriteRule .* - [L]
 
 # Admin routing
 RewriteRule ^admin$ admin/ [R=301,L]
