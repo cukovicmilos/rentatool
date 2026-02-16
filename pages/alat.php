@@ -140,19 +140,22 @@ ob_start();
         <!-- Gallery -->
         <div class="tool-gallery">
             <?php if (!empty($images)): ?>
-            <div class="gallery-main">
+            <div class="gallery-main" onclick="openLightbox(currentImageIndex)" style="cursor:zoom-in">
                 <img src="<?= upload('tools/' . $images[0]['filename']) ?>"
                      alt="<?= e($tool['name']) ?>"
                      id="mainImage"
                      width="800"
                      height="600"
                      fetchpriority="high">
+                <div class="gallery-zoom-hint">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                </div>
             </div>
             <?php if (count($images) > 1): ?>
             <div class="gallery-thumbs">
                 <?php foreach ($images as $i => $img): ?>
                 <div class="gallery-thumb <?= $i === 0 ? 'active' : '' ?>"
-                     onclick="changeImage('<?= upload('tools/' . $img['filename']) ?>', this)">
+                     onclick="changeImage('<?= upload('tools/' . $img['filename']) ?>', this, <?= $i ?>)">
                     <img src="<?= upload('tools/' . $img['filename']) ?>"
                          alt="<?= e($tool['name']) ?> - slika <?= $i + 1 ?>"
                          width="80"
@@ -165,6 +168,24 @@ ob_start();
             <?php else: ?>
             <div class="gallery-main no-image">
                 <span>Nema slike</span>
+            </div>
+            <?php endif; ?>
+
+            <!-- Lightbox -->
+            <?php if (!empty($images)): ?>
+            <div class="lightbox" id="lightbox" role="dialog" aria-label="Galerija slika" aria-modal="true">
+                <div class="lightbox-backdrop" onclick="closeLightbox()"></div>
+                <button class="lightbox-close" onclick="closeLightbox()" aria-label="Zatvori galeriju">&times;</button>
+                <?php if (count($images) > 1): ?>
+                <button class="lightbox-nav lightbox-prev" onclick="lightboxNav(-1)" aria-label="Prethodna slika">&#8249;</button>
+                <button class="lightbox-nav lightbox-next" onclick="lightboxNav(1)" aria-label="Sledeća slika">&#8250;</button>
+                <?php endif; ?>
+                <div class="lightbox-content">
+                    <img src="" alt="" id="lightboxImage" class="lightbox-image">
+                </div>
+                <?php if (count($images) > 1): ?>
+                <div class="lightbox-counter" id="lightboxCounter"></div>
+                <?php endif; ?>
             </div>
             <?php endif; ?>
             
@@ -377,6 +398,157 @@ ob_start();
     width: 100%;
     height: 100%;
     object-fit: contain;
+}
+
+.gallery-main:not(.no-image) {
+    position: relative;
+}
+
+.gallery-zoom-hint {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    background: rgba(0,0,0,0.55);
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+}
+
+.gallery-main:hover .gallery-zoom-hint {
+    opacity: 1;
+}
+
+/* Lightbox */
+.lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+}
+
+.lightbox.active {
+    display: flex;
+}
+
+.lightbox-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.lightbox-close {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    z-index: 10;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 40px;
+    line-height: 1;
+    cursor: pointer;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.lightbox-close:hover {
+    background: rgba(255,255,255,0.12);
+}
+
+.lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 48px;
+    line-height: 1;
+    width: 52px;
+    height: 72px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.lightbox-nav:hover {
+    background: rgba(255,255,255,0.18);
+}
+
+.lightbox-prev { left: 16px; }
+.lightbox-next { right: 16px; }
+
+.lightbox-content {
+    position: relative;
+    z-index: 5;
+    max-width: 90vw;
+    max-height: 88vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lightbox-image {
+    max-width: 90vw;
+    max-height: 85vh;
+    object-fit: contain;
+    border-radius: 4px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+    animation: lightboxFadeIn 0.2s ease-out;
+}
+
+@keyframes lightboxFadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.lightbox-counter {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    color: rgba(255,255,255,0.7);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    background: rgba(0,0,0,0.5);
+    padding: 6px 16px;
+    border-radius: 20px;
+}
+
+@media (max-width: 768px) {
+    .lightbox-nav {
+        width: 40px;
+        height: 56px;
+        font-size: 36px;
+    }
+    .lightbox-prev { left: 8px; }
+    .lightbox-next { right: 8px; }
+    .lightbox-image {
+        max-width: 95vw;
+        max-height: 80vh;
+    }
 }
 
 .gallery-main.no-image {
@@ -727,12 +899,83 @@ ob_start();
 </style>
 
 <script>
-// Gallery
-function changeImage(src, thumb) {
+// Gallery images array
+const galleryImages = <?= json_encode(array_map(function($img) use ($tool) {
+    return [
+        'src' => '/rentatool/uploads/tools/' . $img['filename'],
+        'alt' => $tool['name'] . ' - slika'
+    ];
+}, $images)) ?>;
+let currentImageIndex = 0;
+
+function changeImage(src, thumb, index) {
     document.getElementById('mainImage').src = src;
     document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
     thumb.classList.add('active');
+    if (typeof index !== 'undefined') currentImageIndex = index;
 }
+
+// Lightbox
+function openLightbox(index) {
+    const lb = document.getElementById('lightbox');
+    if (!lb || !galleryImages.length) return;
+    currentImageIndex = index || 0;
+    updateLightboxImage();
+    lb.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+    const lb = document.getElementById('lightbox');
+    if (lb) lb.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function lightboxNav(dir) {
+    currentImageIndex = (currentImageIndex + dir + galleryImages.length) % galleryImages.length;
+    updateLightboxImage();
+    // Sync thumbnail
+    const thumbs = document.querySelectorAll('.gallery-thumb');
+    if (thumbs[currentImageIndex]) {
+        document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
+        thumbs[currentImageIndex].classList.add('active');
+        document.getElementById('mainImage').src = galleryImages[currentImageIndex].src;
+    }
+}
+
+function updateLightboxImage() {
+    const img = document.getElementById('lightboxImage');
+    const counter = document.getElementById('lightboxCounter');
+    if (!img) return;
+    img.src = galleryImages[currentImageIndex].src;
+    img.alt = galleryImages[currentImageIndex].alt;
+    if (counter) counter.textContent = (currentImageIndex + 1) + ' / ' + galleryImages.length;
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', function(e) {
+    const lb = document.getElementById('lightbox');
+    if (!lb || !lb.classList.contains('active')) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') lightboxNav(-1);
+    if (e.key === 'ArrowRight') lightboxNav(1);
+});
+
+// Touch swipe support
+(function() {
+    let touchStartX = 0;
+    const lb = document.getElementById('lightbox');
+    if (!lb) return;
+    lb.addEventListener('touchstart', function(e) {
+        touchStartX = e.changedTouches[0].screenX;
+    }, {passive: true});
+    lb.addEventListener('touchend', function(e) {
+        const diff = e.changedTouches[0].screenX - touchStartX;
+        if (Math.abs(diff) > 50) {
+            lightboxNav(diff > 0 ? -1 : 1);
+        }
+    }, {passive: true});
+})();
 
 // Date calculation
 const toolPrice = <?= $tool['price_24h'] ?>;

@@ -89,5 +89,83 @@ document.addEventListener('DOMContentLoaded', function() {
             link.classList.add('active');
         }
     });
-    
+
 });
+
+// Category on-the-fly creation
+function toggleNewCategory() {
+    const form = document.getElementById('newCategoryForm');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    if (form.style.display === 'block') {
+        document.getElementById('newCatName').focus();
+    }
+}
+
+function createCategory() {
+    const nameInput = document.getElementById('newCatName');
+    const parentSelect = document.getElementById('newCatParent');
+    const name = nameInput.value.trim();
+
+    if (!name) {
+        nameInput.focus();
+        return;
+    }
+
+    const baseUrl = document.querySelector('meta[name="base-url"]')?.content
+        || window.location.pathname.split('/admin/')[0];
+
+    fetch(baseUrl + '/api/category', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            name: name,
+            parent_id: parentSelect.value || null
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+
+        const tree = document.getElementById('categoryTree');
+        const parentId = data.parent_id;
+
+        if (parentId) {
+            // Find parent group and add as child
+            const parentCheckbox = tree.querySelector('input[value="' + parentId + '"]');
+            if (parentCheckbox) {
+                const group = parentCheckbox.closest('.cat-group');
+                let childrenDiv = group.querySelector('.cat-children');
+                if (!childrenDiv) {
+                    childrenDiv = document.createElement('div');
+                    childrenDiv.className = 'cat-children';
+                    group.appendChild(childrenDiv);
+                }
+                const label = document.createElement('label');
+                label.className = 'cat-child';
+                label.innerHTML = '<input type="checkbox" name="categories[]" value="' + data.id + '" checked> <span class="cat-name">' + data.name + '</span>';
+                childrenDiv.appendChild(label);
+            }
+        } else {
+            // Add as new parent group
+            const group = document.createElement('div');
+            group.className = 'cat-group';
+            group.innerHTML = '<label class="cat-parent"><input type="checkbox" name="categories[]" value="' + data.id + '" checked> <span class="cat-name">' + data.name + '</span></label>';
+            tree.appendChild(group);
+
+            // Also add to parent select dropdown
+            const opt = document.createElement('option');
+            opt.value = data.id;
+            opt.textContent = '↳ Pod-kategorija od: ' + data.name;
+            parentSelect.appendChild(opt);
+        }
+
+        // Reset form
+        nameInput.value = '';
+        parentSelect.value = '';
+        document.getElementById('newCategoryForm').style.display = 'none';
+    })
+    .catch(err => alert('Greška: ' + err.message));
+}

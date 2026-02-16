@@ -77,6 +77,16 @@
     font-size: var(--font-size-small);
 }
 
+.admin-user .btn-secondary {
+    color: var(--color-white);
+    border-color: rgba(255,255,255,0.3);
+}
+
+.admin-user .btn-secondary:hover {
+    background: rgba(255,255,255,0.12);
+    border-color: rgba(255,255,255,0.5);
+}
+
 /* Admin Main */
 .admin-main {
     min-height: calc(100vh - 160px);
@@ -291,6 +301,81 @@
 }
 
 .spec-row .remove-spec {
+    flex-shrink: 0;
+}
+
+/* Category Tree */
+.category-tree {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-sm);
+    max-height: 300px;
+    overflow-y: auto;
+    background: var(--color-white);
+}
+
+.cat-group {
+    margin-bottom: 2px;
+}
+
+.cat-group:last-child {
+    margin-bottom: 0;
+}
+
+.cat-parent {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: 6px 8px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: var(--font-size-base);
+}
+
+.cat-parent:hover {
+    background: var(--color-gray-100);
+}
+
+.cat-children {
+    margin-left: 24px;
+    padding-left: 12px;
+    border-left: 2px solid var(--color-gray-200);
+}
+
+.cat-child {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: 4px 8px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: var(--font-size-small);
+    color: var(--color-gray-600);
+}
+
+.cat-child:hover {
+    background: var(--color-gray-100);
+    color: var(--color-black);
+}
+
+.cat-parent input:checked + .cat-name,
+.cat-child input:checked + .cat-name {
+    color: var(--color-accent);
+    font-weight: 600;
+}
+
+.new-cat-row {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+}
+
+.new-cat-row .form-control {
+    flex: 1;
+}
+
+.new-cat-row .btn {
     flex-shrink: 0;
 }
 

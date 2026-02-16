@@ -455,14 +455,62 @@ ob_start();
             
             <div class="form-group">
                 <label class="form-label">Kategorije</label>
-                <div class="d-flex flex-wrap gap-2">
-                    <?php foreach ($allCategories as $cat): ?>
-                        <label class="form-check" style="margin: 0;">
+                <div class="category-tree" id="categoryTree">
+                    <?php
+                    // Build tree: parents first, then children grouped
+                    $parents = array_filter($allCategories, fn($c) => !$c['parent_id']);
+                    $children = [];
+                    foreach ($allCategories as $c) {
+                        if ($c['parent_id']) $children[$c['parent_id']][] = $c;
+                    }
+                    foreach ($parents as $parent):
+                    ?>
+                    <div class="cat-group">
+                        <label class="cat-parent">
+                            <input type="checkbox" name="categories[]" value="<?= $parent['id'] ?>"
+                                <?= in_array($parent['id'], $toolCategories) ? 'checked' : '' ?>>
+                            <span class="cat-name"><?= e($parent['name']) ?></span>
+                        </label>
+                        <?php if (!empty($children[$parent['id']])): ?>
+                        <div class="cat-children">
+                            <?php foreach ($children[$parent['id']] as $child): ?>
+                            <label class="cat-child">
+                                <input type="checkbox" name="categories[]" value="<?= $child['id'] ?>"
+                                    <?= in_array($child['id'], $toolCategories) ? 'checked' : '' ?>>
+                                <span class="cat-name"><?= e($child['name']) ?></span>
+                            </label>
+                            <?php endforeach; ?>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                    <?php endforeach; ?>
+                    <?php
+                    // Orphan categories (parent_id set but parent doesn't exist)
+                    $parentIds = array_column($parents, 'id');
+                    foreach ($allCategories as $cat):
+                        if ($cat['parent_id'] && !in_array($cat['parent_id'], $parentIds)):
+                    ?>
+                    <div class="cat-group">
+                        <label class="cat-parent">
                             <input type="checkbox" name="categories[]" value="<?= $cat['id'] ?>"
                                 <?= in_array($cat['id'], $toolCategories) ? 'checked' : '' ?>>
-                            <?= $cat['parent_id'] ? '-- ' : '' ?><?= e($cat['name']) ?>
+                            <span class="cat-name"><?= e($cat['name']) ?></span>
                         </label>
-                    <?php endforeach; ?>
+                    </div>
+                    <?php endif; endforeach; ?>
+                </div>
+                <button type="button" class="btn btn-secondary btn-small mt-2" onclick="toggleNewCategory()" id="newCatToggle">+ Nova kategorija</button>
+                <div id="newCategoryForm" style="display:none; margin-top: 8px;">
+                    <div class="new-cat-row">
+                        <input type="text" id="newCatName" class="form-control" placeholder="Naziv kategorije">
+                        <select id="newCatParent" class="form-control">
+                            <option value="">Glavna kategorija</option>
+                            <?php foreach ($parents as $p): ?>
+                            <option value="<?= $p['id'] ?>">↳ Pod-kategorija od: <?= e($p['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <button type="button" class="btn btn-primary btn-small" onclick="createCategory()">Dodaj</button>
+                    </div>
                 </div>
             </div>
         </div>
