@@ -419,14 +419,14 @@ ob_start();
             
             <div class="form-row">
                 <div class="form-group">
-                    <label for="price_24h" class="form-label required">Cena za 24h (<?= CURRENCY_SYMBOL ?>)</label>
+                    <label for="price_24h" class="form-label required">Cena za 24h (<?= CURRENCY_SIGN ?>)</label>
                     <input type="number" id="price_24h" name="price_24h" class="form-control" 
                            value="<?= e($tool['price_24h'] ?? post('price_24h')) ?>" 
                            step="0.01" min="0" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="deposit" class="form-label">Depozit/Kaucija (<?= CURRENCY_SYMBOL ?>)</label>
+                    <label for="deposit" class="form-label">Depozit/Kaucija (<?= CURRENCY_SIGN ?>)</label>
                     <input type="number" id="deposit" name="deposit" class="form-control" 
                            value="<?= e($tool['deposit'] ?? post('deposit', 0)) ?>" 
                            step="0.01" min="0">

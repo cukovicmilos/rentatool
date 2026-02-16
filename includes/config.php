@@ -47,8 +47,8 @@ define('SITE_PHONE', '+381 24 123 456');
 define('SITE_ADDRESS', 'Subotica, Srbija');
 
 // Currency
-if (!defined('CURRENCY')) define('CURRENCY', 'EUR');
-if (!defined('CURRENCY_SYMBOL')) define('CURRENCY_SYMBOL', '€');
+define('CURRENCY', 'EUR');
+define('CURRENCY_SIGN', '€');
 
 // Pricing rules
 define('WEEKEND_MARKUP', 0.10);      // +10% for weekends

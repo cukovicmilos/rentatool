@@ -194,6 +194,14 @@ ob_start();
                 <?= nl2br(e($tool['short_description'])) ?>
             </div>
             <?php endif; ?>
+
+            <?php if ($tool['description']): ?>
+            <div class="tool-description">
+                <div class="description-content">
+                    <?= nl2br(e($tool['description'])) ?>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
         
         <!-- Info -->
@@ -305,10 +313,10 @@ ob_start();
                 </div>
                 
                 <button type="button" id="addToCartBtn" class="btn btn-primary btn-large btn-block mt-2" disabled
-                        aria-label="Dodaj <?= e($tool['name']) ?> u korpu"
+                        aria-label="Rezerviši <?= e($tool['name']) ?>"
                         aria-disabled="true">
-                    <span aria-hidden="true">Dodaj u korpu</span>
-                    <span class="sr-only">Dodaj <?= e($tool['name']) ?> u korpu za izabrani period</span>
+                    <span aria-hidden="true">Rezerviši</span>
+                    <span class="sr-only">Rezerviši <?= e($tool['name']) ?> za izabrani period</span>
                 </button>
                 <p class="text-muted text-center mt-1">
                     <small>Max <?= MAX_RENTAL_DAYS ?> dana, rezervacija do <?= MAX_ADVANCE_DAYS ?> dana unapred</small>
@@ -348,15 +356,6 @@ ob_start();
     
     <!-- Description & Specs -->
     <div class="tool-details-section mt-4">
-        <?php if ($tool['description']): ?>
-        <div class="tool-description">
-            <h2>Detaljnije</h2>
-            <div class="description-content">
-                <?= nl2br(e($tool['description'])) ?>
-            </div>
-        </div>
-        <?php endif; ?>
-        
         <?php if (!empty($specs)): ?>
         <div class="tool-specs">
             <h2>Specifikacije</h2>
@@ -389,7 +388,7 @@ ob_start();
 .gallery-main {
     width: 100%;
     aspect-ratio: 4/3;
-    background: var(--color-gray-100);
+    background: #fff;
     border-radius: var(--border-radius);
     overflow: hidden;
 }
@@ -843,6 +842,10 @@ ob_start();
     .tool-details-section {
         grid-template-columns: 1fr;
     }
+}
+
+.tool-description {
+    margin-top: var(--spacing-md);
 }
 
 .tool-description h2,

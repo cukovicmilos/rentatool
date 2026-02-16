@@ -425,7 +425,7 @@
 .pricing-image {
     width: 100%;
     min-height: 150px;
-    background: var(--color-gray-100);
+    background: #fff;
     border-radius: var(--border-radius);
     margin-bottom: var(--spacing-md);
     overflow: hidden;

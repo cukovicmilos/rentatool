@@ -395,24 +395,6 @@ ob_start();
     </div>
 </section>
 
-<!-- TRUST LOGOS (BRENDOVI) -->
-<section class="promo-trust">
-    <p class="trust-label">Brendovi u našoj ponudi</p>
-    <div class="trust-logos">
-        <div class="trust-logo">
-            <span class="brand-name">Metabo</span>
-        </div>
-        <div class="trust-logo">
-            <span class="brand-name">Einhell</span>
-        </div>
-        <div class="trust-logo">
-            <span class="brand-name">Parkside</span>
-        </div>
-        <div class="trust-logo">
-            <span class="brand-name">Womax</span>
-        </div>
-    </div>
-</section>
 
 <!-- CTA SECTION -->
 <section class="promo-section promo-cta-section">

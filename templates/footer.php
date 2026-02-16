@@ -33,9 +33,9 @@
         <div class="footer-section">
             <h4>Dostava</h4>
             <ul class="footer-delivery">
-                <li>Lično preuzimanje: <strong>0 <?= CURRENCY_SYMBOL ?></strong></li>
-                <li>Samo dostava: <strong><?= DELIVERY_ONEWAY ?> <?= CURRENCY_SYMBOL ?></strong></li>
-                <li>Dostava + povrat: <strong><?= DELIVERY_ROUNDTRIP ?> <?= CURRENCY_SYMBOL ?></strong></li>
+                <li>Lično preuzimanje: <strong>0 <?= CURRENCY_SIGN ?></strong></li>
+                <li>Samo dostava: <strong><?= DELIVERY_ONEWAY ?> <?= CURRENCY_SIGN ?></strong></li>
+                <li>Dostava + povrat: <strong><?= DELIVERY_ROUNDTRIP ?> <?= CURRENCY_SIGN ?></strong></li>
             </ul>
         </div>
         
@@ -43,7 +43,7 @@
     
     <div class="footer-bottom">
         <div class="footer-container">
-            <p>&copy; <?= date('Y') ?> <?= SITE_NAME ?>. Sva prava zadržana.</p>
+            <p>&copy; <?= date('Y') ?> <?= SITE_NAME ?>. Neka prava zadržana.</p>
         </div>
     </div>
 </footer>

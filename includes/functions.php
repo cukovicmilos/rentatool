@@ -14,7 +14,9 @@ function url(string $path = ''): string {
  * Asset URL helper
  */
 function asset(string $path): string {
-    return url('assets/' . ltrim($path, '/'));
+    $filePath = ROOT_PATH . '/assets/' . ltrim($path, '/');
+    $version = file_exists($filePath) ? filemtime($filePath) : time();
+    return url('assets/' . ltrim($path, '/')) . '?v=' . $version;
 }
 
 /**

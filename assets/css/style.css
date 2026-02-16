@@ -814,7 +814,7 @@ select.form-control {
 .tool-card-image {
     position: relative;
     aspect-ratio: 4/3;
-    background: var(--color-gray-100);
+    background: #fff;
 }
 
 .tool-card-image img {
