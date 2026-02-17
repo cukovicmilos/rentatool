@@ -57,6 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $specValues = post('spec_values', []);
     $videoUrls = post('video_urls', []);
     $videoTitles = post('video_titles', []);
+    $recommendedIds = post('recommended_ids', []);
     
     // Generate slug
     $slug = slugify($name);
@@ -127,6 +128,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
             
+            // Update recommendations
+            db()->execute("DELETE FROM tool_recommendations WHERE tool_id = ?", [$id]);
+            foreach ($recommendedIds as $i => $recId) {
+                $recId = (int)$recId;
+                if ($recId > 0 && $recId !== $id) {
+                    db()->insert(
+                        "INSERT INTO tool_recommendations (tool_id, recommended_tool_id, sort_order) VALUES (?, ?, ?)",
+                        [$id, $recId, $i]
+                    );
+                }
+            }
+
             // Handle image uploads
             if (!empty($_FILES['images']['name'][0])) {
                 $uploadDir = 'tools';
@@ -195,6 +208,7 @@ $toolCategories = [];
 $toolSpecs = [];
 $toolImages = [];
 $toolVideos = [];
+$toolRecommendations = [];
 
 if ($action === 'izmeni' && $id) {
     $tool = db()->fetch("SELECT * FROM tools WHERE id = ?", [$id]);
@@ -209,6 +223,14 @@ if ($action === 'izmeni' && $id) {
     $toolSpecs = db()->fetchAll("SELECT * FROM tool_specifications WHERE tool_id = ? ORDER BY sort_order", [$id]);
     $toolImages = db()->fetchAll("SELECT * FROM tool_images WHERE tool_id = ? ORDER BY sort_order", [$id]);
     $toolVideos = db()->fetchAll("SELECT * FROM tool_videos WHERE tool_id = ? ORDER BY sort_order", [$id]);
+    $toolRecommendations = db()->fetchAll("
+        SELECT t.id, t.name,
+               (SELECT filename FROM tool_images WHERE tool_id = t.id AND is_primary = 1 LIMIT 1) as primary_image
+        FROM tool_recommendations tr
+        JOIN tools t ON t.id = tr.recommended_tool_id
+        WHERE tr.tool_id = ?
+        ORDER BY tr.sort_order
+    ", [$id]);
 }
 
 // Get all categories for select
@@ -577,6 +599,176 @@ ob_start();
         <p class="form-text mt-2">Dodajte YouTube linkove za video uputstva, recenzije ili demonstracije alata.</p>
     </div>
     
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <h3>Preporučeni alati</h3>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Dodajte komplementarne proizvode</label>
+            <div style="position: relative;">
+                <input type="text" id="recSearch" class="form-control"
+                       placeholder="Kucajte naziv alata za pretragu..." autocomplete="off">
+                <div id="recDropdown" class="rec-dropdown" style="display:none;"></div>
+            </div>
+            <div id="recChips" class="rec-chips">
+                <?php foreach ($toolRecommendations as $rec): ?>
+                <div class="rec-chip" data-id="<?= $rec['id'] ?>">
+                    <?php if ($rec['primary_image']): ?>
+                    <img src="<?= upload('tools/' . $rec['primary_image']) ?>" alt="" class="rec-chip-img">
+                    <?php endif; ?>
+                    <span><?= e($rec['name']) ?></span>
+                    <input type="hidden" name="recommended_ids[]" value="<?= $rec['id'] ?>">
+                    <button type="button" class="rec-chip-remove" onclick="this.parentElement.remove()">&times;</button>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
+        <p class="form-text mt-2">Preporučeni alati se prikazuju na stranici proizvoda. Kucajte ime alata da biste ga pronašli.</p>
+    </div>
+
+    <style>
+    .rec-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--color-white);
+        border: 1px solid var(--border-color);
+        border-top: none;
+        border-radius: 0 0 var(--border-radius) var(--border-radius);
+        max-height: 240px;
+        overflow-y: auto;
+        z-index: 100;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .rec-dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        cursor: pointer;
+        border-bottom: 1px solid var(--color-gray-100);
+    }
+    .rec-dropdown-item:hover {
+        background: var(--color-gray-100);
+    }
+    .rec-dropdown-item img {
+        width: 36px;
+        height: 36px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+    .rec-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+    }
+    .rec-chip {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--color-gray-100);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 4px 10px 4px 4px;
+        font-size: 13px;
+    }
+    .rec-chip-img {
+        width: 28px;
+        height: 28px;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+    .rec-chip-remove {
+        background: none;
+        border: none;
+        color: var(--color-gray-500);
+        cursor: pointer;
+        font-size: 16px;
+        line-height: 1;
+        padding: 0 2px;
+    }
+    .rec-chip-remove:hover {
+        color: var(--color-danger);
+    }
+    </style>
+
+    <script>
+    (function() {
+        const searchInput = document.getElementById('recSearch');
+        const dropdown = document.getElementById('recDropdown');
+        const chipsContainer = document.getElementById('recChips');
+        const toolId = <?= $id ?: 0 ?>;
+        let debounceTimer;
+
+        searchInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            const q = this.value.trim();
+            if (q.length < 2) {
+                dropdown.style.display = 'none';
+                return;
+            }
+            debounceTimer = setTimeout(() => {
+                fetch('<?= url('api/tools-search') ?>?q=' + encodeURIComponent(q) + '&exclude=' + toolId)
+                    .then(r => r.json())
+                    .then(tools => {
+                        // Filter out already added
+                        const addedIds = [...chipsContainer.querySelectorAll('.rec-chip')]
+                            .map(c => c.dataset.id);
+                        const filtered = tools.filter(t => !addedIds.includes(String(t.id)));
+
+                        if (filtered.length === 0) {
+                            dropdown.style.display = 'none';
+                            return;
+                        }
+
+                        dropdown.innerHTML = filtered.map(t => {
+                            const imgHtml = t.primary_image
+                                ? '<img src="<?= url('uploads/tools/') ?>' + t.primary_image + '" alt="">'
+                                : '';
+                            return '<div class="rec-dropdown-item" data-id="' + t.id + '" data-name="' + t.name.replace(/"/g, '&quot;') + '" data-image="' + (t.primary_image || '') + '">'
+                                + imgHtml + '<span>' + t.name + '</span></div>';
+                        }).join('');
+                        dropdown.style.display = 'block';
+
+                        dropdown.querySelectorAll('.rec-dropdown-item').forEach(item => {
+                            item.addEventListener('click', function() {
+                                addChip(this.dataset.id, this.dataset.name, this.dataset.image);
+                                searchInput.value = '';
+                                dropdown.style.display = 'none';
+                            });
+                        });
+                    });
+            }, 300);
+        });
+
+        function addChip(id, name, image) {
+            const chip = document.createElement('div');
+            chip.className = 'rec-chip';
+            chip.dataset.id = id;
+            let imgHtml = '';
+            if (image) {
+                imgHtml = '<img src="<?= url('uploads/tools/') ?>' + image + '" alt="" class="rec-chip-img">';
+            }
+            chip.innerHTML = imgHtml
+                + '<span>' + name + '</span>'
+                + '<input type="hidden" name="recommended_ids[]" value="' + id + '">'
+                + '<button type="button" class="rec-chip-remove" onclick="this.parentElement.remove()">&times;</button>';
+            chipsContainer.appendChild(chip);
+        }
+
+        // Close dropdown on outside click
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+    })();
+    </script>
+
     <div class="admin-card">
         <div class="form-actions" style="border: none; margin: 0; padding: 0;">
             <button type="submit" class="btn btn-primary btn-large">

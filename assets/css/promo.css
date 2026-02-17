@@ -550,7 +550,7 @@
 }
 
 /* ==========================================================================
-   FAQ Section
+   FAQ Section (jb_accordion_lite)
    ========================================================================== */
 
 .promo-faq {
@@ -572,7 +572,7 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.faq-question {
+.faq-item .jb-accordion-lite-header {
     width: 100%;
     padding: var(--spacing-lg);
     background: none;
@@ -588,36 +588,37 @@
     transition: background 0.2s;
 }
 
-.faq-question:hover {
+.faq-item .jb-accordion-lite-header:hover {
     background: var(--color-gray-100);
 }
 
-.faq-icon {
-    font-size: 24px;
-    font-weight: 300;
+.faq-item .accordion-arrow {
     color: var(--color-accent);
-    transition: transform 0.2s;
+    display: flex;
+    align-items: center;
+    transition: transform 0.3s;
 }
 
-.faq-item.open .faq-icon {
-    transform: rotate(45deg);
+.faq-item.open .accordion-arrow {
+    transform: rotate(180deg);
 }
 
-.faq-answer {
+.faq-item .jb-accordion-lite-content {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.3s ease, padding 0.3s ease;
+    transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), padding 0.3s;
+    padding: 0 var(--spacing-lg);
 }
 
-.faq-item.open .faq-answer {
-    max-height: 500px;
-    padding: 0 var(--spacing-lg) var(--spacing-lg);
+.faq-item.open .jb-accordion-lite-content {
+    padding: 0 var(--spacing-lg);
 }
 
 .faq-answer p {
     color: var(--color-gray-600);
     line-height: 1.7;
     margin: 0;
+    padding: var(--spacing-lg) 0 var(--spacing-xl);
 }
 
 /* ==========================================================================

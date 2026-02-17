@@ -32,6 +32,16 @@ $categories = db()->fetchAll("
 // Get tool videos
 $videos = db()->fetchAll("SELECT * FROM tool_videos WHERE tool_id = ? ORDER BY sort_order", [$tool['id']]);
 
+// Get recommended tools
+$recommendations = db()->fetchAll("
+    SELECT t.*,
+           (SELECT filename FROM tool_images WHERE tool_id = t.id AND is_primary = 1 LIMIT 1) as primary_image
+    FROM tool_recommendations tr
+    JOIN tools t ON t.id = tr.recommended_tool_id
+    WHERE tr.tool_id = ? AND t.status != 'inactive'
+    ORDER BY tr.sort_order
+", [$tool['id']]);
+
 // Get blocked dates for this tool (next 30 days)
 $blockedDates = db()->fetchAll("
     SELECT blocked_date FROM blocked_dates 
@@ -354,6 +364,22 @@ ob_start();
     </div>
     <?php endif; ?>
     
+    <!-- Recommendations -->
+    <?php if (!empty($recommendations)): ?>
+    <div class="tool-recommendations mt-4">
+        <h2>Preporučujemo</h2>
+        <div class="tools-grid recommendations-grid">
+            <?php
+            $originalTool = $tool;
+            foreach ($recommendations as $tool):
+                include TEMPLATES_PATH . '/components/tool-card.php';
+            endforeach;
+            $tool = $originalTool;
+            ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- Description & Specs -->
     <div class="tool-details-section mt-4">
         <?php if (!empty($specs)): ?>
@@ -776,6 +802,21 @@ ob_start();
     padding-top: var(--spacing-sm);
     font-weight: 700;
     font-size: 1.2em;
+}
+
+.tool-recommendations {
+    width: 100%;
+}
+
+.tool-recommendations h2 {
+    font-size: var(--font-size-large);
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 2px solid var(--color-accent);
+}
+
+.recommendations-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 }
 
 .tool-videos {

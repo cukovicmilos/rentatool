@@ -158,6 +158,16 @@ CREATE TABLE IF NOT EXISTS pages (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Tool recommendations (complementary products)
+CREATE TABLE IF NOT EXISTS tool_recommendations (
+    tool_id INTEGER NOT NULL,
+    recommended_tool_id INTEGER NOT NULL,
+    sort_order INTEGER DEFAULT 0,
+    PRIMARY KEY (tool_id, recommended_tool_id),
+    FOREIGN KEY (tool_id) REFERENCES tools(id) ON DELETE CASCADE,
+    FOREIGN KEY (recommended_tool_id) REFERENCES tools(id) ON DELETE CASCADE
+);
+
 -- Indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_tools_status ON tools(status);
 CREATE INDEX IF NOT EXISTS idx_tools_slug ON tools(slug);

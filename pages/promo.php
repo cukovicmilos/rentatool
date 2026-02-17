@@ -379,15 +379,19 @@ ob_start();
 <!-- FAQ SECTION -->
 <section class="promo-section promo-faq" id="faq">
     <h2 class="promo-section-title">Često postavljana pitanja</h2>
-    
-    <div class="faq-list">
+
+    <div id="faq-accordion" class="jb-accordion-lite-container faq-list">
         <?php foreach ($faqs as $index => $faq): ?>
-        <div class="faq-item">
-            <button class="faq-question" aria-expanded="false" data-faq="<?= $index ?>">
+        <div class="jb-accordion-lite-item faq-item">
+            <button class="jb-accordion-lite-header faq-question">
                 <span><?= e($faq['question']) ?></span>
-                <span class="faq-icon">+</span>
+                <span class="accordion-arrow">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <polyline points="6 8 10 12 14 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
             </button>
-            <div class="faq-answer" id="faq-answer-<?= $index ?>">
+            <div class="jb-accordion-lite-content faq-answer">
                 <p><?= e($faq['answer']) ?></p>
             </div>
         </div>
@@ -411,30 +415,13 @@ $content = ob_get_clean();
 // Extra CSS for promo page - use minified version with defer loading
 $extraCss = '<link rel="stylesheet" href="' . asset('css/promo.min.css') . '" media="print" onload="this.media=\'all\'"><noscript><link rel="stylesheet" href="' . asset('css/promo.min.css') . '"></noscript>';
 
-// Extra JS for FAQ accordion
+// Extra JS for FAQ accordion (jb_accordion_lite) + smooth scroll
 $extraJs = '
+<script src="' . asset('js/jb-accordion-lite.min.js') . '"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    // FAQ Accordion
-    document.querySelectorAll(".faq-question").forEach(function(button) {
-        button.addEventListener("click", function() {
-            const faqItem = this.closest(".faq-item");
-            const isOpen = faqItem.classList.contains("open");
-            
-            // Close all
-            document.querySelectorAll(".faq-item").forEach(function(item) {
-                item.classList.remove("open");
-                item.querySelector(".faq-question").setAttribute("aria-expanded", "false");
-            });
-            
-            // Open clicked if was closed
-            if (!isOpen) {
-                faqItem.classList.add("open");
-                this.setAttribute("aria-expanded", "true");
-            }
-        });
-    });
-    
+    initJbAccordionLite({ containerId: "faq-accordion", allowMultiple: false });
+
     // Smooth scroll for anchor links
     document.querySelectorAll(\'a[href^="#"]\').forEach(function(anchor) {
         anchor.addEventListener("click", function(e) {
