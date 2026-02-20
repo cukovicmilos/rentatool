@@ -172,6 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             
             db()->commit();
+            generateSitemap();
             flash('success', $action === 'dodaj' ? 'Alat je uspešno dodat.' : 'Alat je uspešno izmenjen.');
             redirect('admin/alati');
             
@@ -197,6 +198,7 @@ if ($action === 'obrisi' && $id) {
         }
         
         db()->execute("DELETE FROM tools WHERE id = ?", [$id]);
+        generateSitemap();
         flash('success', 'Alat je uspešno obrisan.');
     }
     redirect('admin/alati');

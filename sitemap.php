@@ -13,7 +13,7 @@ require_once __DIR__ . '/includes/functions.php';
 header('Content-Type: application/xml; charset=utf-8');
 
 $database = db();
-$siteUrl = 'https://labubush.duckdns.org' . BASE_URL;
+$siteUrl = 'https://rentatool.in.rs' . BASE_URL;
 
 // Start XML
 echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";

@@ -20,9 +20,11 @@ if (file_exists($envFile)) {
     }
 }
 
-// Error reporting (disable in production)
+// Error reporting - log errors but don't display to users
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+ini_set('error_log', dirname(__DIR__) . '/temp/php_errors.log');
 
 // Session start
 if (session_status() === PHP_SESSION_NONE) {
@@ -37,7 +39,7 @@ define('UPLOADS_PATH', ROOT_PATH . '/uploads');
 define('CLASSES_PATH', ROOT_PATH . '/classes');
 
 // Base URL - adjust for your environment
-define('BASE_URL', '/rentatool');
+define('BASE_URL', '');
 
 // Site settings
 define('SITE_NAME', 'Rent a Tool');

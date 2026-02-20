@@ -501,6 +501,51 @@ function formatReservationTelegramMessage(array $reservation, array $items): str
 }
 
 /**
+ * Generate static sitemap.xml
+ */
+function generateSitemap(): void {
+    $siteUrl = 'https://rentatool.in.rs';
+    $database = db();
+
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+
+    // Homepage
+    $xml .= "  <url>\n    <loc>{$siteUrl}/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n";
+
+    // Alati listing
+    $xml .= "  <url>\n    <loc>{$siteUrl}/alati</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.9</priority>\n  </url>\n";
+
+    // Categories
+    $categories = $database->fetchAll("SELECT slug, name FROM categories WHERE active = 1 ORDER BY name");
+    foreach ($categories as $cat) {
+        $loc = htmlspecialchars("{$siteUrl}/kategorija/{$cat['slug']}");
+        $xml .= "  <url>\n    <loc>{$loc}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n";
+    }
+
+    // Tools
+    $tools = $database->fetchAll("SELECT id, name, slug, updated_at FROM tools WHERE status != 'inactive' ORDER BY name");
+    foreach ($tools as $tool) {
+        $slug = $tool['slug'] ?: slugify($tool['name']);
+        $loc = htmlspecialchars("{$siteUrl}/alat/{$tool['id']}/{$slug}");
+        $lastmod = !empty($tool['updated_at']) ? date('Y-m-d', strtotime($tool['updated_at'])) : date('Y-m-d');
+        $xml .= "  <url>\n    <loc>{$loc}</loc>\n    <lastmod>{$lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.9</priority>\n  </url>\n";
+    }
+
+    // Static pages
+    $pages = $database->fetchAll("SELECT slug, updated_at FROM pages WHERE active = 1 ORDER BY title");
+    foreach ($pages as $page) {
+        $loc = htmlspecialchars("{$siteUrl}/stranica/{$page['slug']}");
+        $lastmod = !empty($page['updated_at']) ? date('Y-m-d', strtotime($page['updated_at'])) : date('Y-m-d');
+        $xml .= "  <url>\n    <loc>{$loc}</loc>\n    <lastmod>{$lastmod}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.5</priority>\n  </url>\n";
+    }
+
+    $xml .= '</urlset>';
+
+    file_put_contents(ROOT_PATH . '/sitemap.xml', $xml);
+}
+
+/**
  * Extract YouTube video ID from URL
  */
 function getYouTubeVideoId(string $url): ?string {

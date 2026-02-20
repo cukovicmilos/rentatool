@@ -13,7 +13,7 @@
 if (empty($breadcrumbs)) return;
 
 // Build BreadcrumbList Schema
-$siteUrl = 'https://labubush.duckdns.org';
+$siteUrl = 'https://rentatool.in.rs';
 $breadcrumbSchema = [
     '@context' => 'https://schema.org',
     '@type' => 'BreadcrumbList',

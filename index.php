@@ -9,7 +9,7 @@ require_once __DIR__ . '/includes/functions.php';
 
 // Get request URI and remove base path
 $requestUri = $_SERVER['REQUEST_URI'];
-$basePath = '/rentatool';
+$basePath = '';
 $path = parse_url($requestUri, PHP_URL_PATH);
 $path = substr($path, strlen($basePath));
 $path = trim($path, '/');

@@ -25,7 +25,7 @@ $canonicalUrl = $canonicalUrl ?? null;
 $schemaData = $schemaData ?? null;
 
 // Build full URLs
-$siteUrl = 'https://labubush.duckdns.org';
+$siteUrl = 'https://rentatool.in.rs';
 $fullCanonicalUrl = $canonicalUrl 
     ? $siteUrl . BASE_URL . $canonicalUrl 
     : $siteUrl . $_SERVER['REQUEST_URI'];
@@ -98,7 +98,7 @@ $fullImageUrl = $pageImage
 
     <!-- Font Awesome - Inlined to eliminate render-blocking request -->
     <style>
-    @font-face{font-family:"Font Awesome 6 Free";font-style:normal;font-weight:900;font-display:swap;src:url(/rentatool/assets/fonts/fontawesome/fa-solid-900.woff2) format("woff2")}
+    @font-face{font-family:"Font Awesome 6 Free";font-style:normal;font-weight:900;font-display:swap;src:url(/assets/fonts/fontawesome/fa-solid-900.woff2) format("woff2")}
     .fa,.fas,.far,.fab{-moz-osx-font-smoothing:grayscale;-webkit-font-smoothing:antialiased;display:inline-block;font-style:normal;font-variant:normal;line-height:1;text-rendering:auto}
     .fa,.fas{font-family:"Font Awesome 6 Free";font-weight:900}
     .fa-award:before{content:"\f559"}.fa-calendar-alt:before,.fa-calendar-days:before{content:"\f073"}.fa-check-circle:before,.fa-circle-check:before{content:"\f058"}.fa-clock:before{content:"\f017"}.fa-comments:before{content:"\f086"}.fa-globe:before{content:"\f0ac"}.fa-headset:before{content:"\f590"}.fa-piggy-bank:before{content:"\f4d3"}.fa-shield-alt:before,.fa-shield-halved:before{content:"\f3ed"}.fa-shopping-cart:before,.fa-cart-shopping:before{content:"\f07a"}.fa-toolbox:before{content:"\f552"}.fa-truck:before{content:"\f0d1"}.fa-wrench:before{content:"\f0ad"}

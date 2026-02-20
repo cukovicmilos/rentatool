@@ -1,11 +1,11 @@
 # Robots.txt for Rent a Tool
-# https://labubush.duckdns.org/rentatool/
+# https://rentatool.in.rs/
 
 User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://labubush.duckdns.org/rentatool/sitemap.php
+Sitemap: https://rentatool.in.rs/sitemap.xml
 
 # Disallow admin area
 Disallow: /admin/

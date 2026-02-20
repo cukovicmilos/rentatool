@@ -53,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             flash('success', 'Kategorija je uspešno izmenjena.');
         }
+        generateSitemap();
         redirect('admin/kategorije');
     }
 }
@@ -71,6 +72,7 @@ if ($action === 'obrisi' && $id) {
             flash('error', 'Nije moguće obrisati kategoriju koja ima podkategorije.');
         } else {
             db()->execute("DELETE FROM categories WHERE id = ?", [$id]);
+            generateSitemap();
             flash('success', 'Kategorija je uspešno obrisana.');
         }
     }

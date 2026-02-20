@@ -95,7 +95,7 @@ $schemaData = [
     ],
     'offers' => [
         '@type' => 'Offer',
-        'url' => 'https://labubush.duckdns.org' . BASE_URL . $canonicalUrl,
+        'url' => 'https://rentatool.in.rs' . BASE_URL . $canonicalUrl,
         'priceCurrency' => 'EUR',
         'price' => number_format($tool['price_24h'], 2, '.', ''),
         'priceValidUntil' => date('Y-m-d', strtotime('+1 year')),
@@ -117,7 +117,7 @@ $schemaData = [
 
 // Add image if available
 if (!empty($images)) {
-    $schemaData['image'] = 'https://labubush.duckdns.org' . BASE_URL . '/uploads/tools/' . $images[0]['filename'];
+    $schemaData['image'] = 'https://rentatool.in.rs' . BASE_URL . '/uploads/tools/' . $images[0]['filename'];
 }
 
 // Add specifications as additionalProperty
@@ -430,16 +430,14 @@ ob_start();
 
 .gallery-main {
     width: 100%;
-    aspect-ratio: 4/3;
     background: #fff;
     border-radius: var(--border-radius);
-    overflow: hidden;
 }
 
 .gallery-main img {
     width: 100%;
-    height: 100%;
-    object-fit: contain;
+    height: auto;
+    display: block;
 }
 
 .gallery-main:not(.no-image) {
@@ -963,7 +961,7 @@ ob_start();
 // Gallery images array
 const galleryImages = <?= json_encode(array_map(function($img) use ($tool) {
     return [
-        'src' => '/rentatool/uploads/tools/' . $img['filename'],
+        'src' => '/uploads/tools/' . $img['filename'],
         'alt' => $tool['name'] . ' - slika'
     ];
 }, $images)) ?>;
