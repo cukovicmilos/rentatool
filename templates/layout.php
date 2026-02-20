@@ -96,8 +96,16 @@ $fullImageUrl = $pageImage
     @media(max-width:768px){.mobile-menu-toggle{display:flex}.main-nav{display:none;position:absolute;top:var(--header-height);left:0;right:0;background:var(--color-black);padding:var(--spacing-md)}.main-nav.open{display:block}.nav-list{flex-direction:column;gap:0}.nav-link{display:block;padding:var(--spacing-md) 0;border-bottom:1px solid var(--color-gray-600)}.nav-list{text-align:center}.nav-list>li{text-align:center}.nav-link-dropdown{display:inline-flex;align-items:center;gap:var(--spacing-xs)}.cart-text{display:none}.content-wrapper{flex-direction:column}.content-wrapper.with-sidebar .sidebar{flex:none;width:100%;order:2;margin-top:var(--spacing-xl)}.tools-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:var(--spacing-md)}.promo-hero-content{grid-template-columns:1fr;text-align:center}.promo-hero-visual{order:-1}.hero-logo-container{max-width:280px;margin:0 auto}}
     </style>
 
-    <!-- Font Awesome - Custom subset with only used icons (much smaller) -->
-    <link rel="stylesheet" href="<?= asset('fonts/fontawesome/fa-custom.css') ?>">
+    <!-- Font Awesome - Inlined to eliminate render-blocking request -->
+    <style>
+    @font-face{font-family:"Font Awesome 6 Free";font-style:normal;font-weight:900;font-display:swap;src:url(/rentatool/assets/fonts/fontawesome/fa-solid-900.woff2) format("woff2")}
+    .fa,.fas,.far,.fab{-moz-osx-font-smoothing:grayscale;-webkit-font-smoothing:antialiased;display:inline-block;font-style:normal;font-variant:normal;line-height:1;text-rendering:auto}
+    .fa,.fas{font-family:"Font Awesome 6 Free";font-weight:900}
+    .fa-award:before{content:"\f559"}.fa-calendar-alt:before,.fa-calendar-days:before{content:"\f073"}.fa-check-circle:before,.fa-circle-check:before{content:"\f058"}.fa-clock:before{content:"\f017"}.fa-comments:before{content:"\f086"}.fa-globe:before{content:"\f0ac"}.fa-headset:before{content:"\f590"}.fa-piggy-bank:before{content:"\f4d3"}.fa-shield-alt:before,.fa-shield-halved:before{content:"\f3ed"}.fa-shopping-cart:before,.fa-cart-shopping:before{content:"\f07a"}.fa-toolbox:before{content:"\f552"}.fa-truck:before{content:"\f0d1"}.fa-wrench:before{content:"\f0ad"}
+    </style>
+
+    <!-- Preconnect for YouTube thumbnails -->
+    <link rel="preconnect" href="https://i.ytimg.com" crossorigin>
     
     <!-- Main stylesheet - defer non-critical CSS -->
     <link rel="stylesheet" href="<?= asset('css/style.min.css') ?>" media="print" onload="this.media='all'">

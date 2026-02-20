@@ -51,6 +51,7 @@ $currentCategorySlug = $slug;
 // Breadcrumbs
 $breadcrumbs = [
     ['title' => 'Početna', 'url' => url('')],
+    ['title' => 'Svi alati', 'url' => url('alati')],
 ];
 if ($parentCategory) {
     $breadcrumbs[] = ['title' => $parentCategory['name'], 'url' => url('kategorija/' . $parentCategory['slug'])];

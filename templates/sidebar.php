@@ -22,7 +22,7 @@ $currentCategorySlug = $currentCategorySlug ?? '';
     <h3 class="sidebar-title">Kategorije</h3>
     <ul class="category-list">
         <li>
-            <a href="<?= url('') ?>" class="category-link <?= empty($currentCategorySlug) ? 'active' : '' ?>">
+            <a href="<?= url('alati') ?>" class="category-link <?= empty($currentCategorySlug) ? 'active' : '' ?>">
                 Svi alati
             </a>
         </li>
@@ -62,19 +62,3 @@ $currentCategorySlug = $currentCategorySlug ?? '';
     </ul>
 </div>
 
-<div class="sidebar-section">
-    <h3 class="sidebar-title">Kontakt</h3>
-    <div class="contact-info">
-        <p><strong>Tel:</strong> <?= SITE_PHONE ?></p>
-        <p><strong>Email:</strong> <?= SITE_EMAIL ?></p>
-    </div>
-</div>
-
-<div class="sidebar-section">
-    <h3 class="sidebar-title">Radno vreme</h3>
-    <div class="working-hours">
-        <p>Pon - Pet: 08:00 - 18:00</p>
-        <p>Sub: 08:00 - 14:00</p>
-        <p>Ned: Zatvoreno</p>
-    </div>
-</div>

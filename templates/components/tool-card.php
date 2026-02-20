@@ -33,11 +33,18 @@ $weekendPrice = $tool['price_24h'] * (1 + WEEKEND_MARKUP);
     <?php endif; ?>
     <a href="<?= url('alat/' . $tool['slug']) ?>" class="tool-card-link">
         <div class="tool-card-image">
-            <img src="<?= e($imageUrl) ?>"
-                 alt="<?= e($tool['name']) ?>"
-                 width="400"
-                 height="300"
-                 loading="lazy">
+            <picture>
+                <?php if ($tool['primary_image']):
+                    $cardWebp = preg_replace('/\.(jpe?g|png)$/i', '.webp', $tool['primary_image']);
+                    if (file_exists(UPLOADS_PATH . '/tools/' . $cardWebp)): ?>
+                <source srcset="<?= upload('tools/' . $cardWebp) ?>" type="image/webp">
+                <?php endif; endif; ?>
+                <img src="<?= e($imageUrl) ?>"
+                     alt="<?= e($tool['name']) ?>"
+                     width="400"
+                     height="300"
+                     loading="lazy">
+            </picture>
         </div>
         
         <div class="tool-card-content">

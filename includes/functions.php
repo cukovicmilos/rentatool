@@ -262,7 +262,10 @@ function uploadImage(array $file, string $folder = ''): ?string {
     
     // Resize image if needed
     resizeImage($destination, IMAGE_MAX_WIDTH, IMAGE_MAX_HEIGHT);
-    
+
+    // Generate WebP version for performance
+    generateWebP($destination);
+
     return ($folder ? $folder . '/' : '') . $filename;
 }
 
@@ -330,6 +333,31 @@ function resizeImage(string $path, int $maxWidth, int $maxHeight): bool {
     imagedestroy($resized);
     
     return true;
+}
+
+/**
+ * Generate WebP version of an image
+ */
+function generateWebP(string $path, int $quality = 80): ?string {
+    $info = getimagesize($path);
+    if (!$info) return null;
+
+    $type = $info[2];
+    switch ($type) {
+        case IMAGETYPE_JPEG: $img = imagecreatefromjpeg($path); break;
+        case IMAGETYPE_PNG:
+            $img = imagecreatefrompng($path);
+            imagealphablending($img, true);
+            imagesavealpha($img, true);
+            break;
+        default: return null;
+    }
+
+    $webpPath = preg_replace('/\.(jpe?g|png)$/i', '.webp', $path);
+    imagewebp($img, $webpPath, $quality);
+    imagedestroy($img);
+
+    return $webpPath;
 }
 
 /**

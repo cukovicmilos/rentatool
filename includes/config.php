@@ -41,7 +41,7 @@ define('BASE_URL', '/rentatool');
 
 // Site settings
 define('SITE_NAME', 'Rent a Tool');
-define('SITE_DESCRIPTION', 'Iznajmljivanje građevinske opreme u Subotici i okolini');
+define('SITE_DESCRIPTION', 'Iznajmljivanje građevinske opreme i alata u Subotici i okolini');
 define('SITE_EMAIL', 'info@rentatool.rs');
 define('SITE_PHONE', '+381 24 123 456');
 define('SITE_ADDRESS', 'Subotica, Srbija');

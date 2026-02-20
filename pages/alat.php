@@ -135,6 +135,7 @@ if (!empty($specs)) {
 // Breadcrumbs
 $breadcrumbs = [
     ['title' => 'Početna', 'url' => url('')],
+    ['title' => 'Svi alati', 'url' => url('alati')],
 ];
 if (!empty($categories)) {
     $breadcrumbs[] = ['title' => $categories[0]['name'], 'url' => url('kategorija/' . $categories[0]['slug'])];
@@ -151,12 +152,18 @@ ob_start();
         <div class="tool-gallery">
             <?php if (!empty($images)): ?>
             <div class="gallery-main" onclick="openLightbox(currentImageIndex)" style="cursor:zoom-in">
-                <img src="<?= upload('tools/' . $images[0]['filename']) ?>"
-                     alt="<?= e($tool['name']) ?>"
-                     id="mainImage"
-                     width="800"
-                     height="600"
-                     fetchpriority="high">
+                <picture>
+                    <?php $webpFile = preg_replace('/\.(jpe?g|png)$/i', '.webp', $images[0]['filename']);
+                    if (file_exists(UPLOADS_PATH . '/tools/' . $webpFile)): ?>
+                    <source srcset="<?= upload('tools/' . $webpFile) ?>" type="image/webp">
+                    <?php endif; ?>
+                    <img src="<?= upload('tools/' . $images[0]['filename']) ?>"
+                         alt="<?= e($tool['name']) ?>"
+                         id="mainImage"
+                         width="800"
+                         height="600"
+                         fetchpriority="high">
+                </picture>
                 <div class="gallery-zoom-hint">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
                 </div>
@@ -164,13 +171,19 @@ ob_start();
             <?php if (count($images) > 1): ?>
             <div class="gallery-thumbs">
                 <?php foreach ($images as $i => $img): ?>
+                <?php $thumbWebp = preg_replace('/\.(jpe?g|png)$/i', '.webp', $img['filename']); ?>
                 <div class="gallery-thumb <?= $i === 0 ? 'active' : '' ?>"
                      onclick="changeImage('<?= upload('tools/' . $img['filename']) ?>', this, <?= $i ?>)">
-                    <img src="<?= upload('tools/' . $img['filename']) ?>"
-                         alt="<?= e($tool['name']) ?> - slika <?= $i + 1 ?>"
-                         width="80"
-                         height="60"
-                         loading="lazy">
+                    <picture>
+                        <?php if (file_exists(UPLOADS_PATH . '/tools/' . $thumbWebp)): ?>
+                        <source srcset="<?= upload('tools/' . $thumbWebp) ?>" type="image/webp">
+                        <?php endif; ?>
+                        <img src="<?= upload('tools/' . $img['filename']) ?>"
+                             alt="<?= e($tool['name']) ?> - slika <?= $i + 1 ?>"
+                             width="80"
+                             height="60"
+                             loading="lazy">
+                    </picture>
                 </div>
                 <?php endforeach; ?>
             </div>
@@ -341,7 +354,7 @@ ob_start();
     <div class="tool-videos mt-4">
         <h2>Video materijali</h2>
         <div class="videos-grid">
-            <?php foreach ($videos as $video): 
+            <?php foreach ($videos as $video):
                 $videoId = getYouTubeVideoId($video['youtube_url']);
                 if ($videoId):
             ?>
@@ -350,13 +363,17 @@ ob_start();
                 <h3 class="video-title"><?= e($video['title']) ?></h3>
                 <?php endif; ?>
                 <div class="video-container">
-                    <iframe 
-                        src="https://www.youtube.com/embed/<?= e($videoId) ?>" 
-                        frameborder="0" 
-                        loading="lazy"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        allowfullscreen>
-                    </iframe>
+                    <div class="youtube-facade" data-video-id="<?= e($videoId) ?>">
+                        <img src="https://i.ytimg.com/vi/<?= e($videoId) ?>/hqdefault.jpg"
+                             alt="Video: <?= e($tool['name']) ?>"
+                             loading="lazy" width="480" height="360">
+                        <button class="youtube-play" aria-label="Pusti video">
+                            <svg viewBox="0 0 68 48" width="68" height="48">
+                                <path d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55C3.97 2.33 2.27 4.81 1.48 7.74.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="red"/>
+                                <path d="M45 24L27 14v20" fill="white"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
             <?php endif; endforeach; ?>
@@ -1253,6 +1270,18 @@ function calculatePrice() {
     addBtn.disabled = false;
     addBtn.setAttribute('aria-disabled', 'false');
 }
+
+// YouTube facade - load iframe on click
+document.querySelectorAll('.youtube-facade').forEach(function(el) {
+    el.addEventListener('click', function() {
+        var iframe = document.createElement('iframe');
+        iframe.src = 'https://www.youtube-nocookie.com/embed/' + this.dataset.videoId + '?autoplay=1';
+        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+        iframe.allowFullscreen = true;
+        iframe.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%';
+        this.replaceWith(iframe);
+    });
+});
 
 // Add to cart
 document.getElementById('addToCartBtn')?.addEventListener('click', function() {

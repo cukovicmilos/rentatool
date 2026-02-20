@@ -97,7 +97,7 @@ $faqs = [
     ],
     [
         'question' => 'Da li je kaucija obavezna za svaki alat?',
-        'answer' => 'Kaucija zavisi od vrednosti alata. Za jednostavnije alate (bušilice, brusilice) kaucija je simbolična ili je nema. Za skuplje alate (agregati, kompresori) kaucija je obavezna i vraća se u celosti po vraćanju ispravnog alata.'
+        'answer' => 'Kaucija zavisi od vrednosti alata. Za jednostavnije alate (bušilice, brusilice) kaucija je simbolična ili je nema. Za skuplje alate (šlicarica, usisivač) kaucija je obavezna i vraća se u celosti po vraćanju ispravnog alata.'
     ],
     [
         'question' => 'Šta ako probijem rok za vraćanje alata?',
@@ -186,7 +186,7 @@ ob_start();
         
         <div class="benefit-card">
             <div class="benefit-icon"><i class="fas fa-award"></i></div>
-            <h3>Profesionalna oprema</h3>
+            <h3>Kvalitetna oprema</h3>
             <p>Kvalitetni brendovi koji garantuju odličan rezultat vašeg projekta.</p>
         </div>
         
@@ -266,7 +266,7 @@ ob_start();
         <div class="feature-card">
             <div class="feature-icon"><i class="fas fa-toolbox"></i></div>
             <h3>Širok izbor alata</h3>
-            <p>Od bušilica i brusilica do agregata i kompresora - sve na jednom mestu.</p>
+            <p>Od bušilica i brusilica, do pila, i molerskog alata - sve na jednom mestu.</p>
         </div>
         
         <div class="feature-card">
