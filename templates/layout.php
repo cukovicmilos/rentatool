@@ -161,8 +161,22 @@ $fullImageUrl = $pageImage
     </script>
     <?php endif; ?>
     
+    <?php 
+    // Support for additional schemas (e.g., FAQPage)
+    if (!empty($additionalSchemas)): 
+        foreach ($additionalSchemas as $schema): ?>
+    <script type="application/ld+json">
+    <?= json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>
+    </script>
+        <?php endforeach; 
+    endif; ?>
+    
     <?php if (!empty($extraCss)): ?>
     <?= $extraCss ?>
+    <?php endif; ?>
+    
+    <?php if (!empty($extraJsHead)): ?>
+    <?= $extraJsHead ?>
     <?php endif; ?>
     
     <!-- Favicon -->

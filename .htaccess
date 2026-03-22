@@ -63,6 +63,9 @@ RewriteRule ^$ index.php [L]
 
 # Enable mod_headers
 <IfModule mod_headers.c>
+    # HSTS - Force HTTPS for 1 year
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    
     # Static assets - Cache for 1 year (immutable)
     <FilesMatch "\.(jpg|jpeg|png|gif|svg|webp|ico|woff|woff2|ttf|eot)$">
         Header set Cache-Control "max-age=31536000, public, immutable"

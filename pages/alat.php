@@ -72,15 +72,48 @@ $unavailableDates = array_unique($unavailableDates);
 // Calculate prices
 $weekendPrice = $tool['price_24h'] * (1 + WEEKEND_MARKUP);
 
+// FAQ data - univerzalna pitanja sa dinamičkim sadržajem
+$faqs = [
+    [
+        'question' => 'Šta ako se ' . $tool['name'] . ' pokvari dok je kod mene?',
+        'answer' => 'Ne brinite! Ako dođe do kvara pri normalnoj upotrebi, nećete snositi troškove popravke. Samo nas obavestite, a mi ćemo vam ponuditi zamenu ili povrat novca za preostale dane.'
+    ],
+    [
+        'question' => 'Kolika je kaucija za ' . $tool['name'] . '?',
+        'answer' => $tool['deposit'] > 0 
+            ? 'Kaucija za ovaj alat iznosi ' . formatPrice($tool['deposit']) . ' i vraća se u celosti po vraćanju alata u ispravnom stanju.'
+            : 'Za ovaj alat nije potrebna kaucija.'
+    ],
+    [
+        'question' => 'Da li dostavljate ' . $tool['name'] . ' u Subotici?',
+        'answer' => 'Da! Dostava je dostupna na celoj teritoriji grada Subotice i okolini. Cenu dostave možete saznati prilikom rezervacije ili nas kontaktirajte za više informacija.'
+    ],
+    [
+        'question' => 'Koje je radno vreme za preuzimanje alata u Subotici?',
+        'answer' => 'Alate možete preuzeti radnim danima od 08:00 do 18:00h, subotom od 09:00 do 14:00h. Za dogovor van radnog vremena, javite nam se unapred.'
+    ],
+    [
+        'question' => 'Mogu li iznajmiti ' . $tool['name'] . ' za vikend?',
+        'answer' => 'Da! Vikend iznajmljivanje (od petka do ponedeljka) košta ' . formatPrice($weekendPrice) . ' po danu uz 10% popusta u odnosu na standardnu cenu.'
+    ],
+    [
+        'question' => 'Kako da rezervišem ' . $tool['name'] . '?',
+        'answer' => 'Rezervacija je jednostavna - odaberite alat, izaberite datume na stranici, i pošaljite zahtev. Potvrdu ćete dobiti emailom u roku od nekoliko sati. Za hitne rezervacije, nazovite nas direktno.'
+    ]
+];
+
 // Page settings
-$pageTitle = $tool['name'] . ' - ' . SITE_NAME;
-$pageDescription = $tool['short_description'] ?? $tool['name'] . ' za iznajmljivanje';
+$pageTitle = $tool['name'] . ' - Iznajmljivanje Subotica | ' . SITE_NAME;
+$pageDescription = $tool['short_description'] 
+    ? $tool['short_description'] . ' - iznajmljivanje u Subotici i okolini.'
+    : 'Iznajmite ' . $tool['name'] . ' u Subotici. ' . formatPrice($tool['price_24h']) . '/dan. Dostava na teritoriji grada.';
 
 // Open Graph image
 $pageImage = !empty($images) ? '/uploads/tools/' . $images[0]['filename'] : null;
 
 // Canonical URL
-$canonicalUrl = '/alat/' . $tool['id'] . '/' . slugify($tool['name']);
+$toolSlug = $tool['slug'] ?: slugify($tool['name']);
+$canonicalUrl = '/alat/' . $toolSlug;
 
 // Schema.org structured data for Product/Offer
 $schemaData = [
@@ -95,7 +128,7 @@ $schemaData = [
     ],
     'offers' => [
         '@type' => 'Offer',
-        'url' => 'https://rentatool.in.rs' . BASE_URL . $canonicalUrl,
+        'url' => 'https://rentatool.in.rs' . BASE_URL . '/alat/' . $toolSlug,
         'priceCurrency' => 'EUR',
         'price' => number_format($tool['price_24h'], 2, '.', ''),
         'priceValidUntil' => date('Y-m-d', strtotime('+1 year')),
@@ -111,6 +144,11 @@ $schemaData = [
                 'addressLocality' => 'Subotica',
                 'addressCountry' => 'RS'
             ]
+        ],
+        'areaServed' => [
+            '@type' => 'Place',
+            'name' => 'Subotica',
+            'containedIn' => 'Vojvodina'
         ]
     ]
 ];
@@ -131,6 +169,33 @@ if (!empty($specs)) {
         ];
     }
 }
+
+// FAQPage Schema
+$faqSchema = [
+    '@context' => 'https://schema.org',
+    '@type' => 'FAQPage',
+    'mainEntity' => []
+];
+
+foreach ($faqs as $faq) {
+    $faqSchema['mainEntity'][] = [
+        '@type' => 'Question',
+        'name' => $faq['question'],
+        'acceptedAnswer' => [
+            '@type' => 'Answer',
+            'text' => $faq['answer']
+        ]
+    ];
+}
+
+// Additional schemas for output (FAQPage goes here, not in $schemaData)
+$additionalSchemas = [$faqSchema];
+
+// Include promo CSS for FAQ accordion styling
+$extraCss = '<link rel="stylesheet" href="' . asset('css/promo.min.css') . '" media="print" onload="this.media=\'all\'"><noscript><link rel="stylesheet" href="' . asset('css/promo.min.css') . '"></noscript>';
+
+// Extra JS for FAQ accordion - load in head so function is available
+$extraJsHead = '<script src="' . asset('js/jb-accordion-lite.min.js') . '"></script>';
 
 // Breadcrumbs
 $breadcrumbs = [
@@ -172,10 +237,14 @@ ob_start();
             <div class="gallery-thumbs">
                 <?php foreach ($images as $i => $img): ?>
                 <?php $thumbWebp = preg_replace('/\.(jpe?g|png)$/i', '.webp', $img['filename']); ?>
+                <?php $hasWebp = file_exists(UPLOADS_PATH . '/tools/' . $thumbWebp); ?>
                 <div class="gallery-thumb <?= $i === 0 ? 'active' : '' ?>"
-                     onclick="changeImage('<?= upload('tools/' . $img['filename']) ?>', this, <?= $i ?>)">
+                     onclick="changeImage(
+                         '<?= upload('tools/' . $img['filename']) ?>',
+                         '<?= $hasWebp ? upload('tools/' . $thumbWebp) : '' ?>',
+                         this, <?= $i ?>)">
                     <picture>
-                        <?php if (file_exists(UPLOADS_PATH . '/tools/' . $thumbWebp)): ?>
+                        <?php if ($hasWebp): ?>
                         <source srcset="<?= upload('tools/' . $thumbWebp) ?>" type="image/webp">
                         <?php endif; ?>
                         <img src="<?= upload('tools/' . $img['filename']) ?>"
@@ -413,6 +482,30 @@ ob_start();
         </div>
         <?php endif; ?>
     </div>
+    
+    <!-- FAQ Section -->
+    <?php if (!empty($faqs)): ?>
+    <section class="promo-section promo-faq">
+        <h2 class="promo-section-title">Često postavljana pitanja</h2>
+        <div id="faq-accordion" class="jb-accordion-lite-container faq-list">
+            <?php foreach ($faqs as $faq): ?>
+            <div class="jb-accordion-lite-item faq-item">
+                <button class="jb-accordion-lite-header faq-question">
+                    <span><?= e($faq['question']) ?></span>
+                    <span class="accordion-arrow">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                            <polyline points="6 8 10 12 14 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                        </svg>
+                    </span>
+                </button>
+                <div class="jb-accordion-lite-content faq-answer">
+                    <p><?= e($faq['answer']) ?></p>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </section>
+    <?php endif; ?>
 </div>
 
 <style>
@@ -960,17 +1053,35 @@ ob_start();
 <script>
 // Gallery images array
 const galleryImages = <?= json_encode(array_map(function($img) use ($tool) {
+    $webpFile = preg_replace('/\.(jpe?g|png)$/i', '.webp', $img['filename']);
+    $hasWebp = file_exists(UPLOADS_PATH . '/tools/' . $webpFile);
     return [
         'src' => '/uploads/tools/' . $img['filename'],
+        'webpSrc' => $hasWebp ? '/uploads/tools/' . $webpFile : null,
         'alt' => $tool['name'] . ' - slika'
     ];
 }, $images)) ?>;
 let currentImageIndex = 0;
 
-function changeImage(src, thumb, index) {
-    document.getElementById('mainImage').src = src;
+function changeImage(src, webpSrc, thumb, index) {
+    const mainImg = document.getElementById('mainImage');
+    const mainPicture = mainImg ? mainImg.closest('picture') : null;
+    
+    // Update main image src
+    if (mainImg) mainImg.src = src;
+    
+    // Update source element if webp is provided
+    if (mainPicture && webpSrc) {
+        const mainSource = mainPicture.querySelector('source');
+        if (mainSource) {
+            mainSource.srcset = webpSrc;
+        }
+    }
+    
+    // Update active thumb
     document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
-    thumb.classList.add('active');
+    if (thumb) thumb.classList.add('active');
+    
     if (typeof index !== 'undefined') currentImageIndex = index;
 }
 
@@ -993,12 +1104,19 @@ function closeLightbox() {
 function lightboxNav(dir) {
     currentImageIndex = (currentImageIndex + dir + galleryImages.length) % galleryImages.length;
     updateLightboxImage();
-    // Sync thumbnail
+    // Sync thumbnail and main image
     const thumbs = document.querySelectorAll('.gallery-thumb');
     if (thumbs[currentImageIndex]) {
         document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
         thumbs[currentImageIndex].classList.add('active');
-        document.getElementById('mainImage').src = galleryImages[currentImageIndex].src;
+    }
+    // Update main image with webp support
+    const mainImg = document.getElementById('mainImage');
+    const mainPicture = mainImg ? mainImg.closest('picture') : null;
+    if (mainImg) mainImg.src = galleryImages[currentImageIndex].src;
+    if (mainPicture && galleryImages[currentImageIndex].webpSrc) {
+        const mainSource = mainPicture.querySelector('source');
+        if (mainSource) mainSource.srcset = galleryImages[currentImageIndex].webpSrc;
     }
 }
 
@@ -1311,6 +1429,13 @@ document.getElementById('addToCartBtn')?.addEventListener('click', function() {
     .catch(error => {
         alert('Greška: ' + error.message);
     });
+});
+
+// FAQ Accordion initialization
+document.addEventListener('DOMContentLoaded', function() {
+    if (document.getElementById("faq-accordion")) {
+        initJbAccordionLite({ containerId: "faq-accordion", allowMultiple: false });
+    }
 });
 </script>
 

@@ -32,7 +32,7 @@ $categories = $database->fetchAll("SELECT * FROM categories WHERE active = 1 ORD
 foreach ($categories as $cat):
 ?>
     <url>
-        <loc><?= $siteUrl ?>/kategorija/<?= $cat['id'] ?>/<?= slugify($cat['name']) ?></loc>
+        <loc><?= $siteUrl ?>/kategorija/<?= $cat['slug'] ?></loc>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
@@ -45,9 +45,10 @@ $tools = $database->fetchAll("SELECT t.*, c.name as category_name FROM tools t
                      WHERE t.active = 1 ORDER BY t.name");
 foreach ($tools as $tool):
     $lastMod = !empty($tool['updated_at']) ? date('Y-m-d', strtotime($tool['updated_at'])) : date('Y-m-d');
+    $slug = $tool['slug'] ?: slugify($tool['name']);
 ?>
     <url>
-        <loc><?= $siteUrl ?>/alat/<?= $tool['id'] ?>/<?= slugify($tool['name']) ?></loc>
+        <loc><?= $siteUrl ?>/alat/<?= $slug ?></loc>
         <lastmod><?= $lastMod ?></lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.9</priority>

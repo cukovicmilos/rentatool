@@ -527,7 +527,7 @@ function generateSitemap(): void {
     $tools = $database->fetchAll("SELECT id, name, slug, updated_at FROM tools WHERE status != 'inactive' ORDER BY name");
     foreach ($tools as $tool) {
         $slug = $tool['slug'] ?: slugify($tool['name']);
-        $loc = htmlspecialchars("{$siteUrl}/alat/{$tool['id']}/{$slug}");
+        $loc = htmlspecialchars("{$siteUrl}/alat/{$slug}");
         $lastmod = !empty($tool['updated_at']) ? date('Y-m-d', strtotime($tool['updated_at'])) : date('Y-m-d');
         $xml .= "  <url>\n    <loc>{$loc}</loc>\n    <lastmod>{$lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.9</priority>\n  </url>\n";
     }
