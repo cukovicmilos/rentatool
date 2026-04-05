@@ -86,24 +86,38 @@ ob_start();
         </div>
         
         <div class="items-section">
-            <h3>Rezervisani alati</h3>
+            <h3>Rezervisani alati i usluge</h3>
             <table class="items-table">
                 <thead>
                     <tr>
-                        <th>Alat</th>
+                        <th>Stavka</th>
                         <th>Cena/dan</th>
-                        <th>Dana</th>
+                        <th>Datum</th>
                         <th class="text-right">Ukupno</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($items as $item): ?>
+                    <?php if (isset($item['item_type']) && $item['item_type'] === 'service'): ?>
+                    <tr>
+                        <td>
+                            <?= e($item['tool_name']) ?>
+                            <?php if (!empty($item['service_description'])): ?>
+                            <br><small class="text-muted"><?= nl2br(e($item['service_description'])) ?></small>
+                            <?php endif; ?>
+                        </td>
+                        <td>-</td>
+                        <td><?= $item['service_date'] ? formatDate($item['service_date']) : '-' ?></td>
+                        <td class="text-right"><em>Dogovor</em></td>
+                    </tr>
+                    <?php else: ?>
                     <tr>
                         <td><?= e($item['tool_name']) ?></td>
                         <td><?= formatPrice($item['price_per_day']) ?></td>
-                        <td><?= $item['days'] ?></td>
+                        <td><?= $item['days'] ?> dana</td>
                         <td class="text-right"><?= formatPrice($item['subtotal']) ?></td>
                     </tr>
+                    <?php endif; ?>
                     <?php endforeach; ?>
                 </tbody>
                 <tfoot>

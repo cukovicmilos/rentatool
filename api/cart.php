@@ -113,6 +113,60 @@ switch ($action) {
         ]);
         break;
         
+    case 'add_service':
+        $serviceType = $input['service_type'] ?? '';
+        $description = trim($input['description'] ?? '');
+        $serviceDate = $input['service_date'] ?? '';
+        $location = $input['location'] ?? '';
+        
+        $validTypes = ['drilling', 'cutting', 'assembly', 'gluing', 'repair', 'other'];
+        $validLocations = ['workshop', 'onsite'];
+        
+        if (!in_array($serviceType, $validTypes)) {
+            jsonResponse(['success' => false, 'error' => 'Nevažeća vrsta posla.'], 400);
+        }
+        if (empty($description)) {
+            jsonResponse(['success' => false, 'error' => 'Opis posla je obavezan.'], 400);
+        }
+        if (empty($serviceDate)) {
+            jsonResponse(['success' => false, 'error' => 'Željeni datum je obavezan.'], 400);
+        }
+        if (!in_array($location, $validLocations)) {
+            jsonResponse(['success' => false, 'error' => 'Nevažeća lokacija.'], 400);
+        }
+        
+        $date = strtotime($serviceDate);
+        $today = strtotime('today');
+        if ($date < $today) {
+            jsonResponse(['success' => false, 'error' => 'Datum mora biti u budućnosti.'], 400);
+        }
+        
+        $typeLabels = [
+            'drilling' => 'Bušenje',
+            'cutting' => 'Sečenje',
+            'assembly' => 'Sastavljanje/Montaža',
+            'gluing' => 'Lepljenje',
+            'repair' => 'Popravka',
+            'other' => 'Ostalo'
+        ];
+        
+        $_SESSION['cart'][] = [
+            'type' => 'service',
+            'service_type' => $serviceType,
+            'service_label' => 'Sitni poslovi - ' . $typeLabels[$serviceType],
+            'description' => $description,
+            'service_date' => $serviceDate,
+            'location' => $location,
+            'price' => 0
+        ];
+        
+        jsonResponse([
+            'success' => true,
+            'message' => 'Usluga dodata u korpu.',
+            'cart_count' => count($_SESSION['cart'])
+        ]);
+        break;
+        
     default:
         jsonResponse(['success' => false, 'error' => 'Nepoznata akcija.'], 400);
 }

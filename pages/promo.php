@@ -173,6 +173,50 @@ ob_start();
     </div>
 </section>
 
+<!-- SERVICES SECTION -->
+<section class="promo-section promo-services" id="sitni-poslovi">
+    <div class="services-content">
+        <h2 class="promo-section-title">Ili me angažujte za sitnije poslove</h2>
+        <p class="services-subtitle">
+            Treba ti izbušiti rupu, iseći metal, sastaviti nameštaj, zalepiti nešto? 
+            Raspoložen sam za ove i slične poslove.
+        </p>
+        
+        <div class="services-options">
+            <div class="service-option">
+                <div class="service-option-icon">🔧</div>
+                <h3>Donesi u radionicu</h3>
+                <p>Donesi materijal/stvar kod mene, uradiću posao u svojoj radionici.</p>
+            </div>
+            <div class="service-option">
+                <div class="service-option-icon">🏠</div>
+                <h3>Dolazim kod tebe</h3>
+                <p>Dolazim na tvoju adresu sa potrebnim alatom i opremom.</p>
+            </div>
+        </div>
+        
+        <p class="services-note">
+            <strong>Cena se dogovara unapred</strong> — po poslu, u zavisnosti od obima i složenosti.
+        </p>
+        
+        <button class="btn btn-primary btn-large" id="openServiceModal">
+            Naruči uslugu →
+        </button>
+        
+        <div class="services-examples">
+            <h4>Primeri poslova:</h4>
+            <ul>
+                <li>Bušenje rupa u zidu, betonu, drvetu</li>
+                <li>Sečenje metala, drveta, plastike</li>
+                <li>Sastavljanje nameštaja i polica</li>
+                <li>Lepljenje i popravke</li>
+                <li>Montaža i demontaža</li>
+                <li>I još mnogo toga...</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
 <!-- BENEFITS SECTION -->
 <section class="promo-section promo-benefits" id="benefits">
     <h2 class="promo-section-title">Zašto iznajmiti umesto kupiti?</h2>
@@ -436,4 +480,264 @@ document.addEventListener("DOMContentLoaded", function() {
 </script>
 ';
 
+$serviceTypeLabels = [
+    'drilling' => 'Bušenje',
+    'cutting' => 'Sečenje',
+    'assembly' => 'Sastavljanje / Montaža',
+    'gluing' => 'Lepljenje',
+    'repair' => 'Popravka',
+    'other' => 'Ostalo'
+];
+
+$minDate = date('Y-m-d');
+?>
+
+<!-- SERVICE ORDER MODAL -->
+<div class="modal-overlay" id="serviceModal">
+    <div class="modal-content">
+        <button class="modal-close" id="closeServiceModal" type="button">&times;</button>
+        <h2>Naruči uslugu</h2>
+        
+        <form id="serviceOrderForm">
+            <div class="form-group">
+                <label for="service_type" class="form-label required">Vrsta posla</label>
+                <select id="service_type" name="service_type" class="form-control" required>
+                    <option value="">-- Izaberi --</option>
+                    <?php foreach ($serviceTypeLabels as $value => $label): ?>
+                    <option value="<?= $value ?>"><?= $label ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="service_description" class="form-label required">Opis posla</label>
+                <textarea id="service_description" name="service_description" class="form-control" rows="4" 
+                          placeholder="Opiši šta treba uraditi..." required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="service_date" class="form-label required">Željeni datum</label>
+                <input type="date" id="service_date" name="service_date" class="form-control" required min="<?= $minDate ?>">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label required">Lokacija</label>
+                <div class="service-location-options">
+                    <label class="radio-option">
+                        <input type="radio" name="service_location" value="workshop" required>
+                        <span>Doneti u radionicu</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="service_location" value="onsite">
+                        <span>Doći kod vas</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div id="serviceFormErrors" class="alert alert-error" style="display:none"></div>
+            
+            <button type="submit" class="btn btn-primary btn-block">Dodaj u korpu</button>
+        </form>
+    </div>
+</div>
+
+<style>
+.promo-services {
+    background: var(--color-gray-100);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-xl);
+    margin: var(--spacing-xl) auto;
+    max-width: 900px;
+    text-align: center;
+}
+
+.services-subtitle {
+    font-size: var(--font-size-large);
+    color: var(--color-gray-700);
+    margin-bottom: var(--spacing-lg);
+}
+
+.services-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.service-option {
+    background: var(--color-white);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius);
+    border: 2px solid var(--border-color);
+}
+
+.service-option-icon {
+    font-size: 2.5em;
+    margin-bottom: var(--spacing-sm);
+}
+
+.service-option h3 {
+    margin: 0 0 var(--spacing-xs) 0;
+}
+
+.service-option p {
+    margin: 0;
+    font-size: var(--font-size-small);
+    color: var(--color-gray-600);
+}
+
+.services-note {
+    background: #FFF8E1;
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-lg);
+}
+
+.services-examples {
+    margin-top: var(--spacing-lg);
+    text-align: left;
+    background: var(--color-white);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+}
+
+.services-examples h4 {
+    margin: 0 0 var(--spacing-sm) 0;
+}
+
+.services-examples ul {
+    margin: 0;
+    padding-left: var(--spacing-lg);
+    columns: 2;
+}
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--color-white);
+    padding: var(--spacing-xl);
+    border-radius: var(--border-radius);
+    max-width: 500px;
+    width: 90%;
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-close {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+    padding: var(--spacing-xs);
+}
+
+.service-location-options {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    flex: 1;
+}
+
+.radio-option:has(input:checked) {
+    border-color: var(--color-accent);
+    background: var(--color-accent-light);
+}
+
+@media (max-width: 768px) {
+    .services-options {
+        grid-template-columns: 1fr;
+    }
+    .services-examples ul {
+        columns: 1;
+    }
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const serviceModal = document.getElementById('serviceModal');
+    const openBtn = document.getElementById('openServiceModal');
+    const closeBtn = document.getElementById('closeServiceModal');
+    
+    if (openBtn && serviceModal) {
+        openBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            serviceModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+        
+        closeBtn.addEventListener('click', function() {
+            serviceModal.classList.remove('active');
+            document.body.style.overflow = '';
+        });
+        
+        serviceModal.addEventListener('click', function(e) {
+            if (e.target === serviceModal) {
+                serviceModal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+        
+        document.getElementById('serviceOrderForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const form = this;
+            const errorsDiv = document.getElementById('serviceFormErrors');
+            const formData = new FormData(form);
+            
+            fetch('<?= url('api/cart') ?>', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    action: 'add_service',
+                    service_type: formData.get('service_type'),
+                    description: formData.get('service_description'),
+                    service_date: formData.get('service_date'),
+                    location: formData.get('service_location')
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '<?= url('korpa') ?>';
+                } else {
+                    errorsDiv.textContent = data.error || 'Došlo je do greške. Pokušajte ponovo.';
+                    errorsDiv.style.display = 'block';
+                }
+            })
+            .catch(err => {
+                errorsDiv.textContent = 'Došlo je do greške. Pokušajte ponovo.';
+                errorsDiv.style.display = 'block';
+            });
+        });
+    }
+});
+</script>
+
+<?php
 include TEMPLATES_PATH . '/layout.php';

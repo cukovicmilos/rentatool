@@ -482,9 +482,21 @@ function formatReservationTelegramMessage(array $reservation, array $items): str
         $message .= "<b>Adresa:</b> {$reservation['delivery_address']}\n";
     }
     
-    $message .= "\n<b>Alati:</b>\n";
+    $message .= "\n<b>Alati/Usluge:</b>\n";
     foreach ($items as $item) {
-        $message .= "• {$item['tool_name']} - " . formatPrice($item['price']) . "\n";
+        if (isset($item['type']) && $item['type'] === 'service') {
+            $locationText = $item['location'] === 'workshop' ? 'Radionica' : 'Na adresi';
+            $message .= "🔧 <b>USLUGA:</b> {$item['tool_name']}\n";
+            if (!empty($item['description'])) {
+                $message .= "   Opis: " . str_replace("\n", "\n   ", $item['description']) . "\n";
+            }
+            if (!empty($item['service_date'])) {
+                $message .= "   Datum: " . formatDate($item['service_date']) . "\n";
+            }
+            $message .= "   Lokacija: {$locationText}\n";
+        } else {
+            $message .= "• {$item['tool_name']} - " . formatPrice($item['price']) . "\n";
+        }
     }
     
     $message .= "\n<b>Ukupno:</b> " . formatPrice($reservation['total_price']);

@@ -15,29 +15,44 @@ $errors = [];
 // Calculate cart totals
 $cartItems = [];
 $subtotal = 0;
+$hasServices = false;
+$serviceDates = [];
 
 foreach ($cart as $item) {
-    $dates = getDatesBetween($item['date_start'], $item['date_end']);
-    $priceInfo = calculateRentalPrice($item['price_24h'], $dates);
-    
-    $cartItems[] = [
-        'tool_id' => $item['tool_id'],
-        'tool_name' => $item['tool_name'],
-        'price_24h' => $item['price_24h'],
-        'date_start' => $item['date_start'],
-        'date_end' => $item['date_end'],
-        'total_days' => $priceInfo['total_days'],
-        'subtotal' => $priceInfo['total']
-    ];
-    
-    $subtotal += $priceInfo['total'];
+    if (isset($item['type']) && $item['type'] === 'service') {
+        $hasServices = true;
+        $serviceDates[] = $item['service_date'];
+        $cartItems[] = [
+            'type' => 'service',
+            'service_label' => $item['service_label'],
+            'description' => $item['description'],
+            'service_date' => $item['service_date'],
+            'location' => $item['location'],
+            'subtotal' => 0
+        ];
+    } else {
+        $dates = getDatesBetween($item['date_start'], $item['date_end']);
+        $priceInfo = calculateRentalPrice($item['price_24h'], $dates);
+        
+        $cartItems[] = [
+            'type' => 'tool',
+            'tool_id' => $item['tool_id'],
+            'tool_name' => $item['tool_name'],
+            'price_24h' => $item['price_24h'],
+            'date_start' => $item['date_start'],
+            'date_end' => $item['date_end'],
+            'total_days' => $priceInfo['total_days'],
+            'subtotal' => $priceInfo['total']
+        ];
+        
+        $subtotal += $priceInfo['total'];
+    }
 }
 
 // Delivery options
 $deliveryOptions = [
-    'pickup' => ['name' => 'Lično preuzimanje', 'price' => DELIVERY_PICKUP],
-    'delivery' => ['name' => 'Dostava', 'price' => DELIVERY_ONEWAY],
-    'roundtrip' => ['name' => 'Dostava + preuzimanje', 'price' => DELIVERY_ROUNDTRIP]
+    'workshop' => ['name' => 'Dolazim do radionice', 'price' => 0],
+    'onsite' => ['name' => 'Izlazak na teren', 'price' => 10]
 ];
 
 // Handle form submission
@@ -51,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $customerPhone = trim(post('customer_phone'));
         $customerAddress = trim(post('customer_address'));
         $customerNote = trim(post('customer_note'));
-        $deliveryOption = post('delivery_option', 'pickup');
+        $deliveryOption = post('delivery_option', 'workshop');
         
         // Validate
         if (empty($customerName)) {
@@ -65,15 +80,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($customerPhone)) {
             $errors[] = 'Broj telefona je obavezan.';
         }
-        if ($deliveryOption !== 'pickup' && empty($customerAddress)) {
-            $errors[] = 'Adresa je obavezna za dostavu.';
+        if (empty($customerAddress)) {
+            $errors[] = 'Adresa je obavezna.';
         }
         if (!isset($deliveryOptions[$deliveryOption])) {
             $errors[] = 'Nevažeća opcija dostave.';
         }
         
-        // Validate tool availability
+        // Validate tool availability (skip for service items)
         foreach ($cart as $item) {
+            if (isset($item['type']) && $item['type'] === 'service') {
+                continue;
+            }
+            
             $tool = db()->fetch("SELECT status FROM tools WHERE id = ?", [$item['tool_id']]);
             if (!$tool || $tool['status'] !== 'available') {
                 $errors[] = 'Alat "' . $item['tool_name'] . '" više nije dostupan.';
@@ -107,10 +126,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $deliveryFee = $deliveryOptions[$deliveryOption]['price'];
             $total = $subtotal + $deliveryFee;
             
-            // Get date range (earliest start, latest end)
-            $dateStart = min(array_column($cartItems, 'date_start'));
-            $dateEnd = max(array_column($cartItems, 'date_end'));
-            $totalDays = count(getDatesBetween($dateStart, $dateEnd));
+            // Get date range - handle both tool dates and service dates
+            $toolDates = array_filter(array_column($cartItems, 'date_start'));
+            $allDates = array_merge($toolDates, $serviceDates);
+            
+            if (!empty($allDates)) {
+                $dateStart = min($allDates);
+                $dateEnd = max($allDates);
+                $totalDays = count(getDatesBetween($dateStart, $dateEnd));
+            } else {
+                // Only services, use current date
+                $dateStart = date('Y-m-d');
+                $dateEnd = date('Y-m-d');
+                $totalDays = 1;
+            }
             
             // Generate reservation code
             $reservationCode = generateReservationCode();
@@ -134,18 +163,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
                 
                 // Create reservation items
+                $telegramItems = [];
                 foreach ($cartItems as $item) {
-                    db()->insert("
-                        INSERT INTO reservation_items (reservation_id, tool_id, tool_name, price_per_day, days, subtotal)
-                        VALUES (?, ?, ?, ?, ?, ?)
-                    ", [
-                        $reservationId,
-                        $item['tool_id'],
-                        $item['tool_name'],
-                        $item['price_24h'],
-                        $item['total_days'],
-                        $item['subtotal']
-                    ]);
+                    if ($item['type'] === 'service') {
+                        db()->insert("
+                            INSERT INTO reservation_items (reservation_id, tool_id, tool_name, price_per_day, days, subtotal, item_type, service_description, service_date, service_location)
+                            VALUES (?, NULL, ?, 0, 0, 0, 'service', ?, ?, ?)
+                        ", [
+                            $reservationId,
+                            $item['service_label'],
+                            $item['description'],
+                            $item['service_date'],
+                            $item['location']
+                        ]);
+                        $telegramItems[] = [
+                            'type' => 'service',
+                            'tool_name' => $item['service_label'],
+                            'description' => $item['description'],
+                            'service_date' => $item['service_date'],
+                            'location' => $item['location'],
+                            'price' => 0
+                        ];
+                    } else {
+                        db()->insert("
+                            INSERT INTO reservation_items (reservation_id, tool_id, tool_name, price_per_day, days, subtotal, item_type)
+                            VALUES (?, ?, ?, ?, ?, ?, 'tool')
+                        ", [
+                            $reservationId,
+                            $item['tool_id'],
+                            $item['tool_name'],
+                            $item['price_24h'],
+                            $item['total_days'],
+                            $item['subtotal']
+                        ]);
+                        $telegramItems[] = [
+                            'type' => 'tool',
+                            'tool_name' => $item['tool_name'],
+                            'price' => $item['subtotal']
+                        ];
+                    }
                 }
                 
                 db()->commit();
@@ -164,14 +220,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'deposit_total' => 0,
                     'notes' => $customerNote
                 ];
-                
-                $telegramItems = [];
-                foreach ($cartItems as $item) {
-                    $telegramItems[] = [
-                        'tool_name' => $item['tool_name'],
-                        'price' => $item['subtotal']
-                    ];
-                }
                 
                 $telegramMessage = formatReservationTelegramMessage($reservationData, $telegramItems);
                 sendTelegramNotification($telegramMessage);
@@ -259,7 +307,7 @@ ob_start();
                     <?php foreach ($deliveryOptions as $key => $option): ?>
                     <label class="delivery-option">
                         <input type="radio" name="delivery_option" value="<?= $key ?>" 
-                               <?= (post('delivery_option', 'pickup') === $key) ? 'checked' : '' ?>
+                               <?= (post('delivery_option', 'workshop') === $key) ? 'checked' : '' ?>
                                onchange="updateDelivery()">
                         <span class="option-content">
                             <span class="option-name"><?= e($option['name']) ?></span>
@@ -286,29 +334,44 @@ ob_start();
             <table class="summary-table">
                 <thead>
                     <tr>
-                        <th>Alat</th>
-                        <th>Period</th>
-                        <th>Dana</th>
+                        <th>Stavka</th>
+                        <th>Datum</th>
+                        <th>Info</th>
                         <th class="text-right">Cena</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($cartItems as $item): ?>
+                    <?php if ($item['type'] === 'service'): ?>
+                    <tr>
+                        <td><?= e($item['service_label']) ?></td>
+                        <td><?= formatDate($item['service_date']) ?></td>
+                        <td><?= $item['location'] === 'workshop' ? 'Radionica' : 'Na adresi' ?></td>
+                        <td class="text-right"><em>Dogovor</em></td>
+                    </tr>
+                    <?php else: ?>
                     <tr>
                         <td><?= e($item['tool_name']) ?></td>
                         <td><?= formatDate($item['date_start']) ?> - <?= formatDate($item['date_end']) ?></td>
-                        <td><?= $item['total_days'] ?></td>
+                        <td><?= $item['total_days'] ?> dana</td>
                         <td class="text-right"><?= formatPrice($item['subtotal']) ?></td>
                     </tr>
+                    <?php endif; ?>
                     <?php endforeach; ?>
                 </tbody>
                 <tfoot>
+                    <?php if ($hasServices): ?>
                     <tr>
-                        <td colspan="3"><strong>Alati ukupno:</strong></td>
+                        <td colspan="3">Alati ukupno:</td>
                         <td class="text-right"><strong><?= formatPrice($subtotal) ?></strong></td>
                     </tr>
+                    <tr>
+                        <td colspan="3">Usluge:</td>
+                        <td class="text-right"><em>Dogovor</em></td>
+                    </tr>
+                    <?php endif; ?>
                     <tr id="deliveryRow">
-                        <td colspan="3">Dostava:</td>
+                        <td colspan="3"><?= $hasServices ? 'Dostava alata:' : 'Dostava:' ?></td>
                         <td class="text-right" id="deliveryPrice">Besplatno</td>
                     </tr>
                     <tr class="total-row">
@@ -492,10 +555,10 @@ function updateDelivery() {
     
     // Update address requirement
     const addressLabel = document.getElementById('addressLabel');
-    if (selected !== 'pickup') {
-        addressLabel.classList.add('required');
-    } else {
+    if (selected === 'workshop') {
         addressLabel.classList.remove('required');
+    } else {
+        addressLabel.classList.add('required');
     }
 }
 
