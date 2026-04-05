@@ -51,8 +51,8 @@ foreach ($cart as $item) {
 
 // Delivery options
 $deliveryOptions = [
-    'workshop' => ['name' => 'Dolazim do radionice', 'price' => 0],
-    'onsite' => ['name' => 'Izlazak na teren', 'price' => 10]
+    'pickup' => ['name' => 'Dolazim do radionice', 'price' => 0],
+    'delivery' => ['name' => 'Izlazak na teren', 'price' => 10]
 ];
 
 // Handle form submission
@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $customerPhone = trim(post('customer_phone'));
         $customerAddress = trim(post('customer_address'));
         $customerNote = trim(post('customer_note'));
-        $deliveryOption = post('delivery_option', 'workshop');
+        $deliveryOption = post('delivery_option', 'pickup');
         
         // Validate
         if (empty($customerName)) {
@@ -234,6 +234,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
             } catch (Exception $e) {
                 db()->rollback();
+                error_log("Checkout error: " . $e->getMessage());
                 $errors[] = 'Greška pri kreiranju rezervacije. Pokušajte ponovo.';
             }
         }
@@ -307,7 +308,7 @@ ob_start();
                     <?php foreach ($deliveryOptions as $key => $option): ?>
                     <label class="delivery-option">
                         <input type="radio" name="delivery_option" value="<?= $key ?>" 
-                               <?= (post('delivery_option', 'workshop') === $key) ? 'checked' : '' ?>
+                               <?= (post('delivery_option', 'pickup') === $key) ? 'checked' : '' ?>
                                onchange="updateDelivery()">
                         <span class="option-content">
                             <span class="option-name"><?= e($option['name']) ?></span>
