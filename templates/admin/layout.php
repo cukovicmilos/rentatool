@@ -13,7 +13,9 @@ $pageTitle = $pageTitle ?? 'Admin - ' . SITE_NAME;
     <meta name="robots" content="noindex, nofollow">
     <meta name="base-url" content="<?= BASE_URL ?>">
     <title><?= e($pageTitle) ?></title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><polygon points=%2250,5 63,38 98,38 69,59 80,95 50,72 20,95 31,59 2,38 37,38%22 fill=%22%23000%22/></svg>">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?= asset('images/favicon.png') ?>">
+    <link rel="icon" type="image/png" sizes="192x192" href="<?= asset('images/favicon.png') ?>">
+    <link rel="apple-touch-icon" href="<?= asset('images/favicon.png') ?>">
     <link rel="stylesheet" href="<?= asset('css/style.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/admin.css') ?>">
 </head>

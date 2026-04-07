@@ -180,7 +180,9 @@ $fullImageUrl = $pageImage
     <?php endif; ?>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="<?= asset('images/favicon.png') ?>">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?= asset('images/favicon.png') ?>">
+    <link rel="icon" type="image/png" sizes="192x192" href="<?= asset('images/favicon.png') ?>">
+    <link rel="apple-touch-icon" href="<?= asset('images/favicon.png') ?>">
 </head>
 <body class="<?= e($bodyClass) ?>">
     

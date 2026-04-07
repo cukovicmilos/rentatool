@@ -178,7 +178,7 @@ ob_start();
     <div class="services-content">
         <h2 class="promo-section-title">Ili me angažujte za sitnije poslove</h2>
         <p class="services-subtitle">
-            Treba ti izbušiti rupu, iseći metal, sastaviti nameštaj, zalepiti nešto? 
+            Treba ti izbušiti rupu, iseći metal, spojiti struju, zalepiti nešto? 
             Raspoložen sam za ove i slične poslove.
         </p>
         
@@ -208,7 +208,7 @@ ob_start();
             <ul>
                 <li>Bušenje rupa u zidu, betonu, drvetu</li>
                 <li>Sečenje metala, drveta, plastike</li>
-                <li>Sastavljanje nameštaja i polica</li>
+                <li>Manji električarski poslovi</li>
                 <li>Lepljenje i popravke</li>
                 <li>Montaža i demontaža</li>
                 <li>I još mnogo toga...</li>
