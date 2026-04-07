@@ -31,7 +31,12 @@ if ($githubEvent !== 'push') {
 $output = [];
 $returnCode = 0;
 
+// Capture both stdout and stderr
 exec('cd /var/www/rentatool && bash .git/hooks/post-receive 2>&1', $output, $returnCode);
+
+// Log output to file for debugging
+$logMsg = date('Y-m-d H:i:s') . " - Deploy called. Return code: $returnCode\n";
+@file_put_contents('/var/www/rentatool/temp/deploy.log', $logMsg, FILE_APPEND);
 
 header('Content-Type: text/plain');
 echo "Deploy triggered. Return code: $returnCode\n";
