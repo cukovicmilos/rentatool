@@ -53,3 +53,5 @@ else
 fi
 
 log_ok "Deployment complete!"
+
+# Test deploy: 2026-05-01 - smoke test verification successful
