@@ -23,6 +23,14 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST") {
 
 $data = json_decode(file_get_contents("php://input"), true);
 $order = $data["order"] ?? [];
+$csrfToken = $data["csrf_token"] ?? "";
+
+// Verify CSRF token
+if (empty($csrfToken) || empty($_SESSION["csrf_token"]) || !hash_equals($_SESSION["csrf_token"], $csrfToken)) {
+    http_response_code(403);
+    echo json_encode(["error" => "Nevažeći CSRF token."]);
+    exit;
+}
 
 if (empty($order) || !is_array($order)) {
     echo json_encode(["error" => "Nema podataka za čuvanje."]);

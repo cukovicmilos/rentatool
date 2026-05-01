@@ -1264,3 +1264,205 @@ select.form-control {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1.1);
 }
+
+/* Header Search */
+.header-search {
+    position: relative;
+}
+
+.search-form {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-input {
+    width: 200px;
+    padding: 8px 32px 8px 12px;
+    font-size: 14px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 4px;
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    transition: width 0.2s, background 0.2s, border-color 0.2s;
+    outline: none;
+}
+
+.search-input::placeholder {
+    color: rgba(255,255,255,0.6);
+}
+
+.search-input:focus {
+    width: 260px;
+    background: rgba(255,255,255,0.15);
+    border-color: var(--color-accent);
+}
+
+.search-submit {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-submit:hover {
+    color: #fff;
+}
+
+.search-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 320px;
+    max-height: 400px;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    z-index: 1001;
+}
+
+.search-dropdown[hidden] {
+    display: none;
+}
+
+.search-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    color: var(--color-black);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-gray-100);
+    transition: background 0.15s;
+}
+
+.search-dropdown-item:hover {
+    background: var(--color-gray-100);
+    text-decoration: none;
+}
+
+.search-dropdown-item img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    border-radius: 4px;
+    flex-shrink: 0;
+    background: var(--color-white);
+}
+
+.search-dropdown-item-info {
+    min-width: 0;
+}
+
+.search-dropdown-item-name {
+    font-weight: 600;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.search-dropdown-item-desc {
+    font-size: 12px;
+    color: var(--color-gray-500);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+}
+
+.search-dropdown-no-results {
+    padding: 16px;
+    text-align: center;
+    color: var(--color-gray-500);
+    font-size: 14px;
+}
+
+.search-dropdown-view-all {
+    display: block;
+    padding: 12px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--color-accent);
+    text-decoration: none;
+    border-top: 1px solid var(--color-gray-100);
+}
+
+.search-dropdown-view-all:hover {
+    background: var(--color-gray-100);
+    text-decoration: none;
+}
+
+/* Mobile search toggle & bar */
+.mobile-search-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: none;
+    border: none;
+    color: var(--color-white);
+    cursor: pointer;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-search-toggle:hover {
+    color: var(--color-accent);
+}
+
+.mobile-search-bar {
+    display: block;
+    background: var(--color-black);
+    padding: 8px var(--spacing-md) 12px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.mobile-search-bar[hidden] {
+    display: none;
+}
+
+.mobile-search-bar .search-form {
+    position: relative;
+    width: 100%;
+}
+
+.mobile-search-bar .search-input {
+    width: 100%;
+    padding: 10px 40px 10px 14px;
+    font-size: 16px;
+    background: rgba(255,255,255,0.12);
+    border-color: rgba(255,255,255,0.25);
+}
+
+.mobile-search-bar .search-input:focus {
+    width: 100%;
+    background: rgba(255,255,255,0.18);
+}
+
+.mobile-search-bar .search-dropdown {
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    width: auto;
+}
+
+@media (max-width: 768px) {
+    .header-search {
+        display: none;
+    }
+    .mobile-search-toggle {
+        display: flex;
+    }
+}

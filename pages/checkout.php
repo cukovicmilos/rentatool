@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 SELECT r.id FROM reservations r
                 JOIN reservation_items ri ON r.id = ri.reservation_id
                 WHERE ri.tool_id = ?
-                AND r.status IN ('pending', 'confirmed')
+                AND r.status IN ('pending', 'confirmed', 'rented')
                 AND (
                     (r.date_start <= ? AND r.date_end >= ?)
                     OR (r.date_start <= ? AND r.date_end >= ?)

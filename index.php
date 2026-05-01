@@ -101,6 +101,11 @@ switch ($route) {
         require_once __DIR__ . '/pages/alati.php';
         break;
     
+    // Search results page
+    case 'pretraga':
+        require_once __DIR__ . '/pages/pretraga.php';
+        break;
+    
     // Homepage (empty path) - now promo landing
     case '':
         require_once __DIR__ . '/pages/promo.php';

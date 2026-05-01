@@ -225,7 +225,7 @@
 }
 
 .status-available { background: #D4EDDA; color: #155724; }
-.status-rented { background: #FFF3CD; color: #856404; }
+.status-rented { background: #E8D5F2; color: #5A2D7A; }
 .status-maintenance { background: #F8D7DA; color: #721C24; }
 .status-inactive { background: var(--color-gray-200); color: var(--color-gray-500); }
 

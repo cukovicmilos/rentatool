@@ -140,7 +140,7 @@ TOOL_ID=$(sqlite3 "$DB_PATH" "
         SELECT 1 FROM reservation_items ri
         JOIN reservations r ON ri.reservation_id = r.id
         WHERE ri.tool_id = t.id
-        AND r.status IN ('pending', 'confirmed')
+        AND r.status IN ('pending', 'confirmed', 'rented')
         AND r.date_start <= '$DAY_AFTER' AND r.date_end >= '$TOMORROW'
     )
     ORDER BY t.id ASC LIMIT 1;")

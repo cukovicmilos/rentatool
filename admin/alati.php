@@ -241,6 +241,7 @@ $allCategories = db()->fetchAll("SELECT id, name, parent_id FROM categories WHER
 // Get tools for list
 $filterCategory = get('category', '');
 $filterStatus = get('status', '');
+$searchQuery = trim(get('search', ''));
 
 $where = "1=1";
 $params = [];
@@ -252,6 +253,15 @@ if ($filterCategory) {
 if ($filterStatus) {
     $where .= " AND t.status = ?";
     $params[] = $filterStatus;
+}
+if ($searchQuery !== '') {
+    $normalized = normalizeSerbian($searchQuery);
+    $searchTerm = '%' . $normalized . '%';
+    $nameNorm = sqlNormalizeSerbian('t.name');
+    $shortNorm = sqlNormalizeSerbian('t.short_description');
+    $where .= " AND ({$nameNorm} LIKE ? OR {$shortNorm} LIKE ?)";
+    $params[] = $searchTerm;
+    $params[] = $searchTerm;
 }
 
 $tools = db()->fetchAll("
@@ -279,6 +289,8 @@ ob_start();
 
 <div class="admin-card">
     <form method="GET" action="<?= url('admin/alati') ?>" class="d-flex gap-2 flex-wrap mb-3">
+        <input type="search" name="search" class="form-control" placeholder="Pretraži alate..." value="<?= e($searchQuery) ?>" style="max-width: 240px;">
+        
         <select name="category" class="form-control" style="max-width: 200px;">
             <option value="">Sve kategorije</option>
             <?php foreach ($allCategories as $cat): ?>
@@ -297,7 +309,7 @@ ob_start();
         </select>
         
         <button type="submit" class="btn btn-secondary">Filtriraj</button>
-        <?php if ($filterCategory || $filterStatus): ?>
+        <?php if ($filterCategory || $filterStatus || $searchQuery !== ''): ?>
             <a href="<?= url('admin/alati') ?>" class="btn btn-secondary">Resetuj</a>
         <?php endif; ?>
     </form>

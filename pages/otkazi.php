@@ -23,9 +23,14 @@ if ($reservation['status'] === 'cancelled') {
     redirect('rezervacija/' . $code);
 }
 
-// Check if completed
+// Check if completed or already rented
 if ($reservation['status'] === 'completed') {
     flash('error', 'Završena rezervacija ne može biti otkazana.');
+    redirect('rezervacija/' . $code);
+}
+
+if ($reservation['status'] === 'rented') {
+    flash('error', 'Rezervacija koja je već iznajmljena ne može biti otkazana putem sajta. Molimo kontaktirajte nas.');
     redirect('rezervacija/' . $code);
 }
 

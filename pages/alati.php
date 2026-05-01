@@ -1,31 +1,34 @@
 <?php
 /**
- * Tools Listing Page - Tools grouped by categories
+ * Tools Listing Page - Tools grouped by parent categories
  */
 
-// Get all categories that have tools
+// Get parent categories that have tools (directly or through subcategories)
 $categories = db()->fetchAll("
-    SELECT c.*, COUNT(tc.tool_id) as tool_count
+    SELECT c.*, COUNT(DISTINCT t.id) as tool_count
     FROM categories c
-    INNER JOIN tool_categories tc ON c.id = tc.category_id
-    INNER JOIN tools t ON tc.tool_id = t.id AND t.status IN ('available', 'rented')
-    WHERE c.active = 1
+    LEFT JOIN categories sub ON sub.parent_id = c.id
+    LEFT JOIN tool_categories tc ON (tc.category_id = c.id OR tc.category_id = sub.id)
+    LEFT JOIN tools t ON tc.tool_id = t.id AND t.status IN ('available', 'rented')
+    WHERE c.active = 1 AND c.parent_id IS NULL
     GROUP BY c.id
     HAVING tool_count > 0
     ORDER BY c.sort_order, c.name
 ");
 
-// Get all tools grouped by category
+// Get all tools grouped by parent category (includes tools from subcategories)
 $toolsByCategory = [];
 foreach ($categories as $category) {
     $toolsByCategory[$category['id']] = db()->fetchAll("
-        SELECT t.*,
+        SELECT DISTINCT t.*,
                (SELECT filename FROM tool_images WHERE tool_id = t.id AND is_primary = 1 LIMIT 1) as primary_image
         FROM tools t
         INNER JOIN tool_categories tc ON t.id = tc.tool_id
-        WHERE tc.category_id = ? AND t.status IN ('available', 'rented')
+        WHERE tc.category_id IN (
+            SELECT id FROM categories WHERE id = ? OR parent_id = ?
+        ) AND t.status IN ('available', 'rented')
         ORDER BY t.featured DESC, t.name
-    ", [$category['id']]);
+    ", [$category['id'], $category['id']]);
 }
 
 // Page settings

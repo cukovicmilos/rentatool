@@ -81,6 +81,24 @@ $menuCategories = db()->fetchAll("
         </nav>
         
         <div class="header-actions">
+            <div class="header-search">
+                <form action="<?= url('pretraga') ?>" method="GET" class="search-form" autocomplete="off">
+                    <input type="search" name="q" id="searchInput" class="search-input" placeholder="Pretraži alate..." aria-label="Pretraži alate" minlength="2" required>
+                    <button type="submit" class="search-submit" aria-label="Pretraži">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M11.7422 10.3439C12.5329 9.2673 13 7.9382 13 6.5C13 2.91015 10.0899 0 6.5 0C2.91015 0 0 2.91015 0 6.5C0 10.0899 2.91015 13 6.5 13C7.9382 13 9.2673 12.5329 10.3439 11.7422L14.1464 15.1464L15 14.2929L11.7422 10.3439ZM6.5 11.5C3.73858 11.5 1.5 9.26142 1.5 6.5C1.5 3.73858 3.73858 1.5 6.5 1.5C9.26142 1.5 11.5 3.73858 11.5 6.5C11.5 9.26142 9.26142 11.5 6.5 11.5Z"/>
+                        </svg>
+                    </button>
+                    <div class="search-dropdown" id="searchDropdown" hidden></div>
+                </form>
+            </div>
+            
+            <button class="mobile-search-toggle" id="mobileSearchToggle" aria-label="Pretraži" aria-expanded="false">
+                <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M11.7422 10.3439C12.5329 9.2673 13 7.9382 13 6.5C13 2.91015 10.0899 0 6.5 0C2.91015 0 0 2.91015 0 6.5C0 10.0899 2.91015 13 6.5 13C7.9382 13 9.2673 12.5329 10.3439 11.7422L14.1464 15.1464L15 14.2929L11.7422 10.3439ZM6.5 11.5C3.73858 11.5 1.5 9.26142 1.5 6.5C1.5 3.73858 3.73858 1.5 6.5 1.5C9.26142 1.5 11.5 3.73858 11.5 6.5C11.5 9.26142 9.26142 11.5 6.5 11.5Z"/>
+                </svg>
+            </button>
+            
             <a href="<?= url('korpa') ?>" class="cart-link" aria-label="Korpa<?= $cartCount > 0 ? ', ' . $cartCount . ' artikala' : ', prazna' ?>">
                 <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                 <span class="cart-text">Korpa</span>
@@ -96,5 +114,19 @@ $menuCategories = db()->fetchAll("
             </button>
         </div>
         
+    </div>
+    
+    <div class="mobile-search-bar" id="mobileSearchBar" hidden>
+        <div class="header-container">
+            <form action="<?= url('pretraga') ?>" method="GET" class="search-form" autocomplete="off" style="width:100%">
+                <input type="search" name="q" id="mobileSearchInput" class="search-input" placeholder="Pretraži alate..." aria-label="Pretraži alate" minlength="2" required>
+                <button type="submit" class="search-submit" aria-label="Pretraži">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M11.7422 10.3439C12.5329 9.2673 13 7.9382 13 6.5C13 2.91015 10.0899 0 6.5 0C2.91015 0 0 2.91015 0 6.5C0 10.0899 2.91015 13 6.5 13C7.9382 13 9.2673 12.5329 10.3439 11.7422L14.1464 15.1464L15 14.2929L11.7422 10.3439ZM6.5 11.5C3.73858 11.5 1.5 9.26142 1.5 6.5C1.5 3.73858 3.73858 1.5 6.5 1.5C9.26142 1.5 11.5 3.73858 11.5 6.5C11.5 9.26142 9.26142 11.5 6.5 11.5Z"/>
+                    </svg>
+                </button>
+                <div class="search-dropdown" id="mobileSearchDropdown" hidden></div>
+            </form>
+        </div>
     </div>
 </header>

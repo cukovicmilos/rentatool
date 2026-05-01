@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS blocked_dates (
 CREATE TABLE IF NOT EXISTS reservations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     reservation_code TEXT UNIQUE NOT NULL,
-    status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'confirmed', 'completed', 'cancelled')),
+    status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'confirmed', 'rented', 'completed', 'cancelled')),
     
     -- Customer info
     customer_name TEXT NOT NULL,
@@ -171,6 +171,8 @@ CREATE TABLE IF NOT EXISTS tool_recommendations (
 -- Indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_tools_status ON tools(status);
 CREATE INDEX IF NOT EXISTS idx_tools_slug ON tools(slug);
+CREATE INDEX IF NOT EXISTS idx_tools_name ON tools(name);
+CREATE INDEX IF NOT EXISTS idx_tools_short_description ON tools(short_description);
 CREATE INDEX IF NOT EXISTS idx_categories_slug ON categories(slug);
 CREATE INDEX IF NOT EXISTS idx_categories_parent ON categories(parent_id);
 CREATE INDEX IF NOT EXISTS idx_reservations_code ON reservations(reservation_code);

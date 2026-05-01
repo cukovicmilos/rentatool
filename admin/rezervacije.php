@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'status') {
     $newStatus = post('status');
     $resId = (int) post('reservation_id');
     
-    $validStatuses = ['pending', 'confirmed', 'completed', 'cancelled'];
+    $validStatuses = ['pending', 'confirmed', 'rented', 'completed', 'cancelled'];
     if (in_array($newStatus, $validStatuses)) {
         $updateData = ['status' => $newStatus, 'updated_at' => date('Y-m-d H:i:s')];
         if ($newStatus === 'cancelled') {
@@ -82,10 +82,11 @@ ob_start();
 
 <div class="admin-card">
     <form method="GET" class="d-flex gap-2 flex-wrap mb-3">
-        <select name="status" class="form-control" style="max-width: 150px;">
+        <select name="status" class="form-control" style="max-width: 170px;">
             <option value="">Svi statusi</option>
             <option value="pending" <?= $filterStatus === 'pending' ? 'selected' : '' ?>>Na čekanju</option>
             <option value="confirmed" <?= $filterStatus === 'confirmed' ? 'selected' : '' ?>>Potvrđena</option>
+            <option value="rented" <?= $filterStatus === 'rented' ? 'selected' : '' ?>>Iznajmljeno</option>
             <option value="completed" <?= $filterStatus === 'completed' ? 'selected' : '' ?>>Završena</option>
             <option value="cancelled" <?= $filterStatus === 'cancelled' ? 'selected' : '' ?>>Otkazana</option>
         </select>
@@ -132,10 +133,12 @@ ob_start();
                             <form method="POST" action="<?= url('admin/rezervacije/status') ?>" style="margin: 0;">
                                 <?= csrfField() ?>
                                 <input type="hidden" name="reservation_id" value="<?= $res['id'] ?>">
-                                <select name="status" class="form-control" style="width: auto; padding: 4px 8px; font-size: 12px;"
+                                <select name="status" class="form-control"
+                                        style="width: auto; min-width: 120px; padding: 4px 24px 4px 8px; font-size: 12px;"
                                         onchange="this.form.submit()">
                                     <option value="pending" <?= $res['status'] === 'pending' ? 'selected' : '' ?>>Na čekanju</option>
                                     <option value="confirmed" <?= $res['status'] === 'confirmed' ? 'selected' : '' ?>>Potvrđena</option>
+                                    <option value="rented" <?= $res['status'] === 'rented' ? 'selected' : '' ?>>Iznajmljeno</option>
                                     <option value="completed" <?= $res['status'] === 'completed' ? 'selected' : '' ?>>Završena</option>
                                     <option value="cancelled" <?= $res['status'] === 'cancelled' ? 'selected' : '' ?>>Otkazana</option>
                                 </select>
@@ -163,7 +166,7 @@ ob_start();
 <div class="admin-card">
     <div class="admin-card-header">
         <h3>Podaci o kupcu</h3>
-        <span class="status-badge status-<?= $reservation['status'] ?>"><?= ucfirst($reservation['status']) ?></span>
+        <span class="status-badge status-<?= $reservation['status'] ?>"><?= reservationStatusLabel($reservation['status']) ?></span>
     </div>
     
     <div class="form-row">

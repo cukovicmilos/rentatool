@@ -28,7 +28,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
     
     <!-- Categories -->
 <?php
-$categories = $database->fetchAll("SELECT * FROM categories WHERE active = 1 ORDER BY name");
+$categories = $database->fetchAll("SELECT * FROM categories WHERE active = 1 ORDER BY sort_order, name");
 foreach ($categories as $cat):
 ?>
     <url>

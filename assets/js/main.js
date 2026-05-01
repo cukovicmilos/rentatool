@@ -85,4 +85,123 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     });
     
+    // Live search dropdown
+    function initLiveSearch(inputId, dropdownId) {
+        var searchInput = document.getElementById(inputId);
+        var searchDropdown = document.getElementById(dropdownId);
+        
+        if (!searchInput || !searchDropdown) return;
+        
+        var searchTimeout = null;
+        var currentQuery = '';
+        
+        function closeDropdown() {
+            searchDropdown.hidden = true;
+            searchDropdown.innerHTML = '';
+        }
+        
+        function renderResults(tools, query) {
+            if (!tools.length) {
+                searchDropdown.innerHTML = '<div class="search-dropdown-no-results">Nema rezultata</div>';
+                searchDropdown.hidden = false;
+                return;
+            }
+            
+            var html = '';
+            tools.forEach(function(tool) {
+                var shortDesc = tool.short_description 
+                    ? tool.short_description.substring(0, 60) + (tool.short_description.length > 60 ? '...' : '') 
+                    : '';
+                html += '<a href="/alat/' + encodeURIComponent(tool.slug) + '" class="search-dropdown-item">';
+                if (tool.primary_image) {
+                    html += '<img src="/uploads/tools/' + encodeURIComponent(tool.primary_image) + '" alt="' + escapeHtml(tool.name) + '" width="40" height="40" loading="lazy">';
+                }
+                html += '<div class="search-dropdown-item-info">';
+                html += '<div class="search-dropdown-item-name">' + escapeHtml(tool.name) + '</div>';
+                if (shortDesc) {
+                    html += '<div class="search-dropdown-item-desc">' + escapeHtml(shortDesc) + '</div>';
+                }
+                html += '</div></a>';
+            });
+            
+            html += '<a href="/pretraga?q=' + encodeURIComponent(query) + '" class="search-dropdown-view-all">Prikaži sve rezultate →</a>';
+            searchDropdown.innerHTML = html;
+            searchDropdown.hidden = false;
+        }
+        
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        searchInput.addEventListener('input', function() {
+            var query = this.value.trim();
+            currentQuery = query;
+            
+            if (searchTimeout) {
+                clearTimeout(searchTimeout);
+            }
+            
+            if (query.length < 2) {
+                closeDropdown();
+                return;
+            }
+            
+            searchTimeout = setTimeout(function() {
+                fetch('/api/live-search?q=' + encodeURIComponent(query))
+                    .then(function(res) { return res.json(); })
+                    .then(function(tools) {
+                        if (currentQuery === query) {
+                            renderResults(tools, query);
+                        }
+                    })
+                    .catch(function() {
+                        closeDropdown();
+                    });
+            }, 300);
+        });
+        
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeDropdown();
+                this.blur();
+            }
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
+                closeDropdown();
+            }
+        });
+    }
+    
+    initLiveSearch('searchInput', 'searchDropdown');
+    initLiveSearch('mobileSearchInput', 'mobileSearchDropdown');
+    
+    // Mobile search toggle
+    var mobileSearchToggle = document.getElementById('mobileSearchToggle');
+    var mobileSearchBar = document.getElementById('mobileSearchBar');
+    var mobileSearchInput = document.getElementById('mobileSearchInput');
+    
+    if (mobileSearchToggle && mobileSearchBar) {
+        mobileSearchToggle.addEventListener('click', function() {
+            var isOpen = mobileSearchBar.hidden;
+            mobileSearchBar.hidden = !isOpen;
+            mobileSearchToggle.setAttribute('aria-expanded', isOpen);
+            if (isOpen && mobileSearchInput) {
+                mobileSearchInput.focus();
+            }
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (!mobileSearchBar.hidden && 
+                !mobileSearchBar.contains(e.target) && 
+                !mobileSearchToggle.contains(e.target)) {
+                mobileSearchBar.hidden = true;
+                mobileSearchToggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
+    
 });

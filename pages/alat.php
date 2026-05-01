@@ -57,7 +57,7 @@ $reservedDates = db()->fetchAll("
     FROM reservations r
     JOIN reservation_items ri ON r.id = ri.reservation_id
     WHERE ri.tool_id = ? 
-    AND r.status IN ('pending', 'confirmed')
+    AND r.status IN ('pending', 'confirmed', 'rented')
     AND r.date_end >= DATE('now')
 ", [$tool['id']]);
 

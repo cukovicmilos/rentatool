@@ -39,6 +39,7 @@ if ($reservation['status'] === 'pending' || $reservation['status'] === 'confirme
 $statusNames = [
     'pending' => 'Na čekanju',
     'confirmed' => 'Potvrđena',
+    'rented' => 'Iznajmljeno',
     'completed' => 'Završena',
     'cancelled' => 'Otkazana'
 ];
@@ -190,6 +191,11 @@ ob_start();
 .status-banner.status-completed {
     background: #D4EDDA;
     color: #155724;
+}
+
+.status-banner.status-rented {
+    background: #E8D5F2;
+    color: #5A2D7A;
 }
 
 .status-banner.status-cancelled {

@@ -42,6 +42,25 @@ function e(string $value): string {
 }
 
 /**
+ * Normalize Serbian text (remove diacritics for search)
+ */
+function normalizeSerbian(string $text): string {
+    $transliteration = [
+        'č' => 'c', 'ć' => 'c', 'đ' => 'dj', 'š' => 's', 'ž' => 'z',
+        'Č' => 'c', 'Ć' => 'c', 'Đ' => 'dj', 'Š' => 's', 'Ž' => 'z'
+    ];
+    $text = strtr($text, $transliteration);
+    return mb_strtolower($text, 'UTF-8');
+}
+
+/**
+ * Generate SQL expression to normalize a column for Serbian diacritic-insensitive search
+ */
+function sqlNormalizeSerbian(string $column): string {
+    return "LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE({$column},'š','s'),'đ','dj'),'č','c'),'ć','c'),'ž','z'))";
+}
+
+/**
  * Generate slug from string
  */
 function slugify(string $text): string {
@@ -529,7 +548,7 @@ function generateSitemap(): void {
     $xml .= "  <url>\n    <loc>{$siteUrl}/alati</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.9</priority>\n  </url>\n";
 
     // Categories
-    $categories = $database->fetchAll("SELECT slug, name FROM categories WHERE active = 1 ORDER BY name");
+    $categories = $database->fetchAll("SELECT slug, name FROM categories WHERE active = 1 ORDER BY sort_order, name");
     foreach ($categories as $cat) {
         $loc = htmlspecialchars("{$siteUrl}/kategorija/{$cat['slug']}");
         $xml .= "  <url>\n    <loc>{$loc}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n";
@@ -555,6 +574,20 @@ function generateSitemap(): void {
     $xml .= '</urlset>';
 
     file_put_contents(ROOT_PATH . '/sitemap.xml', $xml);
+}
+
+/**
+ * Get Serbian label for reservation status
+ */
+function reservationStatusLabel(string $status): string {
+    $labels = [
+        'pending' => 'Na čekanju',
+        'confirmed' => 'Potvrđena',
+        'rented' => 'Iznajmljeno',
+        'completed' => 'Završena',
+        'cancelled' => 'Otkazana',
+    ];
+    return $labels[$status] ?? ucfirst($status);
 }
 
 /**

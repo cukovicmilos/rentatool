@@ -16,6 +16,7 @@ $stats = [
     'categories' => db()->fetchColumn("SELECT COUNT(*) FROM categories WHERE active = 1"),
     'reservations' => db()->fetchColumn("SELECT COUNT(*) FROM reservations"),
     'reservations_pending' => db()->fetchColumn("SELECT COUNT(*) FROM reservations WHERE status = 'pending'"),
+    'reservations_rented' => db()->fetchColumn("SELECT COUNT(*) FROM reservations WHERE status = 'rented'"),
 ];
 
 // Get recent reservations
@@ -55,6 +56,10 @@ ob_start();
         <span class="stat-value"><?= $stats['reservations_pending'] ?></span>
         <span class="stat-label">Na čekanju</span>
     </div>
+    <div class="stat-card">
+        <span class="stat-value"><?= $stats['reservations_rented'] ?></span>
+        <span class="stat-label">Iznajmljeno</span>
+    </div>
 </div>
 
 <div class="admin-card">
@@ -85,7 +90,7 @@ ob_start();
                         <td><?= e($res['customer_name']) ?></td>
                         <td><?= formatDate($res['date_start']) ?> - <?= formatDate($res['date_end']) ?></td>
                         <td><?= formatPrice($res['total']) ?></td>
-                        <td><span class="status-badge status-<?= $res['status'] ?>"><?= ucfirst($res['status']) ?></span></td>
+                        <td><span class="status-badge status-<?= $res['status'] ?>"><?= reservationStatusLabel($res['status']) ?></span></td>
                         <td><?= formatDateTime($res['created_at']) ?></td>
                     </tr>
                     <?php endforeach; ?>

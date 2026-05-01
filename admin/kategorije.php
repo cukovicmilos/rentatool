@@ -288,13 +288,14 @@ ob_start();
 <script>
 (function() {
     const apiUrl = '<?= url('api/categories-reorder') ?>';
+    const csrfToken = '<?= csrfToken() ?>';
 
     function initDragDrop(container) {
         let dragItem = null;
 
         container.addEventListener('dragstart', function(e) {
             const item = e.target.closest('.cat-sort-item');
-            if (!item || !container.contains(item)) return;
+            if (!item || item.parentElement !== container) return;
             dragItem = item;
             item.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
@@ -312,10 +313,7 @@ ob_start();
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
             const target = e.target.closest('.cat-sort-item');
-            if (!target || target === dragItem || !container.contains(target)) return;
-
-            // Only allow reorder within same level
-            if (target.parentElement !== dragItem.parentElement) return;
+            if (!target || target === dragItem || target.parentElement !== container) return;
 
             container.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
             target.classList.add('drag-over');
@@ -329,23 +327,21 @@ ob_start();
         container.addEventListener('drop', function(e) {
             e.preventDefault();
             const target = e.target.closest('.cat-sort-item');
-            if (!target || target === dragItem || !container.contains(target)) return;
-            if (target.parentElement !== dragItem.parentElement) return;
+            if (!target || target === dragItem || target.parentElement !== container) return;
 
             target.classList.remove('drag-over');
 
-            const parent = target.parentElement;
-            const items = [...parent.children].filter(el => el.classList.contains('cat-sort-item'));
+            const items = [...container.children].filter(el => el.classList.contains('cat-sort-item'));
             const dragIndex = items.indexOf(dragItem);
             const targetIndex = items.indexOf(target);
 
             if (dragIndex < targetIndex) {
-                parent.insertBefore(dragItem, target.nextSibling);
+                container.insertBefore(dragItem, target.nextSibling);
             } else {
-                parent.insertBefore(dragItem, target);
+                container.insertBefore(dragItem, target);
             }
 
-            saveOrder(parent);
+            saveOrder(container);
         });
     }
 
@@ -361,7 +357,7 @@ ob_start();
         fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ order: order })
+            body: JSON.stringify({ order: order, csrf_token: csrfToken })
         })
         .then(r => r.json())
         .then(data => {
