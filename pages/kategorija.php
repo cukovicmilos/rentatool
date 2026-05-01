@@ -44,7 +44,7 @@ $tools = db()->fetchAll("
 ", [$category['id']]);
 
 // Page settings
-$pageTitle = $category['name'] . ' - ' . SITE_NAME;
+$pageTitle = $category['name'] . ' - Iznajmljivanje alata Subotica - Rent a Tool';
 $pageDescription = $category['description'] ?? 'Iznajmljivanje ' . $category['name'] . ' u Subotici';
 $currentCategorySlug = $slug;
 

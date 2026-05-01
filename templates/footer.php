@@ -15,6 +15,7 @@
             <h4>Kontakt</h4>
             <ul class="footer-contact">
                 <li>✈️ Telegram: <a href="https://t.me/cukovicmilos" target="_blank" rel="noopener">@cukovicmilos</a></li>
+                <li>📞 <a href="tel:0642039933">064 203 99 33 (od 15 do 20h)</a></li>
                 <li>📍 <?= SITE_ADDRESS ?></li>
             </ul>
         </div>
@@ -45,3 +46,5 @@
         </div>
     </div>
 </footer>
+
+<script defer src="https://cloud.umami.is/script.js" data-website-id="26fd5173-e0a5-42a5-9434-87a024dd1c38"></script>

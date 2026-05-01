@@ -296,7 +296,7 @@ ob_start();
                 <div class="form-group">
                     <label for="customer_note" class="form-label">Napomena</label>
                     <textarea id="customer_note" name="customer_note" class="form-control" rows="2" 
-                              placeholder="Dodatne napomene (opciono)"><?= e(post('customer_note')) ?></textarea>
+                              placeholder="Recimo u koje vreme bi ste preuzeli alat."><?= e(post('customer_note')) ?></textarea>
                 </div>
             </div>
             

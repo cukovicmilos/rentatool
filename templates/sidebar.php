@@ -22,14 +22,15 @@ $currentCategorySlug = $currentCategorySlug ?? '';
     <h3 class="sidebar-title">Kategorije</h3>
     <ul class="category-list">
         <li>
-            <a href="<?= url('alati') ?>" class="category-link <?= empty($currentCategorySlug) ? 'active' : '' ?>">
+            <a href="<?= url('alati') ?>" class="category-link <?= empty($currentCategorySlug) ? 'active' : '' ?>" title="Svi alati">
                 Svi alati
             </a>
         </li>
         <?php foreach ($categories as $category): ?>
         <li>
             <a href="<?= url('kategorija/' . $category['slug']) ?>" 
-               class="category-link <?= $currentCategorySlug === $category['slug'] ? 'active' : '' ?>">
+               class="category-link <?= $currentCategorySlug === $category['slug'] ? 'active' : '' ?>"
+               title="<?= e($category['name']) ?>">
                 <?= e($category['name']) ?>
                 <?php if ($category['tool_count'] > 0): ?>
                 <span class="category-count">(<?= $category['tool_count'] ?>)</span>
@@ -50,7 +51,8 @@ $currentCategorySlug = $currentCategorySlug ?? '';
                 <?php foreach ($subcategories as $sub): ?>
                 <li>
                     <a href="<?= url('kategorija/' . $sub['slug']) ?>" 
-                       class="category-link <?= $currentCategorySlug === $sub['slug'] ? 'active' : '' ?>">
+                       class="category-link <?= $currentCategorySlug === $sub['slug'] ? 'active' : '' ?>"
+                       title="<?= e($sub['name']) ?>">
                         <?= e($sub['name']) ?>
                     </a>
                 </li>

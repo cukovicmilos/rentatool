@@ -223,7 +223,7 @@ ob_start();
                     <source srcset="<?= upload('tools/' . $webpFile) ?>" type="image/webp">
                     <?php endif; ?>
                     <img src="<?= upload('tools/' . $images[0]['filename']) ?>"
-                         alt="<?= e($tool['name']) ?>"
+                         alt="<?= e(toolAlt($tool)) ?>"
                          id="mainImage"
                          width="800"
                          height="600"
@@ -248,7 +248,7 @@ ob_start();
                         <source srcset="<?= upload('tools/' . $thumbWebp) ?>" type="image/webp">
                         <?php endif; ?>
                         <img src="<?= upload('tools/' . $img['filename']) ?>"
-                             alt="<?= e($tool['name']) ?> - slika <?= $i + 1 ?>"
+                             alt="<?= e(toolAlt($tool)) ?> - slika <?= $i + 1 ?>"
                              width="80"
                              height="60"
                              loading="lazy">

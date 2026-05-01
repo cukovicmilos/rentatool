@@ -220,7 +220,7 @@ $fullImageUrl = $pageImage
     
     <?php include TEMPLATES_PATH . '/footer.php'; ?>
     
-    <script src="<?= asset('js/main.js') ?>" defer></script>
+    <script src="<?= asset('js/main.min.js') ?>" defer></script>
     
     <?php if (!empty($extraJs)): ?>
     <?= $extraJs ?>

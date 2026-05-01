@@ -48,6 +48,10 @@ switch ($route) {
     
     // Tool detail page
     case 'alat':
+        // Redirect old URLs /alat/[id]/[slug] → /alat/[slug] (301)
+        if (isset($segments[2]) && is_numeric($segments[1])) {
+            redirect('alat/' . $segments[2], 301);
+        }
         $_GET['slug'] = $segments[1] ?? '';
         require_once __DIR__ . '/pages/alat.php';
         break;

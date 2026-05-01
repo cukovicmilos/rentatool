@@ -29,8 +29,8 @@ function upload(string $path): string {
 /**
  * Redirect to URL
  */
-function redirect(string $path): void {
-    header('Location: ' . url($path));
+function redirect(string $path, int $statusCode = 302): void {
+    header('Location: ' . url($path), true, $statusCode);
     exit;
 }
 
@@ -39,6 +39,56 @@ function redirect(string $path): void {
  */
 function e(string $value): string {
     return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+}
+
+/**
+ * Generate alt text for tool images
+ */
+function toolAlt(array $tool): string {
+    return ($tool['name'] ?? '') . ' - Iznajmljivanje alata u Subotici - Rent a Tool';
+}
+
+/**
+ * Generate Schema.org Product JSON-LD array for a tool
+ */
+function productSchema(array $tool): array {
+    $schema = [
+        '@context' => 'https://schema.org',
+        '@type' => 'Product',
+        'name' => $tool['name'] ?? '',
+        'description' => $tool['short_description'] ?? $tool['description'] ?? ($tool['name'] ?? ''),
+        'sku' => 'TOOL-' . ($tool['id'] ?? '0'),
+        'brand' => [
+            '@type' => 'Brand',
+            'name' => SITE_NAME
+        ],
+        'offers' => [
+            '@type' => 'Offer',
+            'url' => 'https://rentatool.in.rs' . BASE_URL . '/alat/' . ($tool['slug'] ?? ''),
+            'priceCurrency' => CURRENCY,
+            'price' => number_format($tool['price_24h'] ?? 0, 2, '.', ''),
+            'priceValidUntil' => date('Y-m-d', strtotime('+1 year')),
+            'availability' => ($tool['status'] ?? '') === 'available'
+                ? 'https://schema.org/InStock'
+                : 'https://schema.org/OutOfStock',
+            'itemCondition' => 'https://schema.org/UsedCondition',
+            'seller' => [
+                '@type' => 'LocalBusiness',
+                'name' => SITE_NAME,
+                'address' => [
+                    '@type' => 'PostalAddress',
+                    'addressLocality' => 'Subotica',
+                    'addressCountry' => 'RS'
+                ]
+            ]
+        ]
+    ];
+
+    if (!empty($tool['primary_image'])) {
+        $schema['image'] = 'https://rentatool.in.rs' . BASE_URL . '/uploads/tools/' . $tool['primary_image'];
+    }
+
+    return $schema;
 }
 
 /**

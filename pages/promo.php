@@ -110,7 +110,7 @@ $faqs = [
 ];
 
 // Page settings - no sidebar for landing page
-$pageTitle = 'Iznajmi alat za svoj projekat | ' . SITE_NAME;
+$pageTitle = 'Iznajmljivanje alata Subotica - Rent a Tool';
 $pageDescription = 'Završite posao efikasno sa iznajmljenim alatom. Profesionalna oprema za DIY projekte, renoviranje i popravke. Bez kupovine, bez brige o održavanju.';
 $bodyClass = 'promo-page';
 $showSidebar = false;
@@ -341,8 +341,8 @@ ob_start();
 
 <!-- PRICING SECTION (Featured Tools) -->
 <section class="promo-section promo-pricing" id="pricing">
-    <h2 class="promo-section-title">Popularni alati</h2>
-    <p class="promo-section-subtitle">Pogledajte neke od naših najpopularnijih alata</p>
+    <h2 class="promo-section-title">Najtraženiji alati za iznajmljivanje u Subotici</h2>
+    <p class="promo-section-subtitle">Pogledajte neke od naših najtraženijih alata</p>
     
     <?php if (!empty($featuredTools)): ?>
     <div class="pricing-grid">
@@ -355,7 +355,7 @@ ob_start();
             <div class="pricing-image">
                 <?php if ($tool['primary_image']): ?>
                 <img src="<?= url('uploads/tools/' . $tool['primary_image']) ?>" 
-                     alt="<?= e($tool['name']) ?>"
+                     alt="<?= e(toolAlt($tool)) ?>"
                      width="280"
                      height="180"
                      loading="lazy">
@@ -383,6 +383,9 @@ ob_start();
                 Rezerviši
             </span>
         </a>
+        <script type="application/ld+json">
+        <?= json_encode(productSchema($tool), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>
+        </script>
         <?php endforeach; ?>
     </div>
     <?php else: ?>
