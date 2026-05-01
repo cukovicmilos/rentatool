@@ -4,7 +4,7 @@
 # =============================================================================
 # Simulira ceo checkout flow i proverava da li osnovna funkcionalnost radi.
 # Pokrece se nakon svakog deploy-a.
-# Last verified: 2026-05-01
+# Last verified: 2026-05-01 (deploy race condition fixed)
 #
 # Usage:
 #   bash scripts/smoke-test.sh
