@@ -8,10 +8,18 @@
 GIT_DIR="/var/www/rentatool/.git"
 APP_DIR="/var/www/rentatool"
 LOG_FILE="/var/www/rentatool/temp/deploy.log"
+LOCK_FILE="/var/www/rentatool/temp/deploy.lock"
 
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
 }
+
+# Prevent concurrent deployments using file lock
+exec 200>"$LOCK_FILE"
+if ! flock -n 200; then
+    log "Another deployment is already running. Skipping."
+    exit 0
+fi
 
 cd "$APP_DIR" || exit 1
 
@@ -27,6 +35,17 @@ log "========================================="
 log "Reloading PHP-FPM..."
 if systemctl is-active php-fpm > /dev/null 2>&1; then
     systemctl reload php-fpm 2>&1 | tee -a "$LOG_FILE" || log "Could not reload PHP-FPM"
+fi
+
+# Wait for PHP-FPM to stabilize after reload
+log "Waiting for PHP-FPM to stabilize..."
+sleep 2
+
+# Quick health check before running full smoke test
+HEALTH_CHECK=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "https://rentatool.in.rs/" 2>/dev/null || echo "000")
+if [ "$HEALTH_CHECK" != "200" ]; then
+    log "Health check failed (HTTP $HEALTH_CHECK), waiting 3 more seconds..."
+    sleep 3
 fi
 
 # Run smoke test
