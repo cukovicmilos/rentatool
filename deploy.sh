@@ -31,10 +31,10 @@ git pull origin main 2>/dev/null || git pull 2>/dev/null || log_info "No remote 
 
 # 2. Clear PHP opcache if using PHP-FPM
 log_info "Clearing PHP opcache..."
-if command -v php-fpm &> /dev/null; then
-    # Try to signal PHP-FPM to reload
-    if [ -S /run/php/php-fpm.sock ]; then
-        sudo systemctl reload php-fpm 2>/dev/null || log_info "Could not reload PHP-FPM"
+if command -v php-fpm8.4 &> /dev/null || command -v php-fpm &> /dev/null; then
+    # Try to signal PHP-FPM to reload (check common service names)
+    if [ -S /run/php/php8.4-fpm.sock ] || [ -S /run/php/php-fpm.sock ]; then
+        sudo systemctl reload php8.4-fpm 2>/dev/null || sudo systemctl reload php-fpm 2>/dev/null || log_info "Could not reload PHP-FPM"
     fi
 fi
 

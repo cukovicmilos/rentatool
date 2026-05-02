@@ -33,8 +33,17 @@ log "========================================="
 
 # Reload PHP-FPM
 log "Reloading PHP-FPM..."
-if systemctl is-active php-fpm > /dev/null 2>&1; then
-    systemctl reload php-fpm 2>&1 | tee -a "$LOG_FILE" || log "Could not reload PHP-FPM"
+PHP_FPM_SERVICE=""
+if systemctl is-active php8.4-fpm > /dev/null 2>&1; then
+    PHP_FPM_SERVICE="php8.4-fpm"
+elif systemctl is-active php-fpm > /dev/null 2>&1; then
+    PHP_FPM_SERVICE="php-fpm"
+fi
+
+if [ -n "$PHP_FPM_SERVICE" ]; then
+    systemctl reload "$PHP_FPM_SERVICE" 2>&1 | tee -a "$LOG_FILE" || log "Could not reload PHP-FPM"
+else
+    log "PHP-FPM service not found (checked php8.4-fpm, php-fpm)"
 fi
 
 # Wait for PHP-FPM to stabilize after reload
