@@ -195,7 +195,7 @@ $additionalSchemas = [$faqSchema];
 $extraCss = '<link rel="stylesheet" href="' . asset('css/promo.min.css') . '" media="print" onload="this.media=\'all\'"><noscript><link rel="stylesheet" href="' . asset('css/promo.min.css') . '"></noscript>';
 
 // Extra JS for FAQ accordion - load in head so function is available
-$extraJsHead = '<script src="' . asset('js/jb-accordion-lite.min.js') . '"></script>';
+$extraJsHead = '<script src="' . asset('js/jb-accordion-lite.min.js') . '" defer></script>';
 
 // Breadcrumbs
 $breadcrumbs = [
