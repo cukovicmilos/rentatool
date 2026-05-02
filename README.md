@@ -128,4 +128,6 @@ ADMIN_PASSWORD=your_password
 
 MIT
 
+Smoke test verification: 2026-05-02
+
 Smoke test: 2026-05-02 - WAL mod, deploy fix, MAX_ADVANCE_DAYS validacija
