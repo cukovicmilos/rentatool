@@ -15,7 +15,7 @@
 #   1 - Test neuspesan
 # =============================================================================
 
-set -euo pipefail
+set -uo pipefail
 
 # --- Configuration ---
 BASE_URL="${BASE_URL:-https://rentatool.in.rs}"
@@ -34,9 +34,9 @@ TEST_ADDRESS="Test adresa 1, Subotica"
 TEST_NOTE="Smoke test rezervacija - automatski kreirana"
 DELIVERY_OPTION="pickup"
 
-# Dates: 60+ days from now to avoid conflicts
-TOMORROW=$(date -d '+60 days' '+%Y-%m-%d')
-DAY_AFTER=$(date -d '+62 days' '+%Y-%m-%d')
+# Dates: 5+ days from now to avoid conflicts (within MAX_ADVANCE_DAYS = 30)
+TOMORROW=$(date -d '+5 days' '+%Y-%m-%d')
+DAY_AFTER=$(date -d '+7 days' '+%Y-%m-%d')
 
 # Colors
 RED='\033[0;31m'
@@ -95,6 +95,12 @@ if ! command -v sqlite3 &> /dev/null; then
 fi
 if ! command -v curl &> /dev/null; then
     fail_and_exit "curl nije instaliran"
+fi
+if ! command -v python3 &> /dev/null; then
+    fail_and_exit "python3 nije instaliran (potreban za JSON parsiranje)"
+fi
+if ! command -v jq &> /dev/null; then
+    fail_and_exit "jq nije instaliran (potreban za URL-enkodiranje)"
 fi
 
 TOOL_COUNT=$(sqlite3 "$DB_PATH" "SELECT COUNT(*) FROM tools WHERE status = 'available';")

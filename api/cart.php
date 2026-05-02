@@ -45,6 +45,10 @@ switch ($action) {
             jsonResponse(['success' => false, 'error' => 'Datumi moraju biti u budućnosti.'], 400);
         }
         
+        if ($start > $maxDate || $end > $maxDate) {
+            jsonResponse(['success' => false, 'error' => 'Datumi moraju biti unutar ' . MAX_ADVANCE_DAYS . ' dana od danas.'], 400);
+        }
+        
         if ($end < $start) {
             jsonResponse(['success' => false, 'error' => 'Datum završetka mora biti posle početka.'], 400);
         }

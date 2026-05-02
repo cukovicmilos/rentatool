@@ -31,7 +31,7 @@ log "========================================="
 # Git has already updated the working tree before this hook runs
 # No need for git checkout -f main here
 
-# Reload PHP-FPM
+# Reload PHP-FPM and clear opcache
 log "Reloading PHP-FPM..."
 PHP_FPM_SERVICE=""
 if systemctl is-active php8.4-fpm > /dev/null 2>&1; then
@@ -41,9 +41,15 @@ elif systemctl is-active php-fpm > /dev/null 2>&1; then
 fi
 
 if [ -n "$PHP_FPM_SERVICE" ]; then
-    systemctl reload "$PHP_FPM_SERVICE" 2>&1 | tee -a "$LOG_FILE" || log "Could not reload PHP-FPM"
+    if sudo systemctl reload "$PHP_FPM_SERVICE" 2>&1 | tee -a "$LOG_FILE"; then
+        log "PHP-FPM reloaded successfully"
+    else
+        log "Could not reload PHP-FPM via systemctl, trying opcache_reset()..."
+        php -r "opcache_reset();" 2>/dev/null || log "opcache_reset() failed (may not be root)"
+    fi
 else
     log "PHP-FPM service not found (checked php8.4-fpm, php-fpm)"
+    php -r "opcache_reset();" 2>/dev/null || log "opcache_reset() failed"
 fi
 
 # Wait for PHP-FPM to stabilize after reload
