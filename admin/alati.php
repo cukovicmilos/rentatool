@@ -58,6 +58,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $videoUrls = post('video_urls', []);
     $videoTitles = post('video_titles', []);
     $recommendedIds = post('recommended_ids', []);
+    $jobTitles = post('job_titles', []);
+    $jobDescriptions = post('job_descriptions', []);
     
     // Generate slug
     $slug = slugify($name);
@@ -139,6 +141,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     );
                 }
             }
+            
+            // Update jobs
+            db()->execute("DELETE FROM tool_jobs WHERE tool_id = ?", [$id]);
+            foreach ($jobTitles as $i => $jobTitle) {
+                $jobTitle = trim($jobTitle);
+                $jobDescription = trim($jobDescriptions[$i] ?? '');
+                if (!empty($jobTitle) && !empty($jobDescription)) {
+                    db()->insert(
+                        "INSERT INTO tool_jobs (tool_id, title, description, sort_order) VALUES (?, ?, ?, ?)",
+                        [$id, $jobTitle, $jobDescription, $i]
+                    );
+                }
+            }
 
             // Handle image uploads
             if (!empty($_FILES['images']['name'][0])) {
@@ -211,6 +226,7 @@ $toolSpecs = [];
 $toolImages = [];
 $toolVideos = [];
 $toolRecommendations = [];
+$toolJobs = [];
 
 if ($action === 'izmeni' && $id) {
     $tool = db()->fetch("SELECT * FROM tools WHERE id = ?", [$id]);
@@ -233,6 +249,8 @@ if ($action === 'izmeni' && $id) {
         WHERE tr.tool_id = ?
         ORDER BY tr.sort_order
     ", [$id]);
+    
+    $toolJobs = db()->fetchAll("SELECT * FROM tool_jobs WHERE tool_id = ? ORDER BY sort_order", [$id]);
 }
 
 // Get all categories for select
@@ -640,6 +658,32 @@ ob_start();
         </div>
 
         <p class="form-text mt-2">Preporučeni alati se prikazuju na stranici proizvoda. Kucajte ime alata da biste ga pronašli.</p>
+    </div>
+    
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <h3>Poslovi koje možete raditi sa ovim alatom</h3>
+            <button type="button" id="addJob" class="btn btn-secondary btn-small">+ Dodaj posao</button>
+        </div>
+        
+        <div id="jobList" class="spec-list">
+            <?php 
+            $jobs = !empty($toolJobs) ? $toolJobs : [['title' => '', 'description' => '']];
+            foreach ($jobs as $job): 
+            ?>
+            <div class="spec-row job-row" style="align-items: flex-start;">
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                    <input type="text" name="job_titles[]" class="form-control" 
+                           placeholder="Naziv posla (npr. Bušenje rupa u betonu)" value="<?= e($job['title']) ?>">
+                    <textarea name="job_descriptions[]" class="form-control" rows="2" 
+                              placeholder="Opis posla - šta se radi i kako..."><?= e($job['description']) ?></textarea>
+                </div>
+                <button type="button" class="btn btn-danger btn-small remove-job" style="align-self: flex-start;">&times;</button>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        
+        <p class="form-text mt-2">Dodajte do 10 poslova koji opisuju šta sve može da se uradi sa ovim alatom. Ovo pomaže ljudima da shvate da im je alat potreban.</p>
     </div>
 
     <style>

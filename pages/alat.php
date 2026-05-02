@@ -42,6 +42,9 @@ $recommendations = db()->fetchAll("
     ORDER BY tr.sort_order
 ", [$tool['id']]);
 
+// Get jobs that can be done with this tool
+$toolJobs = db()->fetchAll("SELECT * FROM tool_jobs WHERE tool_id = ? ORDER BY sort_order", [$tool['id']]);
+
 // Get blocked dates for this tool (next 30 days)
 $blockedDates = db()->fetchAll("
     SELECT blocked_date FROM blocked_dates 
@@ -158,14 +161,23 @@ if (!empty($images)) {
     $schemaData['image'] = 'https://rentatool.in.rs' . BASE_URL . '/uploads/tools/' . $images[0]['filename'];
 }
 
-// Add specifications as additionalProperty
+// Add specifications and jobs as additionalProperty
+$schemaData['additionalProperty'] = [];
 if (!empty($specs)) {
-    $schemaData['additionalProperty'] = [];
     foreach ($specs as $spec) {
         $schemaData['additionalProperty'][] = [
             '@type' => 'PropertyValue',
             'name' => $spec['spec_name'],
             'value' => $spec['spec_value']
+        ];
+    }
+}
+if (!empty($toolJobs)) {
+    foreach ($toolJobs as $job) {
+        $schemaData['additionalProperty'][] = [
+            '@type' => 'PropertyValue',
+            'name' => $job['title'],
+            'value' => $job['description']
         ];
     }
 }
@@ -463,6 +475,22 @@ ob_start();
             $tool = $originalTool;
             ?>
         </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- Jobs Section -->
+    <?php if (!empty($toolJobs)): ?>
+    <div class="tool-jobs mt-4">
+        <h2>Poslovi koje možete raditi sa ovim alatom</h2>
+        <div class="jobs-list">
+            <?php foreach ($toolJobs as $job): ?>
+            <div class="job-item">
+                <h3 class="job-title"><?= e($job['title']) ?></h3>
+                <p class="job-description"><?= nl2br(e($job['description'])) ?></p>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <p class="job-cta">Možete me angažovati da ja uradim posao za vas.</p>
     </div>
     <?php endif; ?>
 
@@ -989,6 +1017,66 @@ ob_start();
 
 @media (max-width: 768px) {
     .tool-details-section {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Jobs Section */
+.tool-jobs {
+    width: 100%;
+}
+
+.tool-jobs h2 {
+    font-size: var(--font-size-large);
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 2px solid var(--color-accent);
+}
+
+.jobs-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.job-item {
+    background: var(--color-gray-100);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    border-left: 3px solid var(--color-accent);
+}
+
+.job-title {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    margin: 0 0 var(--spacing-xs) 0;
+    color: var(--color-black);
+}
+
+.job-description {
+    font-size: var(--font-size-small);
+    color: var(--color-gray-600);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.job-description br {
+    margin-bottom: var(--spacing-xs);
+}
+
+.job-cta {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--color-accent);
+    color: var(--color-white);
+    border-radius: var(--border-radius);
+    text-align: center;
+    font-weight: 600;
+    font-size: var(--font-size-base);
+}
+
+@media (max-width: 480px) {
+    .jobs-list {
         grid-template-columns: 1fr;
     }
 }

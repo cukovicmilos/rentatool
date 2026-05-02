@@ -82,6 +82,32 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Dynamic jobs
+    const addJobBtn = document.getElementById('addJob');
+    const jobList = document.getElementById('jobList');
+
+    if (addJobBtn && jobList) {
+        addJobBtn.addEventListener('click', function() {
+            const row = document.createElement('div');
+            row.className = 'spec-row job-row';
+            row.style.alignItems = 'flex-start';
+            row.innerHTML = `
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                    <input type="text" name="job_titles[]" class="form-control" placeholder="Naziv posla (npr. Bušenje rupa u betonu)">
+                    <textarea name="job_descriptions[]" class="form-control" rows="2" placeholder="Opis posla - šta se radi i kako..."></textarea>
+                </div>
+                <button type="button" class="btn btn-danger btn-small remove-job" style="align-self: flex-start;">&times;</button>
+            `;
+            jobList.appendChild(row);
+        });
+
+        jobList.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-job')) {
+                e.target.closest('.job-row').remove();
+            }
+        });
+    }
+
     // Mark current nav link as active
     const currentPath = window.location.pathname;
     document.querySelectorAll('.admin-nav-link').forEach(function(link) {
