@@ -32,8 +32,8 @@ $menuCategories = db()->fetchAll("
         
         <nav class="main-nav" id="mainNav">
             <ul class="nav-list">
-                <li><a href="<?= url('') ?>" class="nav-link">Početna</a></li>
-                <li class="nav-item-dropdown">
+                <li class="hide-mobile"><a href="<?= url('') ?>" class="nav-link">Početna</a></li>
+                <li class="nav-item-dropdown hide-mobile">
                     <a href="<?= url('alati') ?>" class="nav-link nav-link-dropdown">
                         Alati
                         <svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
@@ -75,6 +75,34 @@ $menuCategories = db()->fetchAll("
                     </div>
                     <?php endif; ?>
                 </li>
+                <?php if (!empty($menuCategories)): ?>
+                <li class="mobile-nav-categories">
+                    <?php foreach ($menuCategories as $cat): ?>
+                    <div class="mobile-cat-item">
+                        <a href="<?= url('kategorija/' . $cat['slug']) ?>" class="nav-link mobile-cat-link">
+                            <?= e($cat['name']) ?>
+                            <?php if ($cat['tool_count'] > 0): ?>
+                            <span class="mobile-cat-count">(<?= $cat['tool_count'] ?>)</span>
+                            <?php endif; ?>
+                        </a>
+                        <?php 
+                        $subcats = db()->fetchAll("
+                            SELECT * FROM categories 
+                            WHERE parent_id = ? AND active = 1 
+                            ORDER BY sort_order, name
+                        ", [$cat['id']]);
+                        if (!empty($subcats)): 
+                        ?>
+                        <div class="mobile-subcats">
+                            <?php foreach ($subcats as $sub): ?>
+                            <a href="<?= url('kategorija/' . $sub['slug']) ?>" class="nav-link mobile-sub-link"><?= e($sub['name']) ?></a>
+                            <?php endforeach; ?>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                    <?php endforeach; ?>
+                </li>
+                <?php endif; ?>
                 <li><a href="<?= url('stranica/o-nama') ?>" class="nav-link">O servisu</a></li>
                 <li><a href="<?= url('stranica/kontakt') ?>" class="nav-link">Kontakt</a></li>
             </ul>

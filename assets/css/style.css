@@ -400,6 +400,11 @@ small {
     justify-content: center;
 }
 
+/* Mobile nav categories - hidden on desktop */
+.mobile-nav-categories {
+    display: none;
+}
+
 /* ==========================================================================
    Sidebar
    ========================================================================== */
@@ -1182,6 +1187,48 @@ select.form-control {
 
     .nav-item-dropdown.open .dropdown-arrow {
         transform: rotate(180deg);
+    }
+    
+    /* Hide desktop-only items on mobile */
+    .hide-mobile {
+        display: none;
+    }
+    
+    /* Mobile nav categories */
+    .mobile-nav-categories {
+        display: block;
+    }
+    
+    .mobile-nav-categories .mobile-cat-item:last-child {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .mobile-cat-link {
+        justify-content: flex-end;
+        font-size: 20px;
+        padding: 18px var(--spacing-lg);
+        min-height: 60px;
+        font-weight: 500;
+        gap: var(--spacing-sm);
+    }
+    
+    .mobile-cat-count {
+        font-weight: 400;
+        font-size: 15px;
+        color: var(--color-gray-400);
+    }
+    
+    .mobile-subcats {
+        background: rgba(255, 255, 255, 0.04);
+    }
+    
+    .mobile-sub-link {
+        justify-content: flex-end;
+        font-size: 16px;
+        padding: 14px var(--spacing-lg);
+        padding-right: calc(var(--spacing-lg) + 8px);
+        min-height: 48px;
+        color: var(--color-gray-300);
     }
     
     /* Layout mobile */
