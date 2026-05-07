@@ -115,6 +115,11 @@ switch ($route) {
         require_once __DIR__ . '/pages/promo.php';
         break;
     
+    // Sitemap
+    case 'sitemap.xml':
+        require_once __DIR__ . '/sitemap.php';
+        break;
+    
     // Try pages folder
     default:
         $pageFile = __DIR__ . '/pages/' . $route . '.php';

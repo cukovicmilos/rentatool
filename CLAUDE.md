@@ -27,3 +27,43 @@ You MUST read the overview resource to understand the complete workflow. The inf
 </CRITICAL_INSTRUCTION>
 
 <!-- BACKLOG.MD MCP GUIDELINES END -->
+
+## Deploy Flow
+
+Git push na `origin/main` (GitHub) → GitHub webhook → `api/deploy.php`:
+1. `git fetch origin && git reset --hard origin/main` - povlači najnoviji kod
+2. `sudo systemctl reload php8.4-fpm` - reload PHP-FPM (čisti opcache)
+3. `sleep 2` - čeka da se PHP stabilizuje
+4. `bash scripts/smoke-test.sh` - pokreće smoke test
+5. Ako smoke test padne → Telegram notifikacija "Deploy failed!"
+
+## Smoke Test (`scripts/smoke-test.sh`)
+
+Simulira kompletan checkout flow:
+- Homepage (HTTP 200)
+- Dohvatanje prvog dostupnog alata iz baze
+- Dodavanje u korpu (`POST /api/cart`)
+- Provera korpe
+- Ekstrakcija CSRF tokena sa checkout stranice
+- Slanje checkout forme (ime: Test Korisnik, email: test@rentatool.in.rs, itd.)
+- Provera thank you stranice i reservation koda
+- Verifikacija rezervacije u SQLite bazi
+- Čišćenje test rezervacije na kraju
+
+Period: +5/+7 dana od danas (unutar MAX_ADVANCE_DAYS = 30).
+Zahtevi: `curl`, `sqlite3`, `python3`, `jq`.
+
+## Ključni fajlovi
+
+- `api/deploy.php` - GitHub webhook endpoint (trigera deploy)
+- `scripts/post-receive-hook.sh` - rezervni hook za direktan git push na server
+- `scripts/smoke-test.sh` - smoke test
+- `api/cart.php` - cart API (ima MAX_ADVANCE_DAYS validaciju)
+- `pages/checkout.php` - checkout stranica
+
+## Poznato
+
+- SQLite baza je u WAL modu (izbjegava lock contention)
+- Baza: `database/rentatool.db`, vlasnik `www-data:www-data`
+- `.git` folder: vlasnik `www-data:www-data`
+- Ako se mijenja smoke test, moraju se ažurirati i datumi (držati unutar 30 dana)
