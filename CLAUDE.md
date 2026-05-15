@@ -61,6 +61,12 @@ Zahtevi: `curl`, `sqlite3`, `python3`, `jq`.
 - `api/cart.php` - cart API (ima MAX_ADVANCE_DAYS validaciju)
 - `pages/checkout.php` - checkout stranica
 
+## Komponente
+
+- HTML/CSS/JS koji se koristi na više od jedne stranice ide u `templates/components/` kao jedan include fajl (npr. `service-modal.php`)
+- Stranice ga uključuju sa `<?php include TEMPLATES_PATH . '/components/...' ?>`
+- Ovo važi za sve nove komponente; postojeći duplicirani kod treba refaktorisati u komponente kada se na njega naiđe
+
 ## Poznato
 
 - SQLite baza je u WAL modu (izbjegava lock contention)

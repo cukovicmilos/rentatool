@@ -105,6 +105,16 @@ $faqs = [
     ]
 ];
 
+$serviceTypeLabels = [
+    'drilling' => 'Bušenje',
+    'cutting' => 'Sečenje',
+    'assembly' => 'Sastavljanje / Montaža',
+    'gluing' => 'Lepljenje',
+    'repair' => 'Popravka',
+    'other' => 'Ostalo'
+];
+$minDate = date('Y-m-d');
+
 // Page settings
 $pageTitle = $tool['name'] . ' - Iznajmljivanje Subotica | ' . SITE_NAME;
 $pageDescription = $tool['short_description'] 
@@ -500,7 +510,7 @@ ob_start();
             </div>
             <?php endforeach; ?>
         </div>
-        <p class="job-cta">Možete me angažovati da ja uradim posao za vas.</p>
+        <p class="job-cta">Možete me angažovati da ja uradim posao za vas. <button class="btn btn-outline-white btn-service-order" id="openServiceModal">Rezerviši termin</button></p>
     </div>
     <?php endif; ?>
 
@@ -545,6 +555,8 @@ ob_start();
     </section>
     <?php endif; ?>
 </div>
+
+<?php include TEMPLATES_PATH . '/components/service-modal.php'; ?>
 
 <style>
 .tool-detail-grid {
@@ -1093,6 +1105,15 @@ ob_start();
     text-align: center;
     font-weight: 600;
     font-size: var(--font-size-base);
+    margin-bottom: 0;
+}
+
+.job-cta .btn-outline-white {
+    display: inline;
+    margin-left: var(--spacing-sm);
+    padding: 4px 12px;
+    font-size: 0.9em;
+    white-space: nowrap;
 }
 
 @media (max-width: 480px) {
