@@ -16,7 +16,7 @@
             <ul class="footer-contact">
                 <li>✈️ Telegram: <a href="https://t.me/cukovicmilos" target="_blank" rel="noopener">@cukovicmilos</a></li>
                 <li>📞 <a href="tel:0642039933">064 203 99 33 (od 15 do 20h)</a></li>
-                <li>📍 <?= SITE_ADDRESS ?></li>
+                <li>📍 <a href="<?= SITE_MAP_URL ?>" target="_blank" rel="noopener"><?= SITE_ADDRESS ?></a></li>
             </ul>
         </div>
         
