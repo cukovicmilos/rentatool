@@ -113,6 +113,8 @@ CREATE TABLE IF NOT EXISTS reservations (
     -- Dates
     date_start DATE NOT NULL,
     date_end DATE NOT NULL,
+    time_start TEXT DEFAULT '08:00',
+    time_end TEXT DEFAULT '18:00',
     total_days INTEGER NOT NULL,
     
     -- Pricing

@@ -80,7 +80,8 @@ ob_start();
             
             <div class="detail-section">
                 <h3>Detalji</h3>
-                <p><strong>Period:</strong> <?= formatDate($reservation['date_start']) ?> - <?= formatDate($reservation['date_end']) ?></p>
+                <p><strong>Period:</strong> <?= formatDate($reservation['date_start']) ?> <?= e($reservation['time_start'] ?? '') ?>h - <?= formatDate($reservation['date_end']) ?> <?= e($reservation['time_end'] ?? '') ?>h
+                <br><small>Trajanje: <?= formatRentalDuration(calculateRentalHours($reservation['date_start'], $reservation['date_end'], $reservation['time_start'] ?? '08:00', $reservation['time_end'] ?? '18:00')) ?></small></p>
                 <p><strong>Preuzimanje:</strong> <?= $deliveryNames[$reservation['delivery_option']] ?? $reservation['delivery_option'] ?></p>
                 <p><strong>Kreirana:</strong> <?= formatDateTime($reservation['created_at']) ?></p>
             </div>

@@ -73,7 +73,8 @@ ob_start();
                 <h3>Detalji rezervacije</h3>
                 <p><strong>Broj:</strong> <?= e($reservation['reservation_code']) ?></p>
                 <p><strong>Datum:</strong> <?= formatDateTime($reservation['created_at']) ?></p>
-                <p><strong>Period:</strong> <?= formatDate($reservation['date_start']) ?> - <?= formatDate($reservation['date_end']) ?></p>
+                <p><strong>Period:</strong> <?= formatDate($reservation['date_start']) ?> <?= e($reservation['time_start'] ?? '') ?>h - <?= formatDate($reservation['date_end']) ?> <?= e($reservation['time_end'] ?? '') ?>h
+                <br><small>Trajanje: <?= formatRentalDuration(calculateRentalHours($reservation['date_start'], $reservation['date_end'], $reservation['time_start'] ?? '08:00', $reservation['time_end'] ?? '18:00')) ?></small></p>
                 <p><strong>Preuzimanje:</strong> <?= e($deliveryNames[$reservation['delivery_option']] ?? $reservation['delivery_option']) ?></p>
             </div>
             

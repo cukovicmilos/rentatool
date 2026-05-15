@@ -356,21 +356,31 @@ ob_start();
                     <div class="date-inputs">
                         <div class="form-group">
                             <label for="date_start" class="form-label">Od:</label>
-                            <input type="date" id="date_start" class="form-control date-input-start"
-                                   min="<?= date('Y-m-d') ?>"
-                                   max="<?= date('Y-m-d', strtotime('+30 days')) ?>"
-                                   aria-describedby="date-help"
-                                   aria-label="Datum početka iznajmljivanja"
-                                   required>
+                            <div class="date-time-row">
+                                <input type="date" id="date_start" class="form-control date-input-start"
+                                       min="<?= date('Y-m-d') ?>"
+                                       max="<?= date('Y-m-d', strtotime('+30 days')) ?>"
+                                       aria-describedby="date-help"
+                                       aria-label="Datum početka iznajmljivanja"
+                                       required>
+                                <input type="time" id="time_start" class="form-control"
+                                       value="08:00"
+                                       aria-label="Vreme preuzimanja">
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="date_end" class="form-label">Do:</label>
-                            <input type="date" id="date_end" class="form-control date-input-end"
-                                   min="<?= date('Y-m-d') ?>"
-                                   max="<?= date('Y-m-d', strtotime('+30 days')) ?>"
-                                   aria-describedby="date-help"
-                                   aria-label="Datum završetka iznajmljivanja"
-                                   required>
+                            <div class="date-time-row">
+                                <input type="date" id="date_end" class="form-control date-input-end"
+                                       min="<?= date('Y-m-d') ?>"
+                                       max="<?= date('Y-m-d', strtotime('+30 days')) ?>"
+                                       aria-describedby="date-help"
+                                       aria-label="Datum završetka iznajmljivanja"
+                                       required>
+                                <input type="time" id="time_end" class="form-control"
+                                       value="18:00"
+                                       aria-label="Vreme povratka">
+                            </div>
                         </div>
                     </div>
 
@@ -852,6 +862,16 @@ ob_start();
     gap: var(--spacing-md);
 }
 
+.date-time-row {
+    display: flex;
+    gap: 8px;
+}
+
+.date-time-row input {
+    flex: 1;
+    min-width: 0;
+}
+
 .calendar-wrapper {
     display: flex;
     flex-direction: column;
@@ -1118,6 +1138,11 @@ ob_start();
         gap: var(--spacing-sm);
     }
     
+    .date-time-row {
+        flex-direction: column;
+        gap: 4px;
+    }
+    
     .calendar-wrapper {
         margin-top: var(--spacing-md);
     }
@@ -1366,6 +1391,8 @@ document.getElementById('date_end')?.addEventListener('change', function() {
     calculatePrice();
     updateMiniCalendar(document.getElementById('date_start').value, this.value);
 });
+document.getElementById('time_start')?.addEventListener('change', calculatePrice);
+document.getElementById('time_end')?.addEventListener('change', calculatePrice);
 
 function calculatePrice() {
     const startInput = document.getElementById('date_start');
@@ -1392,8 +1419,14 @@ function calculatePrice() {
         return;
     }
 
-    // Calculate days
-    const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    // Calculate days based on actual hours (24h = 1 dan)
+    const timeStart = document.getElementById('time_start').value || '08:00';
+    const timeEnd = document.getElementById('time_end').value || '18:00';
+    
+    const startDateTime = new Date(startInput.value + 'T' + timeStart);
+    const endDateTime = new Date(endInput.value + 'T' + timeEnd);
+    const totalHours = Math.max(1, (endDateTime - startDateTime) / (1000 * 60 * 60));
+    const days = Math.max(1, Math.floor(totalHours / 24));
 
     if (days > maxDays) {
         alert('Maksimalan period iznajmljivanja je ' + maxDays + ' dana.');
@@ -1429,11 +1462,12 @@ function calculatePrice() {
         return;
     }
     
-    // Count weekend days
+    // Count weekend days (only from billed days)
     let regularDays = 0;
     let weekendDays = 0;
+    let dayCount = 0;
     currentDate = new Date(start);
-    while (currentDate <= end) {
+    while (currentDate <= end && dayCount < days) {
         const day = currentDate.getDay();
         if (day === 0 || day === 6) {
             weekendDays++;
@@ -1441,6 +1475,7 @@ function calculatePrice() {
             regularDays++;
         }
         currentDate.setDate(currentDate.getDate() + 1);
+        dayCount++;
     }
     
     // Calculate totals
@@ -1456,7 +1491,17 @@ function calculatePrice() {
     const total = subtotal - discount;
     
     // Update display
-    document.getElementById('calcDays').textContent = days;
+    const hours = Math.round(totalHours);
+    let durationText;
+    if (hours < 24) {
+        durationText = hours + 'h';
+    } else {
+        const d = Math.floor(hours / 24);
+        const h = hours % 24;
+        const dayStr = d === 1 ? 'dan' : 'dana';
+        durationText = h > 0 ? d + ' ' + dayStr + ' ' + h + 'h' : d + ' ' + dayStr;
+    }
+    document.getElementById('calcDays').textContent = durationText;
     document.getElementById('calcRegular').textContent = regularDays + ' × ' + toolPrice.toFixed(2) + ' € = ' + regularTotal.toFixed(2) + ' €';
     document.getElementById('calcWeekend').textContent = weekendDays + ' × ' + weekendPrice.toFixed(2) + ' € = ' + weekendTotal.toFixed(2) + ' €';
     
@@ -1491,6 +1536,8 @@ document.querySelectorAll('.youtube-facade').forEach(function(el) {
 document.getElementById('addToCartBtn')?.addEventListener('click', function() {
     const start = document.getElementById('date_start').value;
     const end = document.getElementById('date_end').value;
+    const timeStart = document.getElementById('time_start').value || '08:00';
+    const timeEnd = document.getElementById('time_end').value || '18:00';
     
     // Send to cart via AJAX
     fetch('<?= url('api/cart') ?>', {
@@ -1502,7 +1549,9 @@ document.getElementById('addToCartBtn')?.addEventListener('click', function() {
             action: 'add',
             tool_id: toolId,
             date_start: start,
-            date_end: end
+            date_end: end,
+            time_start: timeStart,
+            time_end: timeEnd
         })
     })
     .then(response => response.json())

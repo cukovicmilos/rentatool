@@ -23,6 +23,8 @@ switch ($action) {
         $toolId = (int) ($input['tool_id'] ?? 0);
         $dateStart = $input['date_start'] ?? '';
         $dateEnd = $input['date_end'] ?? '';
+        $timeStart = $input['time_start'] ?? '08:00';
+        $timeEnd = $input['time_end'] ?? '18:00';
         
         // Validate
         if (!$toolId || !$dateStart || !$dateEnd) {
@@ -50,10 +52,18 @@ switch ($action) {
         }
         
         if ($end < $start) {
-            jsonResponse(['success' => false, 'error' => 'Datum završetka mora biti posle početka.'], 400);
+            jsonResponse(['success' => false, 'error' => 'Datum završetka mora biti posle datuma početka.'], 400);
         }
         
-        $days = ceil(($end - $start) / 86400) + 1;
+        // Check combined datetime
+        $startTs = strtotime($dateStart . ' ' . $timeStart);
+        $endTs = strtotime($dateEnd . ' ' . $timeEnd);
+        if ($endTs <= $startTs) {
+            jsonResponse(['success' => false, 'error' => 'Vreme završetka mora biti posle vremena početka.'], 400);
+        }
+        
+        $actualHours = max(1, ($endTs - $startTs) / 3600);
+        $days = max(1, (int) floor($actualHours / 24));
         if ($days > MAX_RENTAL_DAYS) {
             jsonResponse(['success' => false, 'error' => 'Maksimalno ' . MAX_RENTAL_DAYS . ' dana.'], 400);
         }
@@ -61,9 +71,11 @@ switch ($action) {
         // Check if tool already in cart
         foreach ($_SESSION['cart'] as $key => $item) {
             if ($item['tool_id'] == $toolId) {
-                // Update dates instead
+                // Update dates and times instead
                 $_SESSION['cart'][$key]['date_start'] = $dateStart;
                 $_SESSION['cart'][$key]['date_end'] = $dateEnd;
+                $_SESSION['cart'][$key]['time_start'] = $timeStart;
+                $_SESSION['cart'][$key]['time_end'] = $timeEnd;
                 jsonResponse([
                     'success' => true, 
                     'message' => 'Datumi su ažurirani.',
@@ -79,7 +91,9 @@ switch ($action) {
             'tool_slug' => $tool['slug'],
             'price_24h' => $tool['price_24h'],
             'date_start' => $dateStart,
-            'date_end' => $dateEnd
+            'date_end' => $dateEnd,
+            'time_start' => $timeStart,
+            'time_end' => $timeEnd
         ];
         
         jsonResponse([

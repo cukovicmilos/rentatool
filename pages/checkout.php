@@ -32,7 +32,9 @@ foreach ($cart as $item) {
         ];
     } else {
         $dates = getDatesBetween($item['date_start'], $item['date_end']);
-        $priceInfo = calculateRentalPrice($item['price_24h'], $dates);
+        $timeStart = $item['time_start'] ?? '08:00';
+        $timeEnd = $item['time_end'] ?? '18:00';
+        $priceInfo = calculateRentalPrice($item['price_24h'], $dates, $item['date_start'], $item['date_end'], $timeStart, $timeEnd);
         
         $cartItems[] = [
             'type' => 'tool',
@@ -41,7 +43,10 @@ foreach ($cart as $item) {
             'price_24h' => $item['price_24h'],
             'date_start' => $item['date_start'],
             'date_end' => $item['date_end'],
+            'time_start' => $timeStart,
+            'time_end' => $timeEnd,
             'total_days' => $priceInfo['total_days'],
+            'total_hours' => $priceInfo['total_hours'],
             'subtotal' => $priceInfo['total']
         ];
         
@@ -130,10 +135,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $toolDates = array_filter(array_column($cartItems, 'date_start'));
             $allDates = array_merge($toolDates, $serviceDates);
             
+            // Get time from first tool item
+            $timeStart = '08:00';
+            $timeEnd = '18:00';
+            foreach ($cartItems as $item) {
+                if ($item['type'] === 'tool') {
+                    $timeStart = $item['time_start'] ?? '08:00';
+                    $timeEnd = $item['time_end'] ?? '18:00';
+                    break;
+                }
+            }
+            
             if (!empty($allDates)) {
                 $dateStart = min($allDates);
                 $dateEnd = max($allDates);
-                $totalDays = count(getDatesBetween($dateStart, $dateEnd));
+                $totalDays = calculateRentalDays($dateStart, $dateEnd, $timeStart, $timeEnd);
             } else {
                 // Only services, use current date
                 $dateStart = date('Y-m-d');
@@ -152,13 +168,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     INSERT INTO reservations (
                         reservation_code, status,
                         customer_name, customer_email, customer_phone, customer_address, customer_note,
-                        date_start, date_end, total_days,
+                        date_start, date_end, time_start, time_end, total_days,
                         subtotal, weekend_markup, discount, delivery_option, delivery_fee, total
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ", [
                     $reservationCode, 'pending',
                     $customerName, $customerEmail, $customerPhone, $customerAddress, $customerNote,
-                    $dateStart, $dateEnd, $totalDays,
+                    $dateStart, $dateEnd, $timeStart, $timeEnd, $totalDays,
                     $subtotal, 0, 0, $deliveryOption, $deliveryFee, $total
                 ]);
                 
@@ -216,6 +232,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'delivery_address' => $customerAddress,
                     'date_start' => $dateStart,
                     'date_end' => $dateEnd,
+                    'time_start' => $timeStart,
+                    'time_end' => $timeEnd,
                     'total_price' => $total,
                     'deposit_total' => 0,
                     'notes' => $customerNote
@@ -353,8 +371,8 @@ ob_start();
                     <?php else: ?>
                     <tr>
                         <td><?= e($item['tool_name']) ?></td>
-                        <td><?= formatDate($item['date_start']) ?> - <?= formatDate($item['date_end']) ?></td>
-                        <td><?= $item['total_days'] ?> dana</td>
+                        <td><?= formatDate($item['date_start']) ?> <?= e($item['time_start'] ?? '') ?>h<br><small>do <?= formatDate($item['date_end']) ?> <?= e($item['time_end'] ?? '') ?>h</small></td>
+                        <td><?= formatRentalDuration($item['total_hours'] ?? ($item['total_days'] * 24)) ?></td>
                         <td class="text-right"><?= formatPrice($item['subtotal']) ?></td>
                     </tr>
                     <?php endif; ?>

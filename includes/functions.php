@@ -146,6 +146,22 @@ function formatDate(string $date): string {
 }
 
 /**
+ * Format rental duration for display (e.g. "6h", "1 dan 16h", "3 dana")
+ */
+function formatRentalDuration(int $totalHours): string {
+    if ($totalHours < 24) {
+        return $totalHours . 'h';
+    }
+    $days = floor($totalHours / 24);
+    $hours = $totalHours % 24;
+    $dayStr = $days == 1 ? 'dan' : 'dana';
+    if ($hours > 0) {
+        return $days . ' ' . $dayStr . ' ' . $hours . 'h';
+    }
+    return $days . ' ' . $dayStr;
+}
+
+/**
  * Format datetime for display
  */
 function formatDateTime(string $datetime): string {
@@ -161,14 +177,44 @@ function isWeekend(string $date): bool {
 }
 
 /**
+ * Calculate total rental hours between two datetimes
+ */
+function calculateRentalHours(string $dateStart, string $dateEnd, string $timeStart = '08:00', string $timeEnd = '18:00'): int {
+    $startTs = strtotime($dateStart . ' ' . $timeStart);
+    $endTs = strtotime($dateEnd . ' ' . $timeEnd);
+    return max(1, (int) ceil(($endTs - $startTs) / 3600));
+}
+
+/**
+ * Calculate rental days based on actual hours (24h = 1 day, full 24h blocks)
+ */
+function calculateRentalDays(string $dateStart, string $dateEnd, string $timeStart = '08:00', string $timeEnd = '18:00'): int {
+    $hours = calculateRentalHours($dateStart, $dateEnd, $timeStart, $timeEnd);
+    return max(1, (int) floor($hours / 24));
+}
+
+/**
  * Calculate rental price
  */
-function calculateRentalPrice(float $dailyPrice, array $dates): array {
-    $totalDays = count($dates);
+function calculateRentalPrice(float $dailyPrice, array $dates, ?string $dateStart = null, ?string $dateEnd = null, ?string $timeStart = null, ?string $timeEnd = null): array {
+    // Calculate actual days if time info provided
+    $totalHours = 0;
+    if ($dateStart && $dateEnd) {
+        $startTs = strtotime($dateStart . ' ' . ($timeStart ?? '08:00'));
+        $endTs = strtotime($dateEnd . ' ' . ($timeEnd ?? '18:00'));
+        $totalHours = max(1, (int) ceil(($endTs - $startTs) / 3600));
+        $totalDays = max(1, (int) floor($totalHours / 24));
+    } else {
+        $totalDays = count($dates);
+        $totalHours = $totalDays * 24;
+    }
+    
     $regularDays = 0;
     $weekendDays = 0;
     
-    foreach ($dates as $date) {
+    // Count weekend days only from the billed days
+    $countedDates = array_slice($dates, 0, $totalDays);
+    foreach ($countedDates as $date) {
         if (isWeekend($date)) {
             $weekendDays++;
         } else {
@@ -190,6 +236,7 @@ function calculateRentalPrice(float $dailyPrice, array $dates): array {
     
     return [
         'total_days' => $totalDays,
+        'total_hours' => $totalHours,
         'regular_days' => $regularDays,
         'weekend_days' => $weekendDays,
         'subtotal' => $subtotal,
@@ -537,7 +584,13 @@ function formatReservationTelegramMessage(array $reservation, array $items): str
         $message .= "<b>Email:</b> {$reservation['customer_email']}\n";
     }
     
-    $message .= "\n<b>Period:</b> " . formatDate($reservation['date_start']) . " - " . formatDate($reservation['date_end']) . "\n";
+    $timeStart = $reservation['time_start'] ?? '';
+    $timeEnd = $reservation['time_end'] ?? '';
+    $timeStr = '';
+    if ($timeStart || $timeEnd) {
+        $timeStr = " {$timeStart}h - {$timeEnd}h";
+    }
+    $message .= "\n<b>Period:</b> " . formatDate($reservation['date_start']) . " - " . formatDate($reservation['date_end']) . "{$timeStr}\n";
     
     // Delivery option
     $deliveryOptions = [

@@ -46,7 +46,9 @@ foreach ($cart as $index => $item) {
         ];
     } else {
         $dates = getDatesBetween($item['date_start'], $item['date_end']);
-        $priceInfo = calculateRentalPrice($item['price_24h'], $dates);
+        $timeStart = $item['time_start'] ?? '08:00';
+        $timeEnd = $item['time_end'] ?? '18:00';
+        $priceInfo = calculateRentalPrice($item['price_24h'], $dates, $item['date_start'], $item['date_end'], $timeStart, $timeEnd);
         
         $cartItems[] = [
             'index' => $index,
@@ -57,7 +59,10 @@ foreach ($cart as $index => $item) {
             'price_24h' => $item['price_24h'],
             'date_start' => $item['date_start'],
             'date_end' => $item['date_end'],
+            'time_start' => $timeStart,
+            'time_end' => $timeEnd,
             'total_days' => $priceInfo['total_days'],
+            'total_hours' => $priceInfo['total_hours'],
             'regular_days' => $priceInfo['regular_days'],
             'weekend_days' => $priceInfo['weekend_days'],
             'subtotal' => $priceInfo['subtotal'],
@@ -115,8 +120,9 @@ ob_start();
                     </h3>
                     <p class="cart-item-dates">
                         <strong>Period:</strong> 
-                        <?= formatDate($item['date_start']) ?> - <?= formatDate($item['date_end']) ?>
-                        (<?= $item['total_days'] ?> <?= $item['total_days'] == 1 ? 'dan' : 'dana' ?>)
+                        <?= formatDate($item['date_start']) ?> <?= e($item['time_start'] ?? '') ?>h - 
+                        <?= formatDate($item['date_end']) ?> <?= e($item['time_end'] ?? '') ?>h
+                        (<?= formatRentalDuration($item['total_hours']) ?>)
                     </p>
                     <p class="cart-item-breakdown">
                         <?php if ($item['regular_days'] > 0): ?>
