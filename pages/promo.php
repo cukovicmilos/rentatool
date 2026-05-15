@@ -5,13 +5,14 @@
  * Sekcije:
  * 1. Hero Section
  * 2. Trust Logos (brendovi)
- * 3. Benefits Section
- * 4. Process Section
- * 5. Features Section
- * 6. Pricing Section (istaknuti alati)
- * 7. Testimonials Section
- * 8. FAQ Section
- * 9. CTA Section
+ * 3. Services Section
+ * 4. Pricing Section (istaknuti alati)
+ * 5. Benefits Section
+ * 6. Process Section
+ * 7. Features Section
+ * 8. Testimonials Section
+ * 9. FAQ Section
+ * 10. CTA Section
  */
 
 // Get featured tools from database
@@ -217,6 +218,64 @@ ob_start();
     </div>
 </section>
 
+<!-- PRICING SECTION (Featured Tools) -->
+<section class="promo-section promo-pricing" id="pricing">
+    <h2 class="promo-section-title">Najtraženiji alati za iznajmljivanje u Subotici</h2>
+    <p class="promo-section-subtitle">Pogledajte neke od naših najtraženijih alata</p>
+    
+    <?php if (!empty($featuredTools)): ?>
+    <div class="pricing-grid">
+        <?php foreach ($featuredTools as $index => $tool): ?>
+        <a href="<?= url('alat/' . $tool['slug']) ?>" class="pricing-card <?= $index === 1 ? 'featured' : '' ?>">
+            <?php if ($index === 1): ?>
+            <div class="pricing-badge">Popularan izbor</div>
+            <?php endif; ?>
+            
+            <div class="pricing-image">
+                <?php if ($tool['primary_image']): ?>
+                <img src="<?= url('uploads/tools/' . $tool['primary_image']) ?>" 
+                     alt="<?= e(toolAlt($tool)) ?>"
+                     width="280"
+                     height="180"
+                     loading="lazy">
+                <?php else: ?>
+                <div class="no-image"><i class="fas fa-wrench"></i></div>
+                <?php endif; ?>
+            </div>
+            
+            <h3 class="pricing-title"><?= e($tool['name']) ?></h3>
+            
+            <?php if (!empty($tool['short_description'])): ?>
+            <p class="pricing-description"><?= e(truncate($tool['short_description'], 100)) ?></p>
+            <?php endif; ?>
+            
+            <div class="pricing-price">
+                <span class="price-amount"><?= formatPrice($tool['price_24h']) ?></span>
+                <span class="price-period">/ dan</span>
+            </div>
+            
+            <?php if ($tool['deposit'] > 0): ?>
+            <p class="pricing-deposit">Kaucija: <?= formatPrice($tool['deposit']) ?></p>
+            <?php endif; ?>
+            
+            <span class="btn <?= $index === 1 ? 'btn-primary' : 'btn-secondary' ?> btn-block">
+                Rezerviši
+            </span>
+        </a>
+        <script type="application/ld+json">
+        <?= json_encode(productSchema($tool), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>
+        </script>
+        <?php endforeach; ?>
+    </div>
+    <?php else: ?>
+    <p class="text-center text-muted">Trenutno nema istaknutih alata.</p>
+    <?php endif; ?>
+    
+    <div class="pricing-cta">
+        <a href="<?= url('alati') ?>" class="btn btn-primary btn-large">Pogledaj sve alate →</a>
+    </div>
+</section>
+
 <!-- BENEFITS SECTION -->
 <section class="promo-section promo-benefits" id="benefits">
     <h2 class="promo-section-title">Zašto iznajmiti umesto kupiti?</h2>
@@ -336,64 +395,6 @@ ob_start();
             <h3>Stručni saveti</h3>
             <p>Ne znate koji alat vam treba? Pomažemo da odaberete pravi za vaš posao.</p>
         </div>
-    </div>
-</section>
-
-<!-- PRICING SECTION (Featured Tools) -->
-<section class="promo-section promo-pricing" id="pricing">
-    <h2 class="promo-section-title">Najtraženiji alati za iznajmljivanje u Subotici</h2>
-    <p class="promo-section-subtitle">Pogledajte neke od naših najtraženijih alata</p>
-    
-    <?php if (!empty($featuredTools)): ?>
-    <div class="pricing-grid">
-        <?php foreach ($featuredTools as $index => $tool): ?>
-        <a href="<?= url('alat/' . $tool['slug']) ?>" class="pricing-card <?= $index === 1 ? 'featured' : '' ?>">
-            <?php if ($index === 1): ?>
-            <div class="pricing-badge">Popularan izbor</div>
-            <?php endif; ?>
-            
-            <div class="pricing-image">
-                <?php if ($tool['primary_image']): ?>
-                <img src="<?= url('uploads/tools/' . $tool['primary_image']) ?>" 
-                     alt="<?= e(toolAlt($tool)) ?>"
-                     width="280"
-                     height="180"
-                     loading="lazy">
-                <?php else: ?>
-                <div class="no-image"><i class="fas fa-wrench"></i></div>
-                <?php endif; ?>
-            </div>
-            
-            <h3 class="pricing-title"><?= e($tool['name']) ?></h3>
-            
-            <?php if (!empty($tool['short_description'])): ?>
-            <p class="pricing-description"><?= e(truncate($tool['short_description'], 100)) ?></p>
-            <?php endif; ?>
-            
-            <div class="pricing-price">
-                <span class="price-amount"><?= formatPrice($tool['price_24h']) ?></span>
-                <span class="price-period">/ dan</span>
-            </div>
-            
-            <?php if ($tool['deposit'] > 0): ?>
-            <p class="pricing-deposit">Kaucija: <?= formatPrice($tool['deposit']) ?></p>
-            <?php endif; ?>
-            
-            <span class="btn <?= $index === 1 ? 'btn-primary' : 'btn-secondary' ?> btn-block">
-                Rezerviši
-            </span>
-        </a>
-        <script type="application/ld+json">
-        <?= json_encode(productSchema($tool), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>
-        </script>
-        <?php endforeach; ?>
-    </div>
-    <?php else: ?>
-    <p class="text-center text-muted">Trenutno nema istaknutih alata.</p>
-    <?php endif; ?>
-    
-    <div class="pricing-cta">
-        <a href="<?= url('alati') ?>" class="btn btn-primary btn-large">Pogledaj sve alate →</a>
     </div>
 </section>
 
@@ -520,7 +521,10 @@ $minDate = date('Y-m-d');
             
             <div class="form-group">
                 <label for="service_date" class="form-label required">Željeni datum</label>
-                <input type="date" id="service_date" name="service_date" class="form-control" required min="<?= $minDate ?>">
+                <div class="date-time-row">
+                    <input type="date" id="service_date" name="service_date" class="form-control" required min="<?= $minDate ?>">
+                    <input type="time" id="service_time" name="service_time" class="form-control" value="08:00">
+                </div>
             </div>
             
             <div class="form-group">
@@ -545,13 +549,22 @@ $minDate = date('Y-m-d');
 </div>
 
 <style>
+.promo-pricing {
+    background: var(--color-gray-100);
+    padding: var(--spacing-xl) 0;
+}
+
 .promo-services {
     background: var(--color-gray-100);
-    border-radius: var(--border-radius);
-    padding: var(--spacing-xl);
-    margin: var(--spacing-xl) auto;
-    max-width: 900px;
+    padding: var(--spacing-xl) 0;
     text-align: center;
+    max-width: 100%;
+}
+
+.promo-services .services-content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-md);
 }
 
 .services-subtitle {
@@ -612,6 +625,7 @@ $minDate = date('Y-m-d');
     margin: 0;
     padding-left: var(--spacing-lg);
     columns: 2;
+    list-style: disc;
 }
 
 .modal-overlay {
@@ -681,6 +695,17 @@ $minDate = date('Y-m-d');
 }
 </style>
 
+<style>
+.date-time-row {
+    display: flex;
+    gap: 8px;
+}
+.date-time-row input {
+    flex: 1;
+    min-width: 0;
+}
+</style>
+
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     const serviceModal = document.getElementById('serviceModal');
@@ -713,6 +738,7 @@ document.addEventListener("DOMContentLoaded", function() {
             const errorsDiv = document.getElementById('serviceFormErrors');
             const formData = new FormData(form);
             
+            const serviceTime = document.getElementById('service_time').value || '08:00';
             fetch('<?= url('api/cart') ?>', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -721,6 +747,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     service_type: formData.get('service_type'),
                     description: formData.get('service_description'),
                     service_date: formData.get('service_date'),
+                    service_time: serviceTime,
                     location: formData.get('service_location')
                 })
             })

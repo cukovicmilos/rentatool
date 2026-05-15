@@ -365,7 +365,8 @@
    Pricing Section
    ========================================================================== */
 
-.promo-pricing {
+.promo-pricing,
+.promo-services {
     background: var(--color-gray-100);
     max-width: 100%;
     padding: var(--spacing-xxl) var(--spacing-md);
