@@ -190,7 +190,7 @@ function calculateRentalHours(string $dateStart, string $dateEnd, string $timeSt
  */
 function calculateRentalDays(string $dateStart, string $dateEnd, string $timeStart = '08:00', string $timeEnd = '18:00'): int {
     $hours = calculateRentalHours($dateStart, $dateEnd, $timeStart, $timeEnd);
-    return max(1, (int) floor($hours / 24));
+    return max(1, (int) ceil($hours / 24));
 }
 
 /**
@@ -203,7 +203,7 @@ function calculateRentalPrice(float $dailyPrice, array $dates, ?string $dateStar
         $startTs = strtotime($dateStart . ' ' . ($timeStart ?? '08:00'));
         $endTs = strtotime($dateEnd . ' ' . ($timeEnd ?? '18:00'));
         $totalHours = max(1, (int) ceil(($endTs - $startTs) / 3600));
-        $totalDays = max(1, (int) floor($totalHours / 24));
+        $totalDays = max(1, (int) ceil($totalHours / 24));
     } else {
         $totalDays = count($dates);
         $totalHours = $totalDays * 24;

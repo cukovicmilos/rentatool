@@ -123,6 +123,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'izmeni') {
             // Calculate total days for the reservation period (based on hours)
             $totalDays = calculateRentalDays($dateStart, $dateEnd, $timeStart, $timeEnd);
             
+            // Count weekend days
+            $dates = getDatesBetween($dateStart, $dateEnd);
+            $datesSlice = array_slice($dates, 0, $totalDays);
+            $weekendCount = 0;
+            foreach ($datesSlice as $date) {
+                if (isWeekend($date)) $weekendCount++;
+            }
+            
             // Calculate subtotal from all items
             $subtotal = 0;
             $weekendMarkup = 0;
@@ -136,11 +144,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'izmeni') {
                 }
                 // Update item days based on new date range
                 $itemSubtotal = $item['price_per_day'] * $totalDays;
+                $itemMarkup = $weekendCount * $item['price_per_day'] * WEEKEND_MARKUP;
                 db()->execute(
                     "UPDATE reservation_items SET days = ?, subtotal = ? WHERE id = ?",
                     [$totalDays, $itemSubtotal, $item['id']]
                 );
                 $subtotal += $itemSubtotal;
+                $weekendMarkup += $itemMarkup;
             }
             
             // Add new tool items
@@ -152,6 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'izmeni') {
                 if (!$tool) continue;
                 
                 $toolSubtotal = $tool['price_24h'] * $totalDays;
+                $toolMarkup = $weekendCount * $tool['price_24h'] * WEEKEND_MARKUP;
                 db()->insert("
                     INSERT INTO reservation_items (reservation_id, tool_id, tool_name, price_per_day, days, subtotal, item_type)
                     VALUES (?, ?, ?, ?, ?, ?, 'tool')
@@ -159,16 +170,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'izmeni') {
                     $resId, $tool['id'], $tool['name'], $tool['price_24h'], $totalDays, $toolSubtotal
                 ]);
                 $subtotal += $toolSubtotal;
+                $weekendMarkup += $toolMarkup;
             }
             
             // Also handle service items update (just keep them as is)
             
-            // Calculate weekend markup and discount
-            $priceInfo = calculateRentalPrice(1, getDatesBetween($dateStart, $dateEnd));
-            $weekendMarkupDays = $priceInfo['weekend_days'];
+            // Calculate discount
+            if ($totalDays >= 7) {
+                $discount = ($subtotal + $weekendMarkup) * WEEKLY_DISCOUNT;
+            }
             
             // Update reservation
-            $total = $subtotal + $deliveryFee;
+            $total = $subtotal + $weekendMarkup - $discount + $deliveryFee;
             
             db()->execute("
                 UPDATE reservations SET
@@ -384,6 +397,28 @@ ob_start();
         <h3>Finansije</h3>
     </div>
     
+    <?php
+    // Calculate price breakdown for display
+    $displayDates = getDatesBetween($reservation['date_start'], $reservation['date_end']);
+    $displayTotalDays = max(1, (int)$reservation['total_days']);
+    $displayDatesSlice = array_slice($displayDates, 0, $displayTotalDays);
+    $displayWeekendCount = 0;
+    foreach ($displayDatesSlice as $date) {
+        if (isWeekend($date)) $displayWeekendCount++;
+    }
+    
+    $displayBase = 0;
+    $displayMarkup = 0;
+    foreach ($reservationItems as $item) {
+        if ($item['item_type'] === 'service') continue;
+        $displayBase += $item['price_per_day'] * $item['days'];
+        $displayMarkup += $displayWeekendCount * $item['price_per_day'] * WEEKEND_MARKUP;
+    }
+    $displayDiscount = (float)$reservation['discount'];
+    $displayDelivery = (float)$reservation['delivery_fee'];
+    $displayTotal = $displayBase + $displayMarkup - $displayDiscount + $displayDelivery;
+    ?>
+    
     <div class="form-row">
         <div>
             <p><strong>Period:</strong> <?= formatDate($reservation['date_start']) ?> - <?= formatDate($reservation['date_end']) ?></p>
@@ -393,15 +428,16 @@ ob_start();
             <p><strong>Dostava:</strong> <?= ucfirst($reservation['delivery_option']) ?></p>
         </div>
         <div>
-            <p><strong>Međuzbir:</strong> <?= formatPrice($reservation['subtotal']) ?></p>
-            <?php if ($reservation['weekend_markup'] > 0): ?>
-            <p><strong>Vikend doplata:</strong> +<?= formatPrice($reservation['weekend_markup']) ?></p>
+            <p><strong>Osnovna cena:</strong> <?= formatPrice($displayBase) ?></p>
+            <?php if ($displayMarkup > 0): ?>
+            <p><strong>Vikend doplata (+<?= WEEKEND_MARKUP * 100 ?>%):</strong> +<?= formatPrice($displayMarkup) ?></p>
             <?php endif; ?>
-            <?php if ($reservation['discount'] > 0): ?>
-            <p><strong>Popust:</strong> -<?= formatPrice($reservation['discount']) ?></p>
+            <p><strong>Međuzbir:</strong> <?= formatPrice($displayBase + $displayMarkup) ?></p>
+            <?php if ($displayDiscount > 0): ?>
+            <p><strong>Popust (<?= WEEKLY_DISCOUNT * 100 ?>%):</strong> -<?= formatPrice($displayDiscount) ?></p>
             <?php endif; ?>
-            <p><strong>Dostava:</strong> <?= formatPrice($reservation['delivery_fee']) ?></p>
-            <p style="font-size: 1.2em;"><strong>UKUPNO: <?= formatPrice($reservation['total']) ?></strong></p>
+            <p><strong>Dostava:</strong> <?= formatPrice($displayDelivery) ?></p>
+            <p style="font-size: 1.2em;"><strong>UKUPNO: <?= formatPrice($displayTotal) ?></strong></p>
         </div>
     </div>
 </div>

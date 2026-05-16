@@ -63,7 +63,7 @@ switch ($action) {
         }
         
         $actualHours = max(1, ($endTs - $startTs) / 3600);
-        $days = max(1, (int) floor($actualHours / 24));
+        $days = max(1, (int) ceil($actualHours / 24));
         if ($days > MAX_RENTAL_DAYS) {
             jsonResponse(['success' => false, 'error' => 'Maksimalno ' . MAX_RENTAL_DAYS . ' dana.'], 400);
         }

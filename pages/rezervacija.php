@@ -127,6 +127,18 @@ ob_start();
                         <td colspan="3">Alati:</td>
                         <td class="text-right"><?= formatPrice($reservation['subtotal']) ?></td>
                     </tr>
+                    <?php if ((float)$reservation['weekend_markup'] > 0): ?>
+                    <tr>
+                        <td colspan="3">Vikend doplata:</td>
+                        <td class="text-right">+<?= formatPrice($reservation['weekend_markup']) ?></td>
+                    </tr>
+                    <?php endif; ?>
+                    <?php if ((float)$reservation['discount'] > 0): ?>
+                    <tr>
+                        <td colspan="3">Popust (7+ dana):</td>
+                        <td class="text-right">-<?= formatPrice($reservation['discount']) ?></td>
+                    </tr>
+                    <?php endif; ?>
                     <?php if ($reservation['delivery_fee'] > 0): ?>
                     <tr>
                         <td colspan="3">Dostava:</td>

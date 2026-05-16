@@ -1290,8 +1290,8 @@ document.addEventListener('keydown', function(e) {
 
 // Date calculation
 const toolPrice = <?= $tool['price_24h'] ?>;
-const weekendPrice = <?= $weekendPrice ?>;
 const weekendMarkup = <?= WEEKEND_MARKUP ?>;
+const weekendPrice = toolPrice * (1 + weekendMarkup);
 const weeklyDiscount = <?= WEEKLY_DISCOUNT ?>;
 const maxDays = <?= MAX_RENTAL_DAYS ?>;
 const unavailableDates = <?= json_encode($unavailableDates) ?>;
@@ -1447,7 +1447,7 @@ function calculatePrice() {
     const startDateTime = new Date(startInput.value + 'T' + timeStart);
     const endDateTime = new Date(endInput.value + 'T' + timeEnd);
     const totalHours = Math.max(1, (endDateTime - startDateTime) / (1000 * 60 * 60));
-    const days = Math.max(1, Math.floor(totalHours / 24));
+    const days = Math.max(1, Math.ceil(totalHours / 24));
 
     if (days > maxDays) {
         alert('Maksimalan period iznajmljivanja je ' + maxDays + ' dana.');
@@ -1511,16 +1511,12 @@ function calculatePrice() {
     
     const total = subtotal - discount;
     
-    // Update display
-    const hours = Math.round(totalHours);
+    // Update display (show billed days, not raw hours)
     let durationText;
-    if (hours < 24) {
-        durationText = hours + 'h';
+    if (days === 1) {
+        durationText = '1 dan';
     } else {
-        const d = Math.floor(hours / 24);
-        const h = hours % 24;
-        const dayStr = d === 1 ? 'dan' : 'dana';
-        durationText = h > 0 ? d + ' ' + dayStr + ' ' + h + 'h' : d + ' ' + dayStr;
+        durationText = days + ' dana';
     }
     document.getElementById('calcDays').textContent = durationText;
     document.getElementById('calcRegular').textContent = regularDays + ' × ' + toolPrice.toFixed(2) + ' € = ' + regularTotal.toFixed(2) + ' €';

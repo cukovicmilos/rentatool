@@ -15,6 +15,8 @@ $errors = [];
 // Calculate cart totals
 $cartItems = [];
 $subtotal = 0;
+$weekendMarkupTotal = 0;
+$discountTotal = 0;
 $hasServices = false;
 $serviceDates = [];
 
@@ -36,6 +38,9 @@ foreach ($cart as $item) {
         $timeEnd = $item['time_end'] ?? '18:00';
         $priceInfo = calculateRentalPrice($item['price_24h'], $dates, $item['date_start'], $item['date_end'], $timeStart, $timeEnd);
         
+        $itemBase = $item['price_24h'] * $priceInfo['total_days'];
+        $itemMarkup = $priceInfo['weekend_days'] * $item['price_24h'] * WEEKEND_MARKUP;
+        
         $cartItems[] = [
             'type' => 'tool',
             'tool_id' => $item['tool_id'],
@@ -47,10 +52,15 @@ foreach ($cart as $item) {
             'time_end' => $timeEnd,
             'total_days' => $priceInfo['total_days'],
             'total_hours' => $priceInfo['total_hours'],
-            'subtotal' => $priceInfo['total']
+            'regular_days' => $priceInfo['regular_days'],
+            'weekend_days' => $priceInfo['weekend_days'],
+            'subtotal' => $itemBase,
+            'discount' => $priceInfo['discount']
         ];
         
-        $subtotal += $priceInfo['total'];
+        $subtotal += $itemBase;
+        $weekendMarkupTotal += $itemMarkup;
+        $discountTotal += $priceInfo['discount'];
     }
 }
 
@@ -129,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($errors)) {
             // Calculate final totals
             $deliveryFee = $deliveryOptions[$deliveryOption]['price'];
-            $total = $subtotal + $deliveryFee;
+            $total = $subtotal + $weekendMarkupTotal - $discountTotal + $deliveryFee;
             
             // Get date range - handle both tool dates and service dates
             $toolDates = array_filter(array_column($cartItems, 'date_start'));
@@ -175,7 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $reservationCode, 'pending',
                     $customerName, $customerEmail, $customerPhone, $customerAddress, $customerNote,
                     $dateStart, $dateEnd, $timeStart, $timeEnd, $totalDays,
-                    $subtotal, 0, 0, $deliveryOption, $deliveryFee, $total
+                    $subtotal, $weekendMarkupTotal, $discountTotal, $deliveryOption, $deliveryFee, $total
                 ]);
                 
                 // Create reservation items
@@ -372,18 +382,43 @@ ob_start();
                     <tr>
                         <td><?= e($item['tool_name']) ?></td>
                         <td><?= formatDate($item['date_start']) ?> <?= e($item['time_start'] ?? '') ?>h<br><small>do <?= formatDate($item['date_end']) ?> <?= e($item['time_end'] ?? '') ?>h</small></td>
-                        <td><?= formatRentalDuration($item['total_hours'] ?? ($item['total_days'] * 24)) ?></td>
-                        <td class="text-right"><?= formatPrice($item['subtotal']) ?></td>
+                        <td>
+                            <?= $item['total_days'] ?> <?= $item['total_days'] === 1 ? 'dan' : 'dana' ?>
+                            <?php if ($item['regular_days'] > 0 || $item['weekend_days'] > 0): ?>
+                            <br><small>
+                                <?php if ($item['regular_days'] > 0): ?>
+                                    <?= $item['regular_days'] ?> × <?= formatPrice($item['price_24h']) ?>
+                                <?php endif; ?>
+                                <?php if ($item['weekend_days'] > 0): ?>
+                                    <?php if ($item['regular_days'] > 0): ?> + <?php endif; ?>
+                                    <?= $item['weekend_days'] ?> × <?= formatPrice($item['price_24h'] * (1 + WEEKEND_MARKUP)) ?>
+                                <?php endif; ?>
+                            </small>
+                            <?php endif; ?>
+                        </td>
+                        <td class="text-right"><?= formatPrice($item['subtotal'] + ($item['weekend_days'] * $item['price_24h'] * WEEKEND_MARKUP) - $item['discount']) ?></td>
                     </tr>
                     <?php endif; ?>
                     <?php endforeach; ?>
                 </tbody>
                 <tfoot>
-                    <?php if ($hasServices): ?>
                     <tr>
                         <td colspan="3">Alati ukupno:</td>
                         <td class="text-right"><strong><?= formatPrice($subtotal) ?></strong></td>
                     </tr>
+                    <?php if ($weekendMarkupTotal > 0): ?>
+                    <tr>
+                        <td colspan="3">Vikend doplata (+<?= WEEKEND_MARKUP * 100 ?>%):</td>
+                        <td class="text-right">+<?= formatPrice($weekendMarkupTotal) ?></td>
+                    </tr>
+                    <?php endif; ?>
+                    <?php if ($discountTotal > 0): ?>
+                    <tr>
+                        <td colspan="3">Popust (7+ dana):</td>
+                        <td class="text-right">-<?= formatPrice($discountTotal) ?></td>
+                    </tr>
+                    <?php endif; ?>
+                    <?php if ($hasServices): ?>
                     <tr>
                         <td colspan="3">Usluge:</td>
                         <td class="text-right"><em>Dogovor</em></td>
@@ -395,7 +430,7 @@ ob_start();
                     </tr>
                     <tr class="total-row">
                         <td colspan="3"><strong>UKUPNO:</strong></td>
-                        <td class="text-right"><strong id="grandTotal"><?= formatPrice($subtotal) ?></strong></td>
+                        <td class="text-right"><strong id="grandTotal"><?= formatPrice($subtotal + $weekendMarkupTotal - $discountTotal) ?></strong></td>
                     </tr>
                 </tfoot>
             </table>
@@ -559,13 +594,15 @@ ob_start();
 </style>
 
 <script>
-const subtotal = <?= $subtotal ?>;
+const baseSubtotal = <?= $subtotal ?>;
+const weekendMarkupTotal = <?= $weekendMarkupTotal ?>;
+const discountTotal = <?= $discountTotal ?>;
 const deliveryPrices = <?= json_encode(array_map(fn($o) => $o['price'], $deliveryOptions)) ?>;
 
 function updateDelivery() {
     const selected = document.querySelector('input[name="delivery_option"]:checked').value;
     const deliveryPrice = deliveryPrices[selected] || 0;
-    const total = subtotal + deliveryPrice;
+    const total = baseSubtotal + weekendMarkupTotal - discountTotal + deliveryPrice;
     
     document.getElementById('deliveryPrice').textContent = deliveryPrice > 0 
         ? deliveryPrice.toFixed(2) + ' €' 
