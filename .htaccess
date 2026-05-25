@@ -1,5 +1,6 @@
 RewriteEngine On
-RewriteBase /rentatool/
+# RewriteBase /rentatool/  # Uncomment for development in subdirectory
+RewriteBase /
 
 # Redirect to HTTPS (uncomment in production)
 # RewriteCond %{HTTPS} off
@@ -43,6 +44,8 @@ RewriteRule ^([a-z0-9-]+)$ pages/$1.php [L]
 RewriteRule ^kategorija/([a-z0-9-]+)$ pages/kategorija.php?slug=$1 [L,QSA]
 
 # Tool detail pages  
+# Redirect old URL format /alat/[id]/[slug] → /alat/[slug] (301)
+RewriteRule ^alat/([0-9]+)/([a-z0-9-]+)$ alat/$2 [R=301,L]
 RewriteRule ^alat/([a-z0-9-]+)$ pages/alat.php?slug=$1 [L,QSA]
 
 # Static pages

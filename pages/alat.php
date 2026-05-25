@@ -9,6 +9,23 @@ $slug = get('slug', '');
 $tool = db()->fetch("SELECT * FROM tools WHERE slug = ?", [$slug]);
 
 if (!$tool) {
+    // Try to find similar tool by slug prefix match first, then infix
+    if (strlen($slug) >= 3) {
+        $similar = db()->fetchAll(
+            "SELECT slug FROM tools WHERE slug LIKE ? LIMIT 5",
+            [$slug . '%']
+        );
+        if (count($similar) !== 1) {
+            $similar = db()->fetchAll(
+                "SELECT slug FROM tools WHERE slug LIKE ? LIMIT 5",
+                ['%' . $slug . '%']
+            );
+        }
+        if (count($similar) === 1) {
+            redirect('alat/' . $similar[0]['slug'], 301);
+        }
+    }
+
     http_response_code(404);
     $pageTitle = 'Alat nije pronađen';
     $content = '<div class="alert alert-error">Alat nije pronađen.</div><p><a href="' . url('') . '">← Nazad na početnu</a></p>';

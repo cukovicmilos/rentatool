@@ -52,6 +52,13 @@ switch ($route) {
         if (isset($segments[2]) && is_numeric($segments[1])) {
             redirect('alat/' . $segments[2], 301);
         }
+        // Redirect known wrong slugs to correct ones
+        $slugRedirects = [
+            'cirkular' => 'alat/rucni-cirkular',
+        ];
+        if (isset($slugRedirects[$segments[1] ?? ''])) {
+            redirect($slugRedirects[$segments[1]], 301);
+        }
         $_GET['slug'] = $segments[1] ?? '';
         require_once __DIR__ . '/pages/alat.php';
         break;
