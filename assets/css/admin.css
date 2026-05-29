@@ -255,9 +255,29 @@
 
 /* Image Preview */
 .image-preview {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     position: relative;
     margin: var(--spacing-sm);
+    transition: opacity 0.15s, box-shadow 0.15s;
+}
+
+.image-preview[draggable="true"] {
+    cursor: grab;
+}
+
+.image-preview[draggable="true"]:active {
+    cursor: grabbing;
+}
+
+.image-preview.dragging {
+    opacity: 0.4;
+}
+
+.image-preview.drag-over {
+    box-shadow: 0 0 0 2px var(--color-accent);
+    border-radius: var(--border-radius);
 }
 
 .image-preview img {
@@ -266,6 +286,7 @@
     object-fit: cover;
     border-radius: var(--border-radius);
     border: 1px solid var(--border-color);
+    pointer-events: none;
 }
 
 .image-preview .remove-btn {
@@ -281,6 +302,44 @@
     cursor: pointer;
     font-size: 14px;
     line-height: 1;
+    z-index: 2;
+}
+
+.drag-handle {
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    width: 24px;
+    height: 24px;
+    background: var(--color-gray-600);
+    color: var(--color-white);
+    border: none;
+    border-radius: 50%;
+    cursor: grab;
+    font-size: 14px;
+    line-height: 24px;
+    text-align: center;
+    z-index: 2;
+    user-select: none;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.image-order-badge {
+    position: absolute;
+    bottom: 4px;
+    left: 4px;
+    background: rgba(0,0,0,0.65);
+    color: var(--color-white);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.4;
+    z-index: 1;
+    pointer-events: none;
 }
 
 /* Specifications List */

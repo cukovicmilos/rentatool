@@ -118,6 +118,107 @@ document.addEventListener('DOMContentLoaded', function() {
 
 });
 
+// Image drag-and-drop reordering
+(function() {
+    const container = document.getElementById('imageSortable');
+    if (!container) return;
+
+    let draggedEl = null;
+
+    container.addEventListener('dragstart', function(e) {
+        const preview = e.target.closest('.image-preview');
+        if (!preview) return;
+        draggedEl = preview;
+        preview.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', preview.dataset.imageId);
+    });
+
+    container.addEventListener('dragend', function(e) {
+        const preview = e.target.closest('.image-preview');
+        if (preview) preview.classList.remove('dragging');
+    });
+
+    container.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+
+        const target = e.target.closest('.image-preview');
+        if (!target || target === draggedEl) return;
+
+        const rect = target.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        const after = e.clientY > midY;
+
+        if (after) {
+            target.parentNode.insertBefore(draggedEl, target.nextSibling);
+        } else {
+            target.parentNode.insertBefore(draggedEl, target);
+        }
+
+        showSaveButton();
+    });
+
+    container.addEventListener('drop', function(e) {
+        e.preventDefault();
+    });
+
+    function showSaveButton() {
+        const btn = document.getElementById('saveImageOrder');
+        if (btn) btn.style.display = 'inline-block';
+    }
+
+    function updateOrderBadges() {
+        container.querySelectorAll('.image-preview').forEach(function(el, idx) {
+            const badge = el.querySelector('.image-order-badge');
+            if (badge) badge.textContent = idx + 1;
+        });
+    }
+
+    document.getElementById('saveImageOrder')?.addEventListener('click', function() {
+        const order = Array.from(container.querySelectorAll('.image-preview')).map(function(el) {
+            return el.dataset.imageId;
+        });
+
+        const csrfInput = container.querySelector('input[name="csrf_token"]');
+        const csrfToken = csrfInput ? csrfInput.value : '';
+        const toolId = container.dataset.toolId;
+        const baseUrl = document.querySelector('meta[name="base-url"]')?.content || '';
+
+        this.disabled = true;
+        this.textContent = 'Čuvanje...';
+
+        fetch(baseUrl + '/api/images-reorder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                tool_id: parseInt(toolId),
+                order: order.map(Number),
+                csrf_token: csrfToken
+            })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+            document.getElementById('saveImageOrder').style.display = 'none';
+            updateOrderBadges();
+        })
+        .catch(function(err) {
+            alert('Greška: ' + err.message);
+        })
+        .finally(function() {
+            const btn = document.getElementById('saveImageOrder');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Sačuvaj redosled';
+            }
+        });
+    });
+})();
+
 // Category on-the-fly creation
 function toggleNewCategory() {
     const form = document.getElementById('newCategoryForm');

@@ -33,16 +33,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('admin/alati/izmeni/' . post('tool_id'));
     }
     
-    // Set primary image
-    if ($postAction === 'set_primary') {
-        $imageId = (int) post('image_id');
-        $toolId = (int) post('tool_id');
-        db()->execute("UPDATE tool_images SET is_primary = 0 WHERE tool_id = ?", [$toolId]);
-        db()->execute("UPDATE tool_images SET is_primary = 1 WHERE id = ?", [$imageId]);
-        flash('success', 'Primarna slika je postavljena.');
-        redirect('admin/alati/izmeni/' . $toolId);
-    }
-    
     // Save tool
     $name = trim(post('name'));
     $description = trim(post('description'));
@@ -407,25 +397,16 @@ ob_start();
 <div class="admin-card">
     <div class="admin-card-header">
         <h3>Postojeće slike</h3>
+        <span class="form-text" style="font-size: var(--font-size-xs);">Prevlačenjem menjate redosled. Prva slika je glavna.</span>
     </div>
-    <div class="d-flex flex-wrap">
-        <?php foreach ($toolImages as $img): ?>
-        <div class="image-preview">
+    <?php $imgIdx = 0; ?>
+    <div id="imageSortable" class="d-flex flex-wrap" data-tool-id="<?= $tool['id'] ?>">
+        <?php foreach ($toolImages as $img): $imgIdx++; ?>
+        <div class="image-preview" data-image-id="<?= $img['id'] ?>" draggable="true">
+            <div class="drag-handle" title="Prevucite za promenu redosleda">⠿</div>
             <img src="<?= upload('tools/' . $img['filename']) ?>" alt="">
-            <?php if ($img['is_primary']): ?>
-                <span style="position: absolute; bottom: 4px; left: 4px; background: var(--color-accent); 
-                             padding: 2px 6px; border-radius: 2px; font-size: 10px;">Primarna</span>
-            <?php endif; ?>
+            <span class="image-order-badge"><?= $imgIdx ?></span>
             <div style="position: absolute; top: -8px; right: -8px; display: flex; gap: 4px;">
-                <?php if (!$img['is_primary']): ?>
-                <form method="POST" style="margin: 0;">
-                    <?= csrfField() ?>
-                    <input type="hidden" name="_action" value="set_primary">
-                    <input type="hidden" name="image_id" value="<?= $img['id'] ?>">
-                    <input type="hidden" name="tool_id" value="<?= $tool['id'] ?>">
-                    <button type="submit" class="remove-btn" style="background: var(--color-success);" title="Postavi kao primarnu">★</button>
-                </form>
-                <?php endif; ?>
                 <form method="POST" style="margin: 0;">
                     <?= csrfField() ?>
                     <input type="hidden" name="_action" value="delete_image">
@@ -436,6 +417,9 @@ ob_start();
             </div>
         </div>
         <?php endforeach; ?>
+    </div>
+    <div style="margin-top: var(--spacing-md);">
+        <button type="button" id="saveImageOrder" class="btn btn-primary btn-small" style="display: none;">Sačuvaj redosled</button>
     </div>
 </div>
 <?php endif; ?>
