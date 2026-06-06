@@ -120,26 +120,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $errors[] = 'Alat "' . $item['tool_name'] . '" više nije dostupan.';
             }
             
-            // Check for conflicting reservations
-            $conflict = db()->fetch("
-                SELECT r.id FROM reservations r
+            // Check for conflicting reservations (datetime overlap)
+            $reqTimeStart = $item['time_start'] ?? '08:00';
+            $reqTimeEnd = $item['time_end'] ?? '18:00';
+            $reqStartDT = $item['date_start'] . ' ' . $reqTimeStart;
+            $reqEndDT = $item['date_end'] . ' ' . $reqTimeEnd;
+            $reqStartTs = strtotime($reqStartDT);
+            $reqEndTs = strtotime($reqEndDT);
+            
+            $conflicts = db()->fetchAll("
+                SELECT r.date_start, r.date_end, r.time_start, r.time_end
+                FROM reservations r
                 JOIN reservation_items ri ON r.id = ri.reservation_id
                 WHERE ri.tool_id = ?
                 AND r.status IN ('pending', 'confirmed', 'rented')
-                AND (
-                    (r.date_start <= ? AND r.date_end >= ?)
-                    OR (r.date_start <= ? AND r.date_end >= ?)
-                    OR (r.date_start >= ? AND r.date_end <= ?)
-                )
+                AND r.date_end >= ? AND r.date_start <= ?
             ", [
                 $item['tool_id'],
-                $item['date_start'], $item['date_start'],
-                $item['date_end'], $item['date_end'],
                 $item['date_start'], $item['date_end']
             ]);
             
-            if ($conflict) {
-                $errors[] = 'Alat "' . $item['tool_name'] . '" je već rezervisan za odabrane datume.';
+            foreach ($conflicts as $conflict) {
+                $cTimeStart = $conflict['time_start'] ?? '08:00';
+                $cTimeEnd   = $conflict['time_end'] ?? '18:00';
+                $confStartDT = $conflict['date_start'] . ' ' . $cTimeStart;
+                $confEndDT = $conflict['date_end'] . ' ' . $cTimeEnd;
+                
+                if (strtotime($confStartDT) < $reqEndTs && strtotime($confEndDT) > $reqStartTs) {
+                    $errors[] = 'Alat "' . $item['tool_name'] . '" je već rezervisan za odabrani termin.';
+                    break;
+                }
             }
         }
         

@@ -62,7 +62,7 @@ $recommendations = db()->fetchAll("
 // Get jobs that can be done with this tool
 $toolJobs = db()->fetchAll("SELECT * FROM tool_jobs WHERE tool_id = ? ORDER BY sort_order", [$tool['id']]);
 
-// Get blocked dates for this tool (next 30 days)
+// Get blocked dates for this tool (next 30 days) — full day blocks
 $blockedDates = db()->fetchAll("
     SELECT blocked_date FROM blocked_dates 
     WHERE (tool_id = ? OR tool_id IS NULL)
@@ -71,9 +71,9 @@ $blockedDates = db()->fetchAll("
 ", [$tool['id']]);
 $blockedDatesArray = array_column($blockedDates, 'blocked_date');
 
-// Get reserved dates from confirmed reservations
+// Get reserved dates from confirmed reservations (with times)
 $reservedDates = db()->fetchAll("
-    SELECT r.date_start, r.date_end 
+    SELECT r.date_start, r.date_end, r.time_start, r.time_end
     FROM reservations r
     JOIN reservation_items ri ON r.id = ri.reservation_id
     WHERE ri.tool_id = ? 
@@ -81,13 +81,25 @@ $reservedDates = db()->fetchAll("
     AND r.date_end >= DATE('now')
 ", [$tool['id']]);
 
-// Build array of all unavailable dates
-$unavailableDates = $blockedDatesArray;
+// Build reserved date strings (for mini-calendar orange display) + display list
+$reservedDateStrings = [];
+$reservationsDisplay = [];
 foreach ($reservedDates as $res) {
+    $ts = $res['time_start'] ?? '08:00';
+    $te = $res['time_end'] ?? '18:00';
     $dates = getDatesBetween($res['date_start'], $res['date_end']);
-    $unavailableDates = array_merge($unavailableDates, $dates);
+    $reservedDateStrings = array_merge($reservedDateStrings, $dates);
+    $reservationsDisplay[] = [
+        'start' => $res['date_start'],
+        'end'   => $res['date_end'],
+        'from'  => $ts,
+        'to'    => $te
+    ];
 }
-$unavailableDates = array_unique($unavailableDates);
+$reservedDateStrings = array_unique($reservedDateStrings);
+
+// Combined unavailable for calendar display (any block/reservation → orange)
+$unavailableDates = array_unique(array_merge($blockedDatesArray, $reservedDateStrings));
 
 // Calculate prices
 $weekendPrice = $tool['price_24h'] * (1 + WEEKEND_MARKUP);
@@ -462,6 +474,7 @@ ob_start();
                 <p class="text-muted text-center mt-1">
                     <small>Max <?= MAX_RENTAL_DAYS ?> dana, rezervacija do <?= MAX_ADVANCE_DAYS ?> dana unapred</small>
                 </p>
+                <div id="reservationSlots" class="reservation-slots" style="display: none;"></div>
             </div>
             <?php endif; ?>
         </div>
@@ -968,6 +981,40 @@ ob_start();
     color: var(--color-gray-400);
 }
 
+.reservation-slots {
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--color-gray-100);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-xs);
+}
+
+.reservation-slots .slots-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--color-gray-700);
+}
+
+.reservation-slots .slots-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.reservation-slots .slot-chip {
+    display: inline-block;
+    background: #FF9933;
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    white-space: nowrap;
+}
+
+.reservation-slots .slot-chip strong {
+    margin-right: 3px;
+}
+
 .price-calculation {
     background: var(--color-gray-100);
     padding: var(--spacing-md);
@@ -1311,7 +1358,9 @@ const weekendMarkup = <?= WEEKEND_MARKUP ?>;
 const weekendPrice = toolPrice * (1 + weekendMarkup);
 const weeklyDiscount = <?= WEEKLY_DISCOUNT ?>;
 const maxDays = <?= MAX_RENTAL_DAYS ?>;
+const blockedDates = <?= json_encode($blockedDatesArray) ?>;
 const unavailableDates = <?= json_encode($unavailableDates) ?>;
+const reservationsDisplay = <?= json_encode($reservationsDisplay) ?>;
 const toolId = <?= $tool['id'] ?>;
 const toolName = <?= json_encode($tool['name']) ?>;
 
@@ -1329,6 +1378,25 @@ function parseLocalDate(dateStr) {
     return new Date(year, month - 1, day);
 }
 
+// Render reserved time slots below the calendar
+function renderReservationSlots() {
+    const container = document.getElementById('reservationSlots');
+    if (!container) return;
+    const list = reservationsDisplay;
+    if (!list || list.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    container.style.display = 'block';
+    const chips = list.map(r => {
+        const ds = parseLocalDate(r.start);
+        const de = parseLocalDate(r.end);
+        const label = ds.getDate() + '.' + (ds.getMonth() + 1) + '. ' + r.from + ' &rarr; ' + de.getDate() + '.' + (de.getMonth() + 1) + '. ' + r.to;
+        return '<span class="slot-chip">' + label + '</span>';
+    }).join(' ');
+    container.innerHTML = '<div class="slots-title">Rezervisani termini:</div><div class="slots-list">' + chips + '</div>';
+}
+
 // Generate mini calendar
 function generateMiniCalendar() {
     const calendar = document.getElementById('miniCalendar');
@@ -1343,7 +1411,7 @@ function generateMiniCalendar() {
     const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
     
     // Day headers
-    const dayNames = ['N', 'P', 'U', 'S', 'Č', 'P', 'S'];
+    const dayNames = ['P', 'U', 'S', 'Č', 'P', 'S', 'N'];
     dayNames.forEach(day => {
         const header = document.createElement('div');
         header.className = 'mini-calendar-day header';
@@ -1418,6 +1486,7 @@ function updateMiniCalendar(startDateStr, endDateStr) {
 
 // Initialize mini calendar
 generateMiniCalendar();
+renderReservationSlots();
 
 document.getElementById('date_start')?.addEventListener('change', function() {
     this.classList.add('has-selection');
@@ -1474,20 +1543,31 @@ function calculatePrice() {
         return;
     }
 
-    // Check for unavailable dates
+    // Check full-day blocked dates (blocked_dates table)
     let currentDate = new Date(start);
     let unavailableFound = [];
     while (currentDate <= end) {
         const dateStr = currentDate.toISOString().split('T')[0];
-        if (unavailableDates.includes(dateStr)) {
+        if (blockedDates.includes(dateStr)) {
             unavailableFound.push(dateStr);
         }
         currentDate.setDate(currentDate.getDate() + 1);
     }
 
+    // Check datetime overlap with existing reservations
+    const reqStartDT = new Date(startInput.value + 'T' + timeStart);
+    const reqEndDT = new Date(endInput.value + 'T' + timeEnd);
+    for (const res of reservationsDisplay) {
+        const resStartDT = new Date(res.start + 'T' + res.from);
+        const resEndDT = new Date(res.end + 'T' + res.to);
+        if (resStartDT < reqEndDT && reqStartDT < resEndDT) {
+            unavailableFound.push(res.start + ' ' + res.from + '-' + res.end + ' ' + res.to);
+        }
+    }
+
     if (unavailableFound.length > 0) {
-        const dateList = unavailableFound.join(', ');
-        alert('Sledeći datumi su već rezervisani i nisu dostupni: ' + dateList + '\n\nMolimo izaberite drugi period.');
+        const dateList = [...new Set(unavailableFound)].join(', ');
+        alert('Sledeći termini su već rezervisani: ' + dateList + '\n\nMolimo izaberite drugi period.');
         calcDiv.style.display = 'none';
         addBtn.disabled = true;
         addBtn.setAttribute('aria-disabled', 'true');

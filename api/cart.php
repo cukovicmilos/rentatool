@@ -68,6 +68,32 @@ switch ($action) {
             jsonResponse(['success' => false, 'error' => 'Maksimalno ' . MAX_RENTAL_DAYS . ' dana.'], 400);
         }
         
+        // Check for conflicting reservations (datetime overlap)
+        $reqStartDT = $dateStart . ' ' . $timeStart;
+        $reqEndDT = $dateEnd . ' ' . $timeEnd;
+        $reqStartTs = strtotime($reqStartDT);
+        $reqEndTs = strtotime($reqEndDT);
+        
+        $conflicts = db()->fetchAll("
+            SELECT r.date_start, r.date_end, r.time_start, r.time_end
+            FROM reservations r
+            JOIN reservation_items ri ON r.id = ri.reservation_id
+            WHERE ri.tool_id = ?
+            AND r.status IN ('pending', 'confirmed', 'rented')
+            AND r.date_end >= ? AND r.date_start <= ?
+        ", [$toolId, $dateStart, $dateEnd]);
+        
+        foreach ($conflicts as $conflict) {
+            $cTimeStart = $conflict['time_start'] ?? '08:00';
+            $cTimeEnd = $conflict['time_end'] ?? '18:00';
+            $confStartDT = $conflict['date_start'] . ' ' . $cTimeStart;
+            $confEndDT = $conflict['date_end'] . ' ' . $cTimeEnd;
+            
+            if (strtotime($confStartDT) < $reqEndTs && strtotime($confEndDT) > $reqStartTs) {
+                jsonResponse(['success' => false, 'error' => 'Alat je već rezervisan za odabrani termin.'], 400);
+            }
+        }
+        
         // Check if tool already in cart
         foreach ($_SESSION['cart'] as $key => $item) {
             if ($item['tool_id'] == $toolId) {
