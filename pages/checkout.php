@@ -78,7 +78,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Get form data
         $customerName = trim(post('customer_name'));
         $customerEmail = trim(post('customer_email'));
+        $phonePrefix = trim(post('phone_prefix'));
         $customerPhone = trim(post('customer_phone'));
+        // Strip leading zero from phone number, then prepend prefix
+        $customerPhone = $phonePrefix . ltrim($customerPhone, '0');
         $customerAddress = trim(post('customer_address'));
         $customerNote = trim(post('customer_note'));
         $deliveryOption = post('delivery_option', 'pickup');
@@ -94,6 +97,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         if (empty($customerPhone)) {
             $errors[] = 'Broj telefona je obavezan.';
+        } elseif (empty($phonePrefix)) {
+            $errors[] = 'Izaberite pozivni broj države.';
+        } elseif (!preg_match('/^\+\d{1,3}\d{6,12}$/', $customerPhone)) {
+            $errors[] = 'Broj telefona nije validan.';
         }
         if (empty($customerAddress)) {
             $errors[] = 'Adresa je obavezna.';
@@ -311,9 +318,42 @@ ob_start();
                 
                 <div class="form-group">
                     <label for="customer_phone" class="form-label required">Broj telefona</label>
-                    <input type="tel" id="customer_phone" name="customer_phone" class="form-control" 
-                           value="<?= e(post('customer_phone')) ?>" required>
+                    <div class="phone-input-wrapper">
+                        <select id="phone_prefix" name="phone_prefix" class="form-control phone-prefix" required>
+                            <option value="+381"<?= post('phone_prefix') === '+381' || !post('phone_prefix') ? ' selected' : '' ?>>+381 (Srbija)</option>
+                            <option value="+382"<?= post('phone_prefix') === '+382' ? ' selected' : '' ?>>+382 (Crna Gora)</option>
+                            <option value="+385"<?= post('phone_prefix') === '+385' ? ' selected' : '' ?>>+385 (Hrvatska)</option>
+                            <option value="+387"<?= post('phone_prefix') === '+387' ? ' selected' : '' ?>>+387 (Bosna)</option>
+                            <option value="+386"<?= post('phone_prefix') === '+386' ? ' selected' : '' ?>>+386 (Slovenija)</option>
+                            <option value="+389"<?= post('phone_prefix') === '+389' ? ' selected' : '' ?>>+389 (Makedonija)</option>
+                            <option value="+359"<?= post('phone_prefix') === '+359' ? ' selected' : '' ?>>+359 (Bugarska)</option>
+                            <option value="+40"<?= post('phone_prefix') === '+40' ? ' selected' : '' ?>>+40 (Rumunija)</option>
+                            <option value="+36"<?= post('phone_prefix') === '+36' ? ' selected' : '' ?>>+36 (Mađarska)</option>
+                            <option value="+49"<?= post('phone_prefix') === '+49' ? ' selected' : '' ?>>+49 (Nemačka)</option>
+                            <option value="+41"<?= post('phone_prefix') === '+41' ? ' selected' : '' ?>>+41 (Švajcarska)</option>
+                            <option value="+43"<?= post('phone_prefix') === '+43' ? ' selected' : '' ?>>+43 (Austrija)</option>
+                            <option value="+30"<?= post('phone_prefix') === '+30' ? ' selected' : '' ?>>+30 (Grčka)</option>
+                            <option value="+39"<?= post('phone_prefix') === '+39' ? ' selected' : '' ?>>+39 (Italija)</option>
+                        </select>
+                        <input type="tel" id="customer_phone" name="customer_phone" class="form-control phone-number" 
+                               placeholder="06xxxxxxxx" value="<?= e(post('customer_phone')) ?>" required>
+                    </div>
                 </div>
+                <style>
+                .phone-input-wrapper {
+                    display: flex;
+                    gap: 0;
+                }
+                .phone-input-wrapper .phone-prefix {
+                    flex: 0 0 180px;
+                    border-radius: var(--border-radius) 0 0 var(--border-radius);
+                    border-right: none;
+                }
+                .phone-input-wrapper .phone-number {
+                    flex: 1;
+                    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+                }
+                </style>
                 
                 <div class="form-group">
                     <label for="customer_address" class="form-label" id="addressLabel">Adresa</label>

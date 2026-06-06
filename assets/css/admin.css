@@ -215,6 +215,16 @@
     margin-left: var(--spacing-sm);
 }
 
+/* Row color coding by status */
+tr[data-status] {
+    border-left: 4px solid transparent;
+}
+tr[data-status="pending"] { border-left-color: #FFC107; }
+tr[data-status="confirmed"] { border-left-color: #007BFF; }
+tr[data-status="rented"] { border-left-color: #9B59B6; }
+tr[data-status="completed"] { border-left-color: #28A745; }
+tr[data-status="cancelled"] { border-left-color: #DC3545; }
+
 /* Status Badges */
 .status-badge {
     display: inline-block;

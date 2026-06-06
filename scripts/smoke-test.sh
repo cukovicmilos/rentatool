@@ -29,7 +29,7 @@ TEST_PASSED=false
 # Test data
 TEST_NAME="Test Korisnik"
 TEST_EMAIL="test@rentatool.in.rs"
-TEST_PHONE="+381601234567"
+TEST_PHONE="0601234567"
 TEST_ADDRESS="Test adresa 1, Subotica"
 TEST_NOTE="Smoke test rezervacija - automatski kreirana"
 DELIVERY_OPTION="pickup"
@@ -211,6 +211,7 @@ CHECKOUT_RESPONSE=$(curl -s -L -b "$COOKIE_JAR" -c "$COOKIE_JAR" \
     -d "csrf_token=$CSRF_TOKEN" \
     -d "customer_name=$(echo "$TEST_NAME" | jq -sRr @uri)" \
     -d "customer_email=$(echo "$TEST_EMAIL" | jq -sRr @uri)" \
+    -d "phone_prefix=%2B381" \
     -d "customer_phone=$(echo "$TEST_PHONE" | jq -sRr @uri)" \
     -d "customer_address=$(echo "$TEST_ADDRESS" | jq -sRr @uri)" \
     -d "customer_note=$(echo "$TEST_NOTE" | jq -sRr @uri)" \

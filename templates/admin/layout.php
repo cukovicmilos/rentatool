@@ -30,10 +30,9 @@ $pageTitle = $pageTitle ?? 'Admin - ' . SITE_NAME;
             </div>
             
             <nav class="admin-nav">
-                <a href="<?= url('admin/') ?>" class="admin-nav-link">Dashboard</a>
+                <a href="<?= url('admin/') ?>" class="admin-nav-link">Rezervacije</a>
                 <a href="<?= url('admin/kategorije') ?>" class="admin-nav-link">Kategorije</a>
                 <a href="<?= url('admin/alati') ?>" class="admin-nav-link">Alati</a>
-                <a href="<?= url('admin/rezervacije') ?>" class="admin-nav-link">Rezervacije</a>
                 <a href="<?= url('admin/blokirani-datumi') ?>" class="admin-nav-link">Blokirani datumi</a>
                 <a href="<?= url('admin/stranice') ?>" class="admin-nav-link">Stranice</a>
             </nav>
