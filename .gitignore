@@ -35,6 +35,9 @@ desktop.ini
 .sublime-project
 .sublime-workspace
 
+# Credentials (Google Calendar service account, etc.)
+credentials/
+
 # Environment files
 .env
 .env.local

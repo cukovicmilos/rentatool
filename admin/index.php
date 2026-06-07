@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/google-calendar.php';
 
 requireAdmin();
 
@@ -29,6 +30,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'status') {
         );
 
         flash('success', 'Status rezervacije je ažuriran.');
+
+        if ($newStatus === 'confirmed') {
+            $confirmedRes = db()->fetch("SELECT * FROM reservations WHERE id = ?", [$resId]);
+            $confirmedItems = db()->fetchAll("SELECT * FROM reservation_items WHERE reservation_id = ?", [$resId]);
+            if ($confirmedRes && empty($confirmedRes['google_event_id'])) {
+                googleCalendarCreateEvent($confirmedRes, $confirmedItems);
+            }
+        }
     }
     redirect('admin/');
 }
@@ -181,6 +190,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'izmeni') {
             ]);
 
             db()->commit();
+
+            if ($reservation['status'] === 'confirmed') {
+                $updatedRes = db()->fetch("SELECT * FROM reservations WHERE id = ?", [$resId]);
+                $updatedItems = db()->fetchAll("SELECT * FROM reservation_items WHERE reservation_id = ?", [$resId]);
+                if ($updatedRes) {
+                    if (!empty($updatedRes['google_event_id'])) {
+                        googleCalendarUpdateEvent($updatedRes, $updatedItems);
+                    } else {
+                        googleCalendarCreateEvent($updatedRes, $updatedItems);
+                    }
+                }
+            }
+
             flash('success', 'Rezervacija #' . $reservation['reservation_code'] . ' je uspešno izmenjena.');
             redirect('admin/?action=detalji&id=' . $resId);
 

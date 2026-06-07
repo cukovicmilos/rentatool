@@ -85,6 +85,10 @@ define('THUMB_HEIGHT', 300);
 define('TELEGRAM_BOT_TOKEN', getenv('TELEGRAM_BOT_TOKEN') ?: '');
 define('TELEGRAM_CHAT_ID', getenv('TELEGRAM_CHAT_ID') ?: '');
 
+// Google Calendar (from .env)
+define('GOOGLE_CALENDAR_ID', getenv('GOOGLE_CALENDAR_ID') ?: '');
+define('GOOGLE_CREDENTIALS_PATH', ROOT_PATH . '/credentials');
+
 // Timezone
 date_default_timezone_set('Europe/Belgrade');
 
