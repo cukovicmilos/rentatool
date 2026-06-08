@@ -293,6 +293,20 @@ tr[data-status="completed"] { background: rgba(40, 167, 69, 0.12); }
 tr[data-status="cancelled"] { background: rgba(220, 53, 69, 0.12); }
 tr[data-status]:hover { background: var(--color-gray-100); }
 
+/* Pagination */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md) 0;
+}
+
+.pagination-info {
+    font-size: var(--font-size-small);
+    color: var(--color-gray-500);
+}
+
 /* Status Badges */
 .status-badge {
     display: inline-block;

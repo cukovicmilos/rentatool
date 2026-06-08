@@ -222,6 +222,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'izmeni') {
 }
 
 $filterStatus = get('status', '');
+$page = max(1, (int) get('page', 1));
+$perPage = 100;
 
 $where = "1=1";
 $params = [];
@@ -230,11 +232,17 @@ if ($filterStatus) {
     $params[] = $filterStatus;
 }
 
+$totalReservations = db()->fetchColumn("SELECT COUNT(*) FROM reservations WHERE {$where}", $params);
+$totalPages = max(1, (int) ceil($totalReservations / $perPage));
+$page = min($page, $totalPages);
+$offset = ($page - 1) * $perPage;
+
 $reservations = db()->fetchAll("
     SELECT * FROM reservations
     WHERE {$where}
     ORDER BY created_at DESC
-", $params);
+    LIMIT ? OFFSET ?
+", array_merge($params, [$perPage, $offset]));
 
 $allTools = db()->fetchAll("SELECT id, name, price_24h FROM tools WHERE status = 'available' ORDER BY name");
 
@@ -319,6 +327,7 @@ $currentMonthNum = (int)date('m');
 
     <form method="GET" class="d-flex gap-2 flex-wrap mb-3">
         <input type="hidden" name="action" value="list">
+        <input type="hidden" name="page" value="1">
         <select name="status" class="form-control" style="max-width: 170px;">
             <option value="">Svi statusi</option>
             <option value="pending" <?= $filterStatus === 'pending' ? 'selected' : '' ?>>Na čekanju</option>
@@ -393,58 +402,18 @@ $currentMonthNum = (int)date('m');
                 </tbody>
             </table>
         </div>
+        <?php if ($totalPages > 1): ?>
+        <div class="pagination">
+            <?php if ($page > 1): ?>
+            <a href="<?= url('admin/?page=' . ($page - 1) . ($filterStatus ? '&status=' . $filterStatus : '')) ?>" class="btn btn-secondary btn-small">← Prethodna</a>
+            <?php endif; ?>
+            <span class="pagination-info">Strana <?= $page ?> od <?= $totalPages ?> (<?= $totalReservations ?> rezervacija)</span>
+            <?php if ($page < $totalPages): ?>
+            <a href="<?= url('admin/?page=' . ($page + 1) . ($filterStatus ? '&status=' . $filterStatus : '')) ?>" class="btn btn-secondary btn-small">Sledeća →</a>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
     <?php endif; ?>
-</div>
-
-<?php
-$stats = [
-    'tools' => db()->fetchColumn("SELECT COUNT(*) FROM tools"),
-    'tools_available' => db()->fetchColumn("SELECT COUNT(*) FROM tools WHERE status = 'available'"),
-    'categories' => db()->fetchColumn("SELECT COUNT(*) FROM categories WHERE active = 1"),
-    'reservations' => db()->fetchColumn("SELECT COUNT(*) FROM reservations"),
-    'reservations_pending' => db()->fetchColumn("SELECT COUNT(*) FROM reservations WHERE status = 'pending'"),
-    'reservations_rented' => db()->fetchColumn("SELECT COUNT(*) FROM reservations WHERE status = 'rented'"),
-];
-?>
-
-<div class="stats-grid">
-    <div class="stat-card">
-        <span class="stat-value"><?= $stats['tools'] ?></span>
-        <span class="stat-label">Ukupno alata</span>
-    </div>
-    <div class="stat-card">
-        <span class="stat-value"><?= $stats['tools_available'] ?></span>
-        <span class="stat-label">Dostupnih alata</span>
-    </div>
-    <div class="stat-card">
-        <span class="stat-value"><?= $stats['categories'] ?></span>
-        <span class="stat-label">Kategorija</span>
-    </div>
-    <div class="stat-card">
-        <span class="stat-value"><?= $stats['reservations'] ?></span>
-        <span class="stat-label">Ukupno rezervacija</span>
-    </div>
-    <div class="stat-card">
-        <span class="stat-value"><?= $stats['reservations_pending'] ?></span>
-        <span class="stat-label">Na čekanju</span>
-    </div>
-    <div class="stat-card">
-        <span class="stat-value"><?= $stats['reservations_rented'] ?></span>
-        <span class="stat-label">Iznajmljeno</span>
-    </div>
-</div>
-
-<div class="admin-card">
-    <div class="admin-card-header">
-        <h3>Brze akcije</h3>
-    </div>
-
-    <div class="d-flex gap-2 flex-wrap">
-        <a href="<?= url('admin/alati/dodaj') ?>" class="btn btn-primary">+ Dodaj alat</a>
-        <a href="<?= url('admin/kategorije/dodaj') ?>" class="btn btn-secondary">+ Dodaj kategoriju</a>
-        <a href="<?= url('admin/blokirani-datumi/dodaj') ?>" class="btn btn-secondary">+ Blokiraj datum</a>
-        <a href="<?= url('') ?>" class="btn btn-secondary" target="_blank">Pogledaj sajt →</a>
-    </div>
 </div>
 
 <?php elseif ($action === 'detalji'): ?>
