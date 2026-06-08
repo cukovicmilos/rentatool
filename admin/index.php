@@ -261,40 +261,54 @@ ob_start();
 </div>
 
 <?php
-$stats = [
-    'tools' => db()->fetchColumn("SELECT COUNT(*) FROM tools"),
-    'tools_available' => db()->fetchColumn("SELECT COUNT(*) FROM tools WHERE status = 'available'"),
-    'categories' => db()->fetchColumn("SELECT COUNT(*) FROM categories WHERE active = 1"),
-    'reservations' => db()->fetchColumn("SELECT COUNT(*) FROM reservations"),
-    'reservations_pending' => db()->fetchColumn("SELECT COUNT(*) FROM reservations WHERE status = 'pending'"),
-    'reservations_rented' => db()->fetchColumn("SELECT COUNT(*) FROM reservations WHERE status = 'rented'"),
-];
+$finTotal = db()->fetchColumn("SELECT COALESCE(SUM(total), 0) FROM reservations WHERE status = 'completed'");
+$finLastMonth = db()->fetchColumn("SELECT COALESCE(SUM(total), 0) FROM reservations WHERE status = 'completed' AND strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now', '-1 month')");
+$finCurrentMonth = db()->fetchColumn("SELECT COALESCE(SUM(total), 0) FROM reservations WHERE status = 'completed' AND strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now')");
+
+$ytdRows = db()->fetchAll("
+    SELECT strftime('%m', created_at) as month, COALESCE(SUM(total), 0) as revenue
+    FROM reservations
+    WHERE status = 'completed' AND strftime('%Y', created_at) = strftime('%Y', 'now')
+    GROUP BY strftime('%m', created_at)
+    ORDER BY month
+");
+$monthlyRevenue = array_fill(1, 12, 0);
+foreach ($ytdRows as $row) {
+    $monthlyRevenue[(int)$row['month']] = (float)$row['revenue'];
+}
+$maxRevenue = max($monthlyRevenue) ?: 1;
+$monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Avg', 'Sep', 'Okt', 'Nov', 'Dec'];
+$currentMonthNum = (int)date('m');
 ?>
 
-<div class="stats-grid">
+<div class="fin-stats-grid">
     <div class="stat-card">
-        <span class="stat-value"><?= $stats['tools'] ?></span>
-        <span class="stat-label">Ukupno alata</span>
+        <span class="stat-value fin-value"><?= formatPrice($finTotal) ?></span>
+        <span class="stat-label">Ukupan prihod</span>
     </div>
     <div class="stat-card">
-        <span class="stat-value"><?= $stats['tools_available'] ?></span>
-        <span class="stat-label">Dostupnih alata</span>
+        <span class="stat-value fin-value"><?= formatPrice($finLastMonth) ?></span>
+        <span class="stat-label">Prošli mesec</span>
     </div>
     <div class="stat-card">
-        <span class="stat-value"><?= $stats['categories'] ?></span>
-        <span class="stat-label">Kategorija</span>
+        <span class="stat-value fin-value"><?= formatPrice($finCurrentMonth) ?></span>
+        <span class="stat-label">Tekući mesec</span>
     </div>
-    <div class="stat-card">
-        <span class="stat-value"><?= $stats['reservations'] ?></span>
-        <span class="stat-label">Ukupno rezervacija</span>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3>Prihod YTD</h3>
     </div>
-    <div class="stat-card">
-        <span class="stat-value"><?= $stats['reservations_pending'] ?></span>
-        <span class="stat-label">Na čekanju</span>
-    </div>
-    <div class="stat-card">
-        <span class="stat-value"><?= $stats['reservations_rented'] ?></span>
-        <span class="stat-label">Iznajmljeno</span>
+    <div class="chart-bars">
+        <?php for ($m = 1; $m <= $currentMonthNum; $m++): ?>
+        <div class="chart-bar-col">
+            <div class="chart-bar" style="height: <?= round(($monthlyRevenue[$m] / $maxRevenue) * 100) ?>%">
+                <span class="chart-bar-tooltip"><?= formatPrice($monthlyRevenue[$m]) ?></span>
+            </div>
+            <span class="chart-bar-label"><?= $monthNames[$m - 1] ?></span>
+        </div>
+        <?php endfor; ?>
     </div>
 </div>
 
@@ -380,6 +394,44 @@ $stats = [
             </table>
         </div>
     <?php endif; ?>
+</div>
+
+<?php
+$stats = [
+    'tools' => db()->fetchColumn("SELECT COUNT(*) FROM tools"),
+    'tools_available' => db()->fetchColumn("SELECT COUNT(*) FROM tools WHERE status = 'available'"),
+    'categories' => db()->fetchColumn("SELECT COUNT(*) FROM categories WHERE active = 1"),
+    'reservations' => db()->fetchColumn("SELECT COUNT(*) FROM reservations"),
+    'reservations_pending' => db()->fetchColumn("SELECT COUNT(*) FROM reservations WHERE status = 'pending'"),
+    'reservations_rented' => db()->fetchColumn("SELECT COUNT(*) FROM reservations WHERE status = 'rented'"),
+];
+?>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <span class="stat-value"><?= $stats['tools'] ?></span>
+        <span class="stat-label">Ukupno alata</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-value"><?= $stats['tools_available'] ?></span>
+        <span class="stat-label">Dostupnih alata</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-value"><?= $stats['categories'] ?></span>
+        <span class="stat-label">Kategorija</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-value"><?= $stats['reservations'] ?></span>
+        <span class="stat-label">Ukupno rezervacija</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-value"><?= $stats['reservations_pending'] ?></span>
+        <span class="stat-label">Na čekanju</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-value"><?= $stats['reservations_rented'] ?></span>
+        <span class="stat-label">Iznajmljeno</span>
+    </div>
 </div>
 
 <div class="admin-card">
