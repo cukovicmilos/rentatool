@@ -10,9 +10,8 @@
  * 5. Benefits Section
  * 6. Process Section
  * 7. Features Section
- * 8. Testimonials Section
- * 9. FAQ Section
- * 10. CTA Section
+ * 8. FAQ Section
+ * 9. CTA Section
  */
 
 // Get featured tools from database
@@ -36,59 +35,6 @@ if (empty($featuredTools)) {
         LIMIT 6
     ");
 }
-
-// Testimonials data
-$testimonials = [
-    [
-        'name' => 'Marko P.',
-        'role' => 'DIY entuzijasta',
-        'project' => 'Izrada police od drveta',
-        'text' => 'Trebala mi je kružna testera za vikend projekat. Umesto da kupujem alat koji ću koristiti jednom godišnje, iznajmio sam za 2 dana i uštedeo 5.000 dinara!',
-        'rating' => 5
-    ],
-    [
-        'name' => 'Jovan N.',
-        'role' => 'Vlasnik stana',
-        'project' => 'Postavljanje lustera',
-        'text' => 'Morao sam da premestim luster sa jednog mesta na drugo. Iznajmio sam bušilicu i sve potrebno, posao završen za 2 sata. Odlična usluga!',
-        'rating' => 5
-    ],
-    [
-        'name' => 'Ana Đ.',
-        'role' => 'Renoviranje stana',
-        'project' => 'Bušenje rupa za slike',
-        'text' => 'Selila sam se u novi stan i trebalo je okačiti 10 slika. Nikada nisam koristila bušilicu, ali uz savete koje sam dobila, sve je prošlo glatko!',
-        'rating' => 5
-    ],
-    [
-        'name' => 'Stefan J.',
-        'role' => 'Hobista',
-        'project' => 'Izrada stalka od metala',
-        'text' => 'Za projekat stalka od metala mi je trebala ručna brusilica - fleks. Alat čist i ispravan. Definitivno ću opet koristiti.',
-        'rating' => 5
-    ],
-    [
-        'name' => 'Milan S.',
-        'role' => 'Električar amater',
-        'project' => 'Kanal za kablovski internet',
-        'text' => 'Trebalo je probušiti kanal kroz zid za kablovski internet. Iznajmio sam šlicericu sa usisivačem, dobio i uputstva kako da izbegnem instalacije. Top!',
-        'rating' => 4
-    ],
-    [
-        'name' => 'Jelena M.',
-        'role' => 'DIY projekti',
-        'project' => 'Restauracija starog nameštaja',
-        'text' => 'Obnovila sam staru komodu - trebala mi je polirka - šlajferica i nekoliko drugih alata. Sve na jednom mestu, pristupačne cene. Preporučujem!',
-        'rating' => 5
-    ],
-    [
-        'name' => 'Dragan I.',
-        'role' => 'Majstor za sitne popravke',
-        'project' => 'Razni projekti',
-        'text' => 'Koristim RentATool već godinu dana za razne projekte. Uvek pouzdani, alati u odličnom stanju. Štedim novac i ne nagomilavam alat koji više nikad neću koristiti ili jako retko.',
-        'rating' => 5
-    ]
-];
 
 // FAQ data
 $faqs = [
@@ -148,11 +94,6 @@ ob_start();
 <section class="promo-hero">
     <div class="promo-hero-content">
         <div class="promo-hero-text">
-            <div class="promo-social-proof">
-                <span class="stars">★★★★★</span>
-                <span class="proof-text">70+ zadovoljnih korisnika</span>
-            </div>
-            
             <h1 class="promo-headline">Završite posao efikasno sa iznajmljenim alatom</h1>
             
             <p class="promo-subheadline">
@@ -400,32 +341,6 @@ ob_start();
             <h3>Stručni saveti</h3>
             <p>Ne znate koji alat vam treba? Pomažemo da odaberete pravi za vaš posao.</p>
         </div>
-    </div>
-</section>
-
-<!-- TESTIMONIALS SECTION -->
-<section class="promo-section promo-testimonials" id="testimonials">
-    <h2 class="promo-section-title">Šta kažu naši korisnici?</h2>
-    <p class="promo-section-subtitle">Realni projekti, realni ljudi</p>
-    
-    <div class="testimonials-grid">
-        <?php foreach ($testimonials as $testimonial): ?>
-        <div class="testimonial-card">
-            <div class="testimonial-header">
-                <div class="testimonial-avatar">
-                    <?= mb_substr($testimonial['name'], 0, 1) ?>
-                </div>
-                <div class="testimonial-info">
-                    <h4><?= e($testimonial['name']) ?></h4>
-                    <p><?= e($testimonial['project']) ?></p>
-                </div>
-            </div>
-            <p class="testimonial-text">"<?= e($testimonial['text']) ?>"</p>
-            <div class="testimonial-rating">
-                <?= str_repeat('★', $testimonial['rating']) ?><?= str_repeat('☆', 5 - $testimonial['rating']) ?>
-            </div>
-        </div>
-        <?php endforeach; ?>
     </div>
 </section>
 
