@@ -48,6 +48,54 @@ $pageTitle = $category['name'] . ' - Iznajmljivanje alata Subotica - Rent a Tool
 $pageDescription = $category['description'] ?? 'Iznajmljivanje ' . $category['name'] . ' u Subotici';
 $currentCategorySlug = $slug;
 
+// Category FAQ - dinamička pitanja za SEO
+$faqs = [
+    [
+        'question' => 'Koliko košta iznajmljivanje - ' . $category['name'] . '?',
+        'answer' => 'Cene se razlikuju po alatu i prikazane su na kartici svakog alata. Vikendom se naplaćuje 10% više, a za iznajmljivanje od 7 ili više dana odobravamo 10% popusta.'
+    ],
+    [
+        'question' => 'Da li vršite dostavu za kategoriju ' . $category['name'] . ' u Subotici?',
+        'answer' => 'Da! Dostava na adresu košta ' . DELIVERY_ONEWAY . ' ' . CURRENCY_SIGN . ', a dostava sa povratom alata ' . DELIVERY_ROUNDTRIP . ' ' . CURRENCY_SIGN . '. Lično preuzimanje je besplatno - radnim danima od 16:00 do 20:00h i subotom od 08:00 do 20:00h.'
+    ],
+    [
+        'question' => 'Kako da rezervišem alat iz kategorije ' . $category['name'] . '?',
+        'answer' => 'Odaberite alat, izaberite datume na stranici alata i pošaljite zahtev. Potvrdu rezervacije dobićete emailom. Za hitne rezervacije nas možete pozvati direktno.'
+    ],
+    [
+        'question' => 'Da li mogu da produžim period iznajmljivanja?',
+        'answer' => 'Da, dovoljno je da nam se javite pre isteka roka. Produžićemo rezervaciju ukoliko alat nije već rezervisan za drugog korisnika.'
+    ]
+];
+
+// Structured data: ItemList + FAQPage
+$additionalSchemas = [];
+if (!empty($tools)) {
+    $additionalSchemas[] = itemListSchema($tools, $category['name']);
+}
+
+$faqSchema = [
+    '@context' => 'https://schema.org',
+    '@type' => 'FAQPage',
+    'mainEntity' => []
+];
+foreach ($faqs as $faq) {
+    $faqSchema['mainEntity'][] = [
+        '@type' => 'Question',
+        'name' => $faq['question'],
+        'acceptedAnswer' => [
+            '@type' => 'Answer',
+            'text' => $faq['answer']
+        ]
+    ];
+}
+$additionalSchemas[] = $faqSchema;
+
+// CSS/JS for FAQ accordion
+$extraCss = '<link rel="stylesheet" href="' . asset('css/promo.min.css') . '" media="print" onload="this.media=\'all\'"><noscript><link rel="stylesheet" href="' . asset('css/promo.min.css') . '"></noscript>';
+$extraJsHead = '<script src="' . asset('js/jb-accordion-lite.min.js') . '" defer></script>';
+$extraJs = '<script>document.addEventListener("DOMContentLoaded", function() { initJbAccordionLite({ containerId: "faq-accordion", allowMultiple: false }); });</script>';
+
 // Breadcrumbs
 $breadcrumbs = [
     ['title' => 'Početna', 'url' => url('')],
@@ -66,6 +114,14 @@ ob_start();
     <?php if ($category['description']): ?>
     <p class="text-muted"><?= e($category['description']) ?></p>
     <?php endif; ?>
+    <p class="category-intro">
+        Iznajmite <?= e($category['name']) ?> u Subotici i okolini — profesionalna oprema za DIY projekte,
+        renoviranje i popravke, bez kupovine i bez brige o održavanju.
+        <?php if (!empty($tools)): ?>
+        Trenutno u ponudi: <strong><?= count($tools) ?></strong> <?= count($tools) === 1 ? 'alat' : 'alata' ?>.
+        <?php endif; ?>
+        Lično preuzimanje je besplatno, a dostava je dostupna na teritoriji grada Subotice.
+    </p>
 </div>
 
 <?php if (!empty($subcategories)): ?>
@@ -95,12 +151,40 @@ ob_start();
     </div>
 <?php endif; ?>
 
+<!-- FAQ Section -->
+<section class="promo-section promo-faq">
+    <h2 class="promo-section-title">Često postavljana pitanja</h2>
+    <div id="faq-accordion" class="jb-accordion-lite-container faq-list">
+        <?php foreach ($faqs as $faq): ?>
+        <div class="jb-accordion-lite-item faq-item">
+            <button class="jb-accordion-lite-header faq-question">
+                <span><?= e($faq['question']) ?></span>
+                <span class="accordion-arrow">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <polyline points="6 8 10 12 14 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                    </svg>
+                </span>
+            </button>
+            <div class="jb-accordion-lite-content faq-answer">
+                <p><?= e($faq['answer']) ?></p>
+            </div>
+        </div>
+        <?php endforeach; ?>
+    </div>
+</section>
+
 <style>
 .subcategories-bar {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: var(--spacing-sm);
+}
+.category-intro {
+    margin-top: var(--spacing-md);
+    line-height: 1.7;
+    color: var(--color-gray-600);
+    max-width: 800px;
 }
 </style>
 

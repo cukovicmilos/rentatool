@@ -51,6 +51,10 @@ RewriteRule ^alat/([a-z0-9-]+)$ pages/alat.php?slug=$1 [L,QSA]
 # Static pages
 RewriteRule ^stranica/([a-z0-9-]+)$ pages/stranica.php?slug=$1 [L,QSA]
 
+# Guide pages
+RewriteRule ^vodic/([a-z0-9-]+)/([a-z0-9-]+)$ pages/vodic.php?tool=$1&job=$2 [L,QSA]
+RewriteRule ^vodic$ pages/vodic.php [L]
+
 # Reservation cancel/view
 RewriteRule ^rezervacija/([a-zA-Z0-9]+)$ pages/rezervacija.php?code=$1 [L,QSA]
 RewriteRule ^rezervacija/otkazi/([a-zA-Z0-9]+)$ pages/otkazi.php?code=$1 [L,QSA]

@@ -25,6 +25,9 @@ Disallow: /templates/
 # Disallow backlog folder
 Disallow: /backlog/
 
+# Disallow internal search results (thin/duplicate content)
+Disallow: /pretraga
+
 # Allow assets
 Allow: /assets/
 Allow: /uploads/

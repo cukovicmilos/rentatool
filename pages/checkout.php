@@ -287,6 +287,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $pageTitle = 'Checkout - ' . SITE_NAME;
+$robotsMeta = 'noindex, follow';
 $showSidebar = false;
 
 ob_start();

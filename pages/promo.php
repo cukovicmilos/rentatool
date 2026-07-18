@@ -136,6 +136,11 @@ foreach ($faqs as $faq) {
 
 $schemaData = $faqSchema;
 
+// ItemList schema for featured tools
+if (!empty($featuredTools)) {
+    $additionalSchemas = [itemListSchema($featuredTools, 'Najtraženiji alati za iznajmljivanje')];
+}
+
 ob_start();
 ?>
 
@@ -203,6 +208,9 @@ ob_start();
         <button class="btn btn-primary btn-large" id="openServiceModal">
             Naruči uslugu →
         </button>
+        <p class="services-more-link">
+            <a href="<?= url('usluge') ?>">Više informacija o uslugama →</a>
+        </p>
         
         <div class="services-examples">
             <h4>Primeri poslova:</h4>
@@ -262,9 +270,6 @@ ob_start();
                 Rezerviši
             </span>
         </a>
-        <script type="application/ld+json">
-        <?= json_encode(productSchema($tool), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>
-        </script>
         <?php endforeach; ?>
     </div>
     <?php else: ?>
@@ -557,6 +562,15 @@ $minDate = date('Y-m-d');
     padding: var(--spacing-md);
     border-radius: var(--border-radius);
     margin-bottom: var(--spacing-lg);
+}
+
+.services-more-link {
+    margin-top: var(--spacing-md);
+}
+
+.services-more-link a {
+    color: var(--color-gray-600);
+    text-decoration: underline;
 }
 
 .services-examples {

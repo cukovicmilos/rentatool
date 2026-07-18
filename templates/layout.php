@@ -23,15 +23,29 @@ $breadcrumbs = $breadcrumbs ?? [];
 $pageImage = $pageImage ?? null;
 $canonicalUrl = $canonicalUrl ?? null;
 $schemaData = $schemaData ?? null;
+$robotsMeta = $robotsMeta ?? 'index, follow';
 
 // Build full URLs
 $siteUrl = 'https://rentatool.in.rs';
-$fullCanonicalUrl = $canonicalUrl 
-    ? $siteUrl . BASE_URL . $canonicalUrl 
-    : $siteUrl . $_SERVER['REQUEST_URI'];
+if ($canonicalUrl) {
+    $fullCanonicalUrl = $siteUrl . BASE_URL . $canonicalUrl;
+} else {
+    // Canonical without query string and without trailing slash
+    $canonicalPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?: '/';
+    if ($canonicalPath !== '/') {
+        $canonicalPath = rtrim($canonicalPath, '/');
+    }
+    $fullCanonicalUrl = $siteUrl . $canonicalPath;
+}
 $fullImageUrl = $pageImage 
     ? $siteUrl . BASE_URL . $pageImage 
     : $siteUrl . BASE_URL . '/assets/images/og-default.jpg';
+
+// OG image dimensions and type (for rich link previews)
+$ogImageLocalPath = ROOT_PATH . ($pageImage ? BASE_URL . $pageImage : BASE_URL . '/assets/images/og-default.jpg');
+$ogImageSize = @getimagesize($ogImageLocalPath);
+$ogImageExt = strtolower(pathinfo($ogImageLocalPath, PATHINFO_EXTENSION));
+$ogImageTypes = ['jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp'];
 ?>
 <!DOCTYPE html>
 <html lang="sr">
@@ -39,7 +53,7 @@ $fullImageUrl = $pageImage
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="<?= e($pageDescription) ?>">
-    <meta name="robots" content="index, follow">
+    <meta name="robots" content="<?= e($robotsMeta) ?>">
     <meta name="author" content="<?= e(SITE_NAME) ?>">
     <meta name="geo.region" content="RS-VO">
     <meta name="geo.placename" content="Subotica">
@@ -50,6 +64,14 @@ $fullImageUrl = $pageImage
     <meta property="og:title" content="<?= e($pageTitle) ?>">
     <meta property="og:description" content="<?= e($pageDescription) ?>">
     <meta property="og:image" content="<?= e($fullImageUrl) ?>">
+    <?php if ($ogImageSize): ?>
+    <meta property="og:image:width" content="<?= $ogImageSize[0] ?>">
+    <meta property="og:image:height" content="<?= $ogImageSize[1] ?>">
+    <?php endif; ?>
+    <?php if (isset($ogImageTypes[$ogImageExt])): ?>
+    <meta property="og:image:type" content="<?= $ogImageTypes[$ogImageExt] ?>">
+    <?php endif; ?>
+    <meta property="og:image:alt" content="<?= e($pageTitle) ?>">
     <meta property="og:locale" content="sr_RS">
     <meta property="og:site_name" content="<?= e(SITE_NAME) ?>">
     
@@ -106,6 +128,7 @@ $fullImageUrl = $pageImage
 
     <!-- Preconnect for YouTube thumbnails -->
     <link rel="preconnect" href="https://i.ytimg.com" crossorigin>
+    <link rel="preconnect" href="https://cloud.umami.is" crossorigin>
     
     <!-- Main stylesheet - defer non-critical CSS -->
     <link rel="stylesheet" href="<?= asset('css/style.min.css') ?>" media="print" onload="this.media='all'">
@@ -126,6 +149,7 @@ $fullImageUrl = $pageImage
         "email": "<?= e(SITE_EMAIL) ?>",
         "address": {
             "@type": "PostalAddress",
+            "streetAddress": "Gregora Kreka 15",
             "addressLocality": "Subotica",
             "addressRegion": "Vojvodina",
             "addressCountry": "RS"
@@ -140,17 +164,20 @@ $fullImageUrl = $pageImage
             {
                 "@type": "OpeningHoursSpecification",
                 "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-                "opens": "08:00",
-                "closes": "18:00"
+                "opens": "16:00",
+                "closes": "20:00"
             },
             {
                 "@type": "OpeningHoursSpecification",
                 "dayOfWeek": "Saturday",
-                "opens": "09:00",
-                "closes": "14:00"
+                "opens": "08:00",
+                "closes": "20:00"
             }
         ],
-        "sameAs": []
+        "sameAs": [
+            "<?= e(SITE_TELEGRAM_URL) ?>",
+            "<?= e(SITE_MAP_URL) ?>"
+        ]
     }
     </script>
 

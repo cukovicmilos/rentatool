@@ -80,12 +80,78 @@ function productSchema(array $tool): array {
                     'addressLocality' => 'Subotica',
                     'addressCountry' => 'RS'
                 ]
+            ],
+            'shippingDetails' => [
+                '@type' => 'OfferShippingDetails',
+                'shippingRate' => [
+                    '@type' => 'MonetaryAmount',
+                    'value' => number_format(DELIVERY_ONEWAY, 2, '.', ''),
+                    'currency' => CURRENCY
+                ],
+                'shippingDestination' => [
+                    '@type' => 'DefinedRegion',
+                    'addressCountry' => 'RS'
+                ],
+                'deliveryTime' => [
+                    '@type' => 'ShippingDeliveryTime',
+                    'handlingTime' => [
+                        '@type' => 'QuantitativeValue',
+                        'minValue' => 0,
+                        'maxValue' => 1,
+                        'unitCode' => 'DAY'
+                    ],
+                    'transitTime' => [
+                        '@type' => 'QuantitativeValue',
+                        'minValue' => 0,
+                        'maxValue' => 1,
+                        'unitCode' => 'DAY'
+                    ]
+                ]
+            ],
+            'hasMerchantReturnPolicy' => [
+                '@type' => 'MerchantReturnPolicy',
+                'applicableCountry' => 'RS',
+                'returnPolicyCategory' => 'https://schema.org/MerchantReturnFiniteReturnWindow',
+                'merchantReturnDays' => MAX_RENTAL_DAYS,
+                'returnMethod' => 'https://schema.org/ReturnInStore',
+                'returnFees' => 'https://schema.org/FreeReturn'
             ]
         ]
     ];
 
     if (!empty($tool['primary_image'])) {
         $schema['image'] = 'https://rentatool.in.rs' . BASE_URL . '/uploads/tools/' . $tool['primary_image'];
+    }
+
+    return $schema;
+}
+
+/**
+ * Generate Schema.org ItemList JSON-LD array for a list of tools
+ */
+function itemListSchema(array $tools, ?string $listName = null): array {
+    $schema = [
+        '@context' => 'https://schema.org',
+        '@type' => 'ItemList',
+        'itemListElement' => []
+    ];
+
+    if ($listName) {
+        $schema['name'] = $listName;
+    }
+
+    $position = 1;
+    foreach ($tools as $tool) {
+        $item = [
+            '@type' => 'ListItem',
+            'position' => $position++,
+            'url' => 'https://rentatool.in.rs' . BASE_URL . '/alat/' . ($tool['slug'] ?? ''),
+            'name' => $tool['name'] ?? ''
+        ];
+        if (!empty($tool['primary_image'])) {
+            $item['image'] = 'https://rentatool.in.rs' . BASE_URL . '/uploads/tools/' . $tool['primary_image'];
+        }
+        $schema['itemListElement'][] = $item;
     }
 
     return $schema;

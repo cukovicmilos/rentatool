@@ -14,6 +14,20 @@ $path = parse_url($requestUri, PHP_URL_PATH);
 $path = substr($path, strlen($basePath));
 $path = trim($path, '/');
 
+// SEO: 301 redirect trailing slash → canonical URL without slash (GET only)
+$rawPath = parse_url($requestUri, PHP_URL_PATH) ?: '/';
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && $rawPath !== '/' && str_ends_with($rawPath, '/')) {
+    $qs = parse_url($requestUri, PHP_URL_QUERY);
+    header('Location: ' . rtrim($rawPath, '/') . ($qs !== null && $qs !== '' ? '?' . $qs : ''), true, 301);
+    exit;
+}
+
+// SEO: 301 redirect /index.php → /
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && $path === 'index.php') {
+    header('Location: /', true, 301);
+    exit;
+}
+
 // Parse path segments
 $segments = $path ? explode('/', $path) : [];
 
@@ -67,6 +81,13 @@ switch ($route) {
     case 'stranica':
         $_GET['slug'] = $segments[1] ?? '';
         require_once __DIR__ . '/pages/stranica.php';
+        break;
+
+    // Guide pages (vodiči)
+    case 'vodic':
+        $_GET['tool'] = $segments[1] ?? '';
+        $_GET['job'] = $segments[2] ?? '';
+        require_once __DIR__ . '/pages/vodic.php';
         break;
     
     // Cart

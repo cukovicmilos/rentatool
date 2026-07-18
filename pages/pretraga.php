@@ -26,6 +26,7 @@ if (strlen($query) >= 2) {
 }
 
 $pageTitle = 'Pretraga' . ($query ? ': ' . $query : '') . ' | ' . SITE_NAME;
+$robotsMeta = 'noindex, follow';
 $pageDescription = 'Rezultati pretrage alata za iznajmljivanje.' . ($query ? ' Tražili ste: ' . $query . '.' : '');
 $bodyClass = 'search-page';
 

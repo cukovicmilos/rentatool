@@ -75,6 +75,7 @@ foreach ($cart as $index => $item) {
 }
 
 $pageTitle = 'Korpa - ' . SITE_NAME;
+$robotsMeta = 'noindex, follow';
 $showSidebar = false;
 
 ob_start();

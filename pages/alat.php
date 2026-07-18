@@ -122,7 +122,7 @@ $faqs = [
     ],
     [
         'question' => 'Koje je radno vreme za preuzimanje alata u Subotici?',
-        'answer' => 'Alate možete preuzeti radnim danima od 08:00 do 18:00h, subotom od 09:00 do 14:00h. Za dogovor van radnog vremena, javite nam se unapred.'
+        'answer' => 'Alate možete preuzeti radnim danima od 16:00 do 20:00h, subotom od 08:00 do 20:00h. Za dogovor van radnog vremena, javite nam se unapred.'
     ],
     [
         'question' => 'Mogu li iznajmiti ' . $tool['name'] . ' za vikend?',
@@ -158,47 +158,15 @@ $toolSlug = $tool['slug'] ?: slugify($tool['name']);
 $canonicalUrl = '/alat/' . $toolSlug;
 
 // Schema.org structured data for Product/Offer
-$schemaData = [
-    '@context' => 'https://schema.org',
-    '@type' => 'Product',
-    'name' => $tool['name'],
-    'description' => $tool['description'] ?? $tool['short_description'] ?? '',
-    'sku' => 'TOOL-' . $tool['id'],
-    'brand' => [
-        '@type' => 'Brand',
-        'name' => SITE_NAME
-    ],
-    'offers' => [
-        '@type' => 'Offer',
-        'url' => 'https://rentatool.in.rs' . BASE_URL . '/alat/' . $toolSlug,
-        'priceCurrency' => 'EUR',
-        'price' => number_format($tool['price_24h'], 2, '.', ''),
-        'priceValidUntil' => date('Y-m-d', strtotime('+1 year')),
-        'availability' => $tool['status'] === 'available' 
-            ? 'https://schema.org/InStock' 
-            : 'https://schema.org/OutOfStock',
-        'itemCondition' => 'https://schema.org/UsedCondition',
-        'seller' => [
-            '@type' => 'LocalBusiness',
-            'name' => SITE_NAME,
-            'address' => [
-                '@type' => 'PostalAddress',
-                'addressLocality' => 'Subotica',
-                'addressCountry' => 'RS'
-            ]
-        ],
-        'areaServed' => [
-            '@type' => 'Place',
-            'name' => 'Subotica',
-            'containedIn' => 'Vojvodina'
-        ]
-    ]
+$toolForSchema = $tool;
+$toolForSchema['primary_image'] = !empty($images) ? $images[0]['filename'] : null;
+$schemaData = productSchema($toolForSchema);
+$schemaData['description'] = $tool['description'] ?? $tool['short_description'] ?? '';
+$schemaData['offers']['areaServed'] = [
+    '@type' => 'Place',
+    'name' => 'Subotica',
+    'containedIn' => 'Vojvodina'
 ];
-
-// Add image if available
-if (!empty($images)) {
-    $schemaData['image'] = 'https://rentatool.in.rs' . BASE_URL . '/uploads/tools/' . $images[0]['filename'];
-}
 
 // Add specifications and jobs as additionalProperty
 $schemaData['additionalProperty'] = [];
@@ -241,6 +209,22 @@ foreach ($faqs as $faq) {
 
 // Additional schemas for output (FAQPage goes here, not in $schemaData)
 $additionalSchemas = [$faqSchema];
+
+// VideoObject schemas for YouTube videos
+foreach ($videos as $video) {
+    $videoId = getYouTubeVideoId($video['youtube_url']);
+    if (!$videoId) continue;
+    $additionalSchemas[] = [
+        '@context' => 'https://schema.org',
+        '@type' => 'VideoObject',
+        'name' => !empty($video['title']) ? $video['title'] : $tool['name'] . ' - video uputstvo',
+        'description' => (!empty($video['title']) ? $video['title'] . ' - ' : '') . 'Video prikaz alata ' . $tool['name'] . ' za iznajmljivanje u Subotici.',
+        'thumbnailUrl' => 'https://i.ytimg.com/vi/' . $videoId . '/hqdefault.jpg',
+        'uploadDate' => !empty($video['created_at']) ? date('Y-m-d', strtotime($video['created_at'])) : date('Y-m-d'),
+        'embedUrl' => 'https://www.youtube.com/embed/' . $videoId,
+        'contentUrl' => 'https://www.youtube.com/watch?v=' . $videoId
+    ];
+}
 
 // Include promo CSS for FAQ accordion styling
 $extraCss = '<link rel="stylesheet" href="' . asset('css/promo.min.css') . '" media="print" onload="this.media=\'all\'"><noscript><link rel="stylesheet" href="' . asset('css/promo.min.css') . '"></noscript>';
@@ -535,7 +519,9 @@ ob_start();
         <div class="jobs-list">
             <?php foreach ($toolJobs as $job): ?>
             <div class="job-item">
-                <h3 class="job-title"><?= e($job['title']) ?></h3>
+                <h3 class="job-title">
+                    <a href="<?= url('vodic/' . $tool['slug'] . '/' . slugify($job['title'])) ?>"><?= e($job['title']) ?></a>
+                </h3>
                 <p class="job-description"><?= nl2br(e($job['description'])) ?></p>
             </div>
             <?php endforeach; ?>
@@ -1147,6 +1133,15 @@ ob_start();
     font-weight: 600;
     margin: 0 0 var(--spacing-xs) 0;
     color: var(--color-black);
+}
+
+.job-title a {
+    color: inherit;
+}
+
+.job-title a:hover {
+    color: var(--color-accent-hover);
+    text-decoration: underline;
 }
 
 .job-description {

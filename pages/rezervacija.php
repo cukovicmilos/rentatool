@@ -52,6 +52,7 @@ $deliveryNames = [
 ];
 
 $pageTitle = 'Rezervacija ' . $reservation['reservation_code'] . ' - ' . SITE_NAME;
+$robotsMeta = 'noindex, follow';
 $showSidebar = false;
 
 ob_start();

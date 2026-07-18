@@ -23,7 +23,6 @@
 - [Iznajmljivanje alata](https://rentatool.in.rs/kategorija/butan): Rental of construction tools and equipment, focusing on butane and related hardware.
 - [Iznajmljivanje Pila](https://rentatool.in.rs/kategorija/pila): Načina za iznajmljivanje i kupovinu različitih vrsta pila i građevinskog alata.
 - [Iznajmljivanje Alata](https://rentatool.in.rs/kategorija/sekira): Promote rental of various tools, including axes, in Subotica with details on availability and pricing.
-- [Najam Alata](https://rentatool.in.rs/korpa): Offer rental services for construction tools in Subotica.
 - [Rent a Tool - Šlicerica MFE 40](https://rentatool.in.rs/alat/metabo-slicerica-mfe-40): Promocija i rentiranje Metabo šlicerice MFE 40 sa dodatnom opremom u Subotici.
 - [Kosilice za travu Rental](https://rentatool.in.rs/kategorija/kosilica): Renting and renting out tools, focusing on lawn mowers in Subotica.
 - [Rent a Tool](https://rentatool.in.rs/kategorija/cirkular): Renting and renting out power tools, specifically circular saws, in Subotica.

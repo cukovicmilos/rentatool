@@ -36,6 +36,14 @@ $pageTitle = 'Svi alati | ' . SITE_NAME;
 $pageDescription = 'Pregledajte sve alate dostupne za iznajmljivanje. Bušilice, brusilice, testera, kompresori i još mnogo toga.';
 $bodyClass = 'tools-page';
 
+// ItemList schema (one per category section)
+$additionalSchemas = [];
+foreach ($categories as $category) {
+    if (!empty($toolsByCategory[$category['id']])) {
+        $additionalSchemas[] = itemListSchema($toolsByCategory[$category['id']], $category['name']);
+    }
+}
+
 ob_start();
 ?>
 

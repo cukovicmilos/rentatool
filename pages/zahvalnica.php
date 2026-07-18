@@ -32,6 +32,7 @@ $deliveryNames = [
 ];
 
 $pageTitle = 'Rezervacija potvrđena - ' . SITE_NAME;
+$robotsMeta = 'noindex, follow';
 $showSidebar = false;
 
 ob_start();
@@ -154,7 +155,7 @@ ob_start();
         
         <div class="contact-info">
             <h3>Kontakt</h3>
-            <p>Telefon: <?= SITE_PHONE ?></p>
+            <p>Telefon: <?= SITE_PHONE_DISPLAY ?></p>
             <p>Email: <?= SITE_EMAIL ?></p>
         </div>
         

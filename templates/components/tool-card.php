@@ -69,7 +69,4 @@ $weekendPrice = $tool['price_24h'] * (1 + WEEKEND_MARKUP);
             <?php endif; ?>
         </div>
     </a>
-    <script type="application/ld+json">
-    <?= json_encode(productSchema($tool), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>
-    </script>
 </article>

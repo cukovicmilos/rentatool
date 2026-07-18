@@ -44,10 +44,12 @@ define('BASE_URL', '');
 // Site settings
 define('SITE_NAME', 'Rent a Tool');
 define('SITE_DESCRIPTION', 'Iznajmljivanje građevinske opreme i alata u Subotici i okolini');
-define('SITE_EMAIL', 'info@rentatool.rs');
-define('SITE_PHONE', '+381 24 123 456');
+define('SITE_EMAIL', 'cukovic.milos@gmail.com');
+define('SITE_PHONE', '+381642039933');
+define('SITE_PHONE_DISPLAY', '064 203 99 33');
 define('SITE_ADDRESS', 'Gregora Kreka 15, Subotica, Srbija');
 define('SITE_MAP_URL', 'https://maps.app.goo.gl/ibJSAZD9BvqwURcf8');
+define('SITE_TELEGRAM_URL', 'https://t.me/cukovicmilos');
 
 // Currency
 define('CURRENCY', 'EUR');
