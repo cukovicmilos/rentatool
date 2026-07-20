@@ -186,6 +186,9 @@ ob_start();
     color: var(--color-gray-600);
     max-width: 800px;
 }
+.promo-faq {
+    margin-top: var(--spacing-xl);
+}
 </style>
 
 <?php
