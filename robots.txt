@@ -25,9 +25,27 @@ Disallow: /templates/
 # Disallow backlog folder
 Disallow: /backlog/
 
-# Disallow internal search results (thin/duplicate content)
-Disallow: /pretraga
+# NOTE: /pretraga is intentionally NOT blocked here.
+# It has a noindex meta tag; blocking it in robots.txt would prevent
+# Google from ever seeing the noindex (causes "Indexed, though blocked
+# by robots.txt" in Search Console).
 
 # Allow assets
+Allow: /assets/
+Allow: /uploads/
+
+# AI crawlers (ChatGPT, Claude, Gemini, Meta) - explicitly allowed
+# Same restrictions as regular bots apply
+User-agent: GPTBot
+User-agent: ClaudeBot
+User-agent: Google-Extended
+User-agent: Meta-ExternalAgent
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /database/
+Disallow: /includes/
+Disallow: /templates/
+Disallow: /backlog/
 Allow: /assets/
 Allow: /uploads/
