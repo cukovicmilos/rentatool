@@ -1228,13 +1228,15 @@ ob_start();
     }
     
     .mini-calendar {
-        max-width: 120px;
+        max-width: 100%;
+        width: 100%;
     }
     
     .mini-calendar-day {
-        width: 16px;
-        height: 16px;
-        font-size: 8px;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1;
+        font-size: var(--font-size-xs);
     }
     
     .legend-label {
