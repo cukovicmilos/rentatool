@@ -100,7 +100,8 @@ ob_start();
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($items as $item): ?>
+                    <?php for ($i = 0; $i < count($items); $i++): ?>
+                    <?php $item = $items[$i]; ?>
                     <?php if (isset($item['item_type']) && $item['item_type'] === 'service'): ?>
                     <tr>
                         <td>
@@ -120,8 +121,32 @@ ob_start();
                         <td><?= $item['days'] ?> dana</td>
                         <td class="text-right"><?= formatPrice($item['subtotal']) ?></td>
                     </tr>
+                    <?php
+                    // Collect bundle component rows that follow this main item
+                    $components = [];
+                    $j = $i + 1;
+                    while ($j < count($items)
+                        && ($items[$j]['item_type'] ?? 'tool') === 'tool'
+                        && !empty($items[$j]['is_bundle_component'])) {
+                        $components[] = $items[$j];
+                        $j++;
+                    }
+                    $i = $j - 1;
+                    ?>
+                    <?php if (!empty($components)): ?>
+                    <tr class="bundle-component-row">
+                        <td colspan="4">
+                            <div class="bundle-components-sub">
+                                <strong>Uključeno:</strong>
+                                <?php foreach ($components as $c): ?>
+                                <span class="bundle-comp-name"><?= e($c['tool_name']) ?></span>
+                                <?php endforeach; ?>
+                            </div>
+                        </td>
+                    </tr>
                     <?php endif; ?>
-                    <?php endforeach; ?>
+                    <?php endif; ?>
+                    <?php endfor; ?>
                 </tbody>
                 <tfoot>
                     <tr>
@@ -268,6 +293,27 @@ ob_start();
 
 .items-table .total-row td {
     border-top: 2px solid var(--color-accent);
+}
+
+.bundle-component-row td {
+    padding-top: 0;
+    border-bottom: none;
+}
+
+.bundle-components-sub {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--color-gray-100);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-small);
+}
+
+.bundle-comp-name {
+    display: inline-block;
+    margin-left: var(--spacing-xs);
+}
+
+.bundle-comp-name:not(:last-child)::after {
+    content: ',';
 }
 
 .cancel-section {

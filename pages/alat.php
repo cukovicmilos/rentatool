@@ -62,24 +62,36 @@ $recommendations = db()->fetchAll("
 // Get jobs that can be done with this tool
 $toolJobs = db()->fetchAll("SELECT * FROM tool_jobs WHERE tool_id = ? ORDER BY sort_order", [$tool['id']]);
 
-// Get blocked dates for this tool (next 30 days) — full day blocks
+// Bundle handling
+$bundleItems = [];
+$availabilityToolIds = [$tool['id']];
+if (isBundle($tool)) {
+    $bundleItems = getBundleItems($tool['id']);
+    $availabilityToolIds = array_column($bundleItems, 'id');
+    if (empty($availabilityToolIds)) {
+        $availabilityToolIds = [$tool['id']];
+    }
+}
+$idPlaceholders = implode(',', array_fill(0, count($availabilityToolIds), '?'));
+
+// Get blocked dates for this tool/bundle (next 30 days) — full day blocks
 $blockedDates = db()->fetchAll("
-    SELECT blocked_date FROM blocked_dates 
-    WHERE (tool_id = ? OR tool_id IS NULL)
+    SELECT blocked_date FROM blocked_dates
+    WHERE (tool_id IN ({$idPlaceholders}) OR tool_id IS NULL)
     AND blocked_date >= DATE('now')
     AND blocked_date <= DATE('now', '+30 days')
-", [$tool['id']]);
+", $availabilityToolIds);
 $blockedDatesArray = array_column($blockedDates, 'blocked_date');
 
-// Get reserved dates from confirmed reservations (with times)
+// Get reserved dates from active reservations (with times)
 $reservedDates = db()->fetchAll("
     SELECT r.date_start, r.date_end, r.time_start, r.time_end
     FROM reservations r
     JOIN reservation_items ri ON r.id = ri.reservation_id
-    WHERE ri.tool_id = ? 
+    WHERE ri.tool_id IN ({$idPlaceholders})
     AND r.status IN ('pending', 'confirmed', 'rented')
     AND r.date_end >= DATE('now')
-", [$tool['id']]);
+", $availabilityToolIds);
 
 // Build reserved date strings (for mini-calendar orange display) + display list
 $reservedDateStrings = [];
@@ -348,7 +360,7 @@ ob_start();
                     <span class="price-value"><?= formatPrice($weekendPrice) ?></span>
                     <span class="price-note">(+<?= WEEKEND_MARKUP * 100 ?>%)</span>
                 </div>
-                <?php if ($tool['deposit'] > 0): ?>
+                <?php if (!isBundle($tool) && $tool['deposit'] > 0): ?>
                 <div class="price-deposit">
                     <span class="price-label">Depozit:</span>
                     <span class="price-value"><?= formatPrice($tool['deposit']) ?></span>
@@ -358,7 +370,24 @@ ob_start();
                     <small class="text-success">7+ dana = <?= WEEKLY_DISCOUNT * 100 ?>% popusta!</small>
                 </div>
             </div>
-            
+
+            <?php if (!empty($bundleItems)): ?>
+            <div class="bundle-components mt-3">
+                <h3>Bundle sadrži:</h3>
+                <div class="bundle-components-list">
+                    <?php foreach ($bundleItems as $bItem): ?>
+                    <a href="<?= url('alat/' . $bItem['slug']) ?>" class="bundle-component-item">
+                        <?php if ($bItem['primary_image']): ?>
+                        <img src="<?= upload('tools/' . $bItem['primary_image']) ?>" alt="<?= e($bItem['name']) ?>" loading="lazy">
+                        <?php endif; ?>
+                        <span class="bundle-component-name"><?= e($bItem['name']) ?></span>
+                        <span class="bundle-component-price"><?= formatPrice($bItem['price_24h']) ?></span>
+                    </a>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <?php if ($tool['status'] === 'available'): ?>
             <!-- Date Selection -->
             <div class="date-selection mt-3" role="group" aria-labelledby="date-selection-heading">
@@ -794,6 +823,57 @@ ob_start();
     padding: var(--spacing-lg);
     border-radius: var(--border-radius);
     border-left: 4px solid var(--color-accent);
+}
+
+.bundle-components {
+    background: var(--color-white);
+    border: 1px solid var(--border-color);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+}
+
+.bundle-components h3 {
+    font-size: var(--font-size-base);
+    margin: 0 0 var(--spacing-sm) 0;
+}
+
+.bundle-components-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.bundle-component-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background: var(--color-gray-100);
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    color: var(--color-black);
+}
+
+.bundle-component-item:hover {
+    background: var(--color-gray-200);
+}
+
+.bundle-component-item img {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.bundle-component-name {
+    flex: 1;
+    font-size: var(--font-size-small);
+}
+
+.bundle-component-price {
+    font-size: var(--font-size-small);
+    font-weight: 600;
 }
 
 .price-main {

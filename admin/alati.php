@@ -41,6 +41,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $price24h = (float) post('price_24h');
     $deposit = (float) post('deposit', 0);
     $status = post('status', 'available');
+    $type = post('type', 'tool');
+    if (!in_array($type, ['tool', 'bundle'], true)) {
+        $type = 'tool';
+    }
     $featured = post('featured') ? 1 : 0;
     $categoryIds = post('categories', []);
     $specNames = post('spec_names', []);
@@ -50,6 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $recommendedIds = post('recommended_ids', []);
     $jobTitles = post('job_titles', []);
     $jobDescriptions = post('job_descriptions', []);
+    $bundleComponentIds = post('bundle_component_ids', []);
     
     // Generate slug
     $slug = slugify($name);
@@ -62,7 +67,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($price24h <= 0) {
         $errors[] = 'Cena mora biti veća od 0.';
     }
-    
+    if ($type === 'bundle') {
+        $validComponents = array_filter($bundleComponentIds, fn($v) => (int)$v > 0);
+        if (empty($validComponents)) {
+            $errors[] = 'Bundle mora sadržati bar jedan alat.';
+        }
+    }
+
     // Check unique slug
     $existingSlug = db()->fetch("SELECT id FROM tools WHERE slug = ? AND id != ?", [$slug, $id]);
     if ($existingSlug) {
@@ -75,17 +86,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             if ($action === 'dodaj') {
                 $id = db()->insert(
-                    "INSERT INTO tools (name, slug, description, short_description, youtube_url, price_24h, deposit, status, featured) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    [$name, $slug, $description, $shortDescription, $youtubeUrl, $price24h, $deposit, $status, $featured]
+                    "INSERT INTO tools (name, slug, description, short_description, youtube_url, price_24h, deposit, status, type, featured)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    [$name, $slug, $description, $shortDescription, $youtubeUrl, $price24h, $deposit, $status, $type, $featured]
                 );
             } else {
                 db()->execute(
-                    "UPDATE tools SET name = ?, slug = ?, description = ?, short_description = ?, youtube_url = ?, 
-                     price_24h = ?, deposit = ?, status = ?, featured = ?, updated_at = CURRENT_TIMESTAMP 
+                    "UPDATE tools SET name = ?, slug = ?, description = ?, short_description = ?, youtube_url = ?,
+                     price_24h = ?, deposit = ?, status = ?, type = ?, featured = ?, updated_at = CURRENT_TIMESTAMP
                      WHERE id = ?",
-                    [$name, $slug, $description, $shortDescription, $youtubeUrl, $price24h, $deposit, $status, $featured, $id]
+                    [$name, $slug, $description, $shortDescription, $youtubeUrl, $price24h, $deposit, $status, $type, $featured, $id]
                 );
+            }
+
+            // Update bundle components
+            db()->execute("DELETE FROM bundle_items WHERE bundle_id = ?", [$id]);
+            if ($type === 'bundle') {
+                $sortOrder = 0;
+                foreach ($bundleComponentIds as $componentId) {
+                    $componentId = (int) $componentId;
+                    if ($componentId > 0 && $componentId !== $id) {
+                        db()->insert(
+                            "INSERT INTO bundle_items (bundle_id, component_id, sort_order) VALUES (?, ?, ?)",
+                            [$id, $componentId, $sortOrder++]
+                        );
+                    }
+                }
+                recalculateBundlePrice($id);
+                generateBundleCollage($id);
+            } else {
+                deleteBundleCollageImages($id);
             }
             
             // Update categories
@@ -177,9 +207,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             
             db()->commit();
+
+            // If a component tool changed price, update any bundles that contain it
+            if ($type === 'tool') {
+                recalculateAllBundlesForTool($id);
+            }
+
             flash('success', $action === 'dodaj' ? 'Alat je uspešno dodat.' : 'Alat je uspešno izmenjen.');
             redirect('admin/alati');
-            
+
         } catch (Exception $e) {
             db()->rollback();
             $errors[] = 'Greška pri čuvanju: ' . $e->getMessage();
@@ -199,8 +235,15 @@ if ($action === 'obrisi' && $id) {
         $images = db()->fetchAll("SELECT filename FROM tool_images WHERE tool_id = ?", [$id]);
         foreach ($images as $img) {
             deleteUpload('tools/' . $img['filename']);
+            $webp = preg_replace('/\.(jpe?g|png)$/i', '.webp', $img['filename']);
+            if ($webp !== $img['filename']) {
+                deleteUpload('tools/' . $webp);
+            }
         }
-        
+
+        // Clean up any generated bundle collage records/files
+        deleteBundleCollageImages($id);
+
         db()->execute("DELETE FROM tools WHERE id = ?", [$id]);
         flash('success', 'Alat je uspešno obrisan.');
     }
@@ -215,6 +258,7 @@ $toolImages = [];
 $toolVideos = [];
 $toolRecommendations = [];
 $toolJobs = [];
+$bundleComponents = [];
 
 if ($action === 'izmeni' && $id) {
     $tool = db()->fetch("SELECT * FROM tools WHERE id = ?", [$id]);
@@ -239,6 +283,15 @@ if ($action === 'izmeni' && $id) {
     ", [$id]);
     
     $toolJobs = db()->fetchAll("SELECT * FROM tool_jobs WHERE tool_id = ? ORDER BY sort_order", [$id]);
+
+    $bundleComponents = db()->fetchAll("
+        SELECT t.id, t.name,
+               (SELECT filename FROM tool_images WHERE tool_id = t.id AND is_primary = 1 LIMIT 1) as primary_image
+        FROM bundle_items bi
+        JOIN tools t ON t.id = bi.component_id
+        WHERE bi.bundle_id = ?
+        ORDER BY bi.sort_order
+    ", [$id]);
 }
 
 // Get all categories for select
@@ -273,8 +326,8 @@ if ($searchQuery !== '') {
 $tools = db()->fetchAll("
     SELECT t.*,
            (SELECT filename FROM tool_images WHERE tool_id = t.id AND is_primary = 1 LIMIT 1) as primary_image,
-           (SELECT GROUP_CONCAT(c.name, ', ') FROM categories c 
-            JOIN tool_categories tc ON c.id = tc.category_id 
+           (SELECT GROUP_CONCAT(c.name, ', ') FROM categories c
+            JOIN tool_categories tc ON c.id = tc.category_id
             WHERE tc.tool_id = t.id) as category_names
     FROM tools t
     WHERE {$where}
@@ -348,6 +401,9 @@ ob_start();
                         </td>
                         <td>
                             <strong><?= e($t['name']) ?></strong>
+                            <?php if ($t['type'] === 'bundle'): ?>
+                                <span class="status-badge badge-featured" style="margin-left: 4px;">Bundle</span>
+                            <?php endif; ?>
                             <?php if ($t['featured']): ?>
                                 <span class="status-badge badge-featured" style="margin-left: 4px;">★</span>
                             <?php endif; ?>
@@ -471,6 +527,14 @@ ob_start();
             
             <div class="form-row">
                 <div class="form-group">
+                    <label for="type" class="form-label">Tip</label>
+                    <select id="type" name="type" class="form-control">
+                        <option value="tool" <?= ($tool['type'] ?? 'tool') === 'tool' ? 'selected' : '' ?>>Alat</option>
+                        <option value="bundle" <?= ($tool['type'] ?? '') === 'bundle' ? 'selected' : '' ?>>Bundle (paket)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
                     <label for="status" class="form-label">Status</label>
                     <select id="status" name="status" class="form-control">
                         <option value="available" <?= ($tool['status'] ?? 'available') === 'available' ? 'selected' : '' ?>>Dostupan</option>
@@ -479,7 +543,7 @@ ob_start();
                         <option value="inactive" <?= ($tool['status'] ?? '') === 'inactive' ? 'selected' : '' ?>>Neaktivan</option>
                     </select>
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label">&nbsp;</label>
                     <label class="form-check">
@@ -613,6 +677,37 @@ ob_start();
         <p class="form-text mt-2">Dodajte YouTube linkove za video uputstva, recenzije ili demonstracije alata.</p>
     </div>
     
+    <div class="admin-card" id="bundleComponentsCard" style="<?= ($tool['type'] ?? 'tool') === 'bundle' ? '' : 'display:none;' ?>">
+        <div class="admin-card-header">
+            <h3>Alati u bundle-u</h3>
+            <span class="form-text" style="font-size: var(--font-size-xs);">Prevlačenjem menjate redosled.</span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Dodajte alate u paket</label>
+            <div style="position: relative;">
+                <input type="text" id="bundleSearch" class="form-control"
+                       placeholder="Kucajte naziv alata za pretragu..." autocomplete="off">
+                <div id="bundleDropdown" class="rec-dropdown" style="display:none;"></div>
+            </div>
+            <div id="bundleChips" class="bundle-chips">
+                <?php foreach ($bundleComponents as $comp): ?>
+                <div class="bundle-chip" data-id="<?= $comp['id'] ?>" draggable="true">
+                    <span class="drag-handle" title="Prevucite za promenu redosleda">⠿</span>
+                    <?php if ($comp['primary_image']): ?>
+                    <img src="<?= upload('tools/' . $comp['primary_image']) ?>" alt="" class="bundle-chip-img">
+                    <?php endif; ?>
+                    <span><?= e($comp['name']) ?></span>
+                    <input type="hidden" name="bundle_component_ids[]" value="<?= $comp['id'] ?>">
+                    <button type="button" class="bundle-chip-remove" onclick="this.parentElement.remove()">&times;</button>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
+        <p class="form-text mt-2">Cena bundle-a se automatski računa kao zbir cena komponenti umanjenih za 10%. Depozit bundle-a je uvek 0.</p>
+    </div>
+
     <div class="admin-card">
         <div class="admin-card-header">
             <h3>Preporučeni alati</h3>
@@ -734,9 +829,177 @@ ob_start();
     .rec-chip-remove:hover {
         color: var(--color-danger);
     }
+    .bundle-chips {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 10px;
+    }
+    .bundle-chip {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--color-gray-100);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 8px 10px;
+        font-size: 14px;
+        cursor: grab;
+    }
+    .bundle-chip.dragging {
+        opacity: 0.5;
+    }
+    .bundle-chip .drag-handle {
+        cursor: grab;
+        color: var(--color-gray-500);
+        user-select: none;
+    }
+    .bundle-chip-img {
+        width: 36px;
+        height: 36px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+    .bundle-chip-remove {
+        margin-left: auto;
+        background: none;
+        border: none;
+        color: var(--color-gray-500);
+        cursor: pointer;
+        font-size: 18px;
+        line-height: 1;
+        padding: 0 4px;
+    }
+    .bundle-chip-remove:hover {
+        color: var(--color-danger);
+    }
     </style>
 
     <script>
+    (function() {
+        const typeSelect = document.getElementById('type');
+        const bundleCard = document.getElementById('bundleComponentsCard');
+
+        if (typeSelect && bundleCard) {
+            typeSelect.addEventListener('change', function() {
+                bundleCard.style.display = this.value === 'bundle' ? '' : 'none';
+            });
+        }
+
+        initBundleComponents();
+    })();
+
+    function initBundleComponents() {
+        const searchInput = document.getElementById('bundleSearch');
+        const dropdown = document.getElementById('bundleDropdown');
+        const chipsContainer = document.getElementById('bundleChips');
+        const toolId = <?= $id ?: 0 ?>;
+        let debounceTimer;
+
+        if (!searchInput || !dropdown || !chipsContainer) return;
+
+        // Drag-and-drop sorting
+        let dragged = null;
+        chipsContainer.addEventListener('dragstart', function(e) {
+            if (e.target.classList.contains('bundle-chip')) {
+                dragged = e.target;
+                e.target.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            }
+        });
+        chipsContainer.addEventListener('dragend', function(e) {
+            if (e.target.classList.contains('bundle-chip')) {
+                e.target.classList.remove('dragging');
+                dragged = null;
+            }
+        });
+        chipsContainer.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            if (!dragged) return;
+            const after = getDragAfterElement(chipsContainer, e.clientY);
+            if (after) {
+                chipsContainer.insertBefore(dragged, after);
+            } else {
+                chipsContainer.appendChild(dragged);
+            }
+        });
+
+        function getDragAfterElement(container, y) {
+            const chips = [...container.querySelectorAll('.bundle-chip:not(.dragging)')];
+            return chips.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                }
+                return closest;
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        searchInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            const q = this.value.trim();
+            if (q.length < 2) {
+                dropdown.style.display = 'none';
+                return;
+            }
+            debounceTimer = setTimeout(() => {
+                fetch('<?= url('api/tools-search') ?>?q=' + encodeURIComponent(q) + '&exclude=' + toolId + '&exclude_bundles=1')
+                    .then(r => r.json())
+                    .then(tools => {
+                        const addedIds = [...chipsContainer.querySelectorAll('.bundle-chip')]
+                            .map(c => c.dataset.id);
+                        const filtered = tools.filter(t => !addedIds.includes(String(t.id)));
+
+                        if (filtered.length === 0) {
+                            dropdown.style.display = 'none';
+                            return;
+                        }
+
+                        dropdown.innerHTML = filtered.map(t => {
+                            const imgHtml = t.primary_image
+                                ? '<img src="<?= url('uploads/tools/') ?>' + t.primary_image + '" alt="">'
+                                : '';
+                            return '<div class="rec-dropdown-item" data-id="' + t.id + '" data-name="' + t.name.replace(/"/g, '&quot;') + '" data-image="' + (t.primary_image || '') + '">'
+                                + imgHtml + '<span>' + t.name + '</span></div>';
+                        }).join('');
+                        dropdown.style.display = 'block';
+
+                        dropdown.querySelectorAll('.rec-dropdown-item').forEach(item => {
+                            item.addEventListener('click', function() {
+                                addBundleChip(this.dataset.id, this.dataset.name, this.dataset.image);
+                                searchInput.value = '';
+                                dropdown.style.display = 'none';
+                            });
+                        });
+                    });
+            }, 300);
+        });
+
+        function addBundleChip(id, name, image) {
+            const chip = document.createElement('div');
+            chip.className = 'bundle-chip';
+            chip.dataset.id = id;
+            chip.draggable = true;
+            let imgHtml = '';
+            if (image) {
+                imgHtml = '<img src="<?= url('uploads/tools/') ?>' + image + '" alt="" class="bundle-chip-img">';
+            }
+            chip.innerHTML = '<span class="drag-handle" title="Prevucite za promenu redosleda">⠿</span>'
+                + imgHtml
+                + '<span>' + name + '</span>'
+                + '<input type="hidden" name="bundle_component_ids[]" value="' + id + '">'
+                + '<button type="button" class="bundle-chip-remove" onclick="this.parentElement.remove()">&times;</button>';
+            chipsContainer.appendChild(chip);
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+    }
+
     (function() {
         const searchInput = document.getElementById('recSearch');
         const dropdown = document.getElementById('recDropdown');

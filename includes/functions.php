@@ -738,3 +738,293 @@ function getYouTubeVideoId(string $url): ?string {
     
     return null;
 }
+
+/* ==========================================================================
+   Bundle helpers
+   ========================================================================== */
+
+/**
+ * Check if a tool row represents a bundle.
+ */
+function isBundle(array $tool): bool {
+    return ($tool['type'] ?? 'tool') === 'bundle';
+}
+
+/**
+ * Get component tools for a bundle (with primary image).
+ */
+function getBundleItems(int $bundleId): array {
+    return db()->fetchAll("
+        SELECT t.id, t.name, t.slug, t.price_24h, t.deposit, t.status,
+               (SELECT filename FROM tool_images WHERE tool_id = t.id AND is_primary = 1 LIMIT 1) as primary_image,
+               bi.sort_order
+        FROM bundle_items bi
+        JOIN tools t ON t.id = bi.component_id
+        WHERE bi.bundle_id = ?
+        ORDER BY bi.sort_order, t.name
+    ", [$bundleId]);
+}
+
+/**
+ * Get component tool IDs for a bundle.
+ */
+function getBundleToolIds(int $bundleId): array {
+    $rows = db()->fetchAll("SELECT component_id FROM bundle_items WHERE bundle_id = ? ORDER BY sort_order", [$bundleId]);
+    return array_column($rows, 'component_id');
+}
+
+/**
+ * Recalculate bundle price as sum of component prices minus 10%.
+ * Bundle deposit is always 0.
+ */
+function recalculateBundlePrice(int $bundleId): void {
+    $total = (float) db()->fetchColumn("
+        SELECT COALESCE(SUM(t.price_24h), 0)
+        FROM bundle_items bi
+        JOIN tools t ON t.id = bi.component_id
+        WHERE bi.bundle_id = ?
+    ", [$bundleId]);
+
+    $bundlePrice = round($total * 0.9, 2);
+    db()->execute(
+        "UPDATE tools SET price_24h = ?, deposit = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        [$bundlePrice, $bundleId]
+    );
+}
+
+/**
+ * Center-crop and resize a GD image resource to exact dimensions.
+ */
+function bundleCenterCrop($source, int $targetWidth, int $targetHeight) {
+    $srcW = imagesx($source);
+    $srcH = imagesy($source);
+    $ratio = max($targetWidth / $srcW, $targetHeight / $srcH);
+    $newW = (int) ($srcW * $ratio);
+    $newH = (int) ($srcH * $ratio);
+
+    $resized = imagecreatetruecolor($newW, $newH);
+    imagecopyresampled($resized, $source, 0, 0, 0, 0, $newW, $newH, $srcW, $srcH);
+
+    $crop = imagecreatetruecolor($targetWidth, $targetHeight);
+    $x = (int) (($newW - $targetWidth) / 2);
+    $y = (int) (($newH - $targetHeight) / 2);
+    imagecopy($crop, $resized, 0, 0, $x, $y, $targetWidth, $targetHeight);
+    imagedestroy($resized);
+
+    return $crop;
+}
+
+/**
+ * Generate a collage image for a bundle from component primary images.
+ * Saves JPG + WebP to uploads/tools/ and sets it as the bundle's primary image.
+ * Returns the generated filename or null.
+ */
+function generateBundleCollage(int $bundleId): ?string {
+    $items = getBundleItems($bundleId);
+    if (empty($items)) {
+        return null;
+    }
+
+    $images = [];
+    foreach ($items as $item) {
+        if (empty($item['primary_image'])) {
+            continue;
+        }
+        $path = UPLOADS_PATH . '/tools/' . $item['primary_image'];
+        $info = @getimagesize($path);
+        if (!$info) {
+            continue;
+        }
+
+        $img = null;
+        switch ($info[2]) {
+            case IMAGETYPE_JPEG:
+                $img = imagecreatefromjpeg($path);
+                break;
+            case IMAGETYPE_PNG:
+                $img = imagecreatefrompng($path);
+                break;
+            case IMAGETYPE_WEBP:
+                $img = imagecreatefromwebp($path);
+                break;
+        }
+
+        if ($img) {
+            $images[] = $img;
+        }
+    }
+
+    if (empty($images)) {
+        return null;
+    }
+
+    $width = 800;
+    $height = 600;
+    $canvas = imagecreatetruecolor($width, $height);
+    $bg = imagecolorallocate($canvas, 240, 240, 240);
+    imagefill($canvas, 0, 0, $bg);
+
+    $count = count($images);
+    $gap = 4;
+
+    if ($count === 1) {
+        $thumb = bundleCenterCrop($images[0], $width, $height);
+        imagecopy($canvas, $thumb, 0, 0, 0, 0, $width, $height);
+        imagedestroy($thumb);
+    } elseif ($count === 2) {
+        $w = (int) (($width - $gap) / 2);
+        $thumb = bundleCenterCrop($images[0], $w, $height);
+        imagecopy($canvas, $thumb, 0, 0, 0, 0, $w, $height);
+        imagedestroy($thumb);
+        $thumb = bundleCenterCrop($images[1], $w, $height);
+        imagecopy($canvas, $thumb, $w + $gap, 0, 0, 0, $w, $height);
+        imagedestroy($thumb);
+    } elseif ($count === 3) {
+        $w = (int) (($width - $gap) / 2);
+        $h = (int) (($height - $gap) / 2);
+        $thumb = bundleCenterCrop($images[0], $w, $h);
+        imagecopy($canvas, $thumb, 0, 0, 0, 0, $w, $h);
+        imagedestroy($thumb);
+        $thumb = bundleCenterCrop($images[1], $w, $h);
+        imagecopy($canvas, $thumb, $w + $gap, 0, 0, 0, $w, $h);
+        imagedestroy($thumb);
+        $thumb = bundleCenterCrop($images[2], $width, $h);
+        imagecopy($canvas, $thumb, 0, $h + $gap, 0, 0, $width, $h);
+        imagedestroy($thumb);
+    } else {
+        // 4+ components -> 2x2 grid using first four
+        $w = (int) (($width - $gap) / 2);
+        $h = (int) (($height - $gap) / 2);
+        for ($i = 0; $i < min(4, $count); $i++) {
+            $thumb = bundleCenterCrop($images[$i], $w, $h);
+            $x = ($i % 2) * ($w + $gap);
+            $y = (int) floor($i / 2) * ($h + $gap);
+            imagecopy($canvas, $thumb, $x, $y, 0, 0, $w, $h);
+            imagedestroy($thumb);
+        }
+    }
+
+    foreach ($images as $img) {
+        imagedestroy($img);
+    }
+
+    $filename = 'bundle-collage-' . $bundleId . '-' . uniqid() . '.jpg';
+    $destPath = UPLOADS_PATH . '/tools/' . $filename;
+    imagejpeg($canvas, $destPath, 90);
+    imagedestroy($canvas);
+
+    generateWebP($destPath);
+
+    // Set as primary image for the bundle
+    db()->execute("UPDATE tool_images SET is_primary = 0 WHERE tool_id = ?", [$bundleId]);
+    db()->insert(
+        "INSERT INTO tool_images (tool_id, filename, sort_order, is_primary) VALUES (?, ?, 0, 1)",
+        [$bundleId, $filename]
+    );
+
+    // Remove previous collage images, keeping the one we just created
+    deleteBundleCollageImages($bundleId, $filename);
+
+    return $filename;
+}
+
+/**
+ * Delete auto-generated bundle collage images for a bundle.
+ * If $keepFilename is provided, that file is preserved.
+ */
+function deleteBundleCollageImages(int $bundleId, ?string $keepFilename = null): void {
+    $images = db()->fetchAll(
+        "SELECT id, filename FROM tool_images WHERE tool_id = ? AND filename LIKE 'bundle-collage-%'",
+        [$bundleId]
+    );
+
+    foreach ($images as $img) {
+        if ($keepFilename && $img['filename'] === $keepFilename) {
+            continue;
+        }
+
+        deleteUpload('tools/' . $img['filename']);
+        $webp = preg_replace('/\.(jpe?g|png)$/i', '.webp', $img['filename']);
+        if ($webp !== $img['filename']) {
+            deleteUpload('tools/' . $webp);
+        }
+
+        db()->execute("DELETE FROM tool_images WHERE id = ?", [$img['id']]);
+    }
+}
+
+/**
+ * Recalculate price and regenerate collage for every bundle that contains a tool.
+ */
+function recalculateAllBundlesForTool(int $toolId): void {
+    $bundles = db()->fetchAll("SELECT bundle_id FROM bundle_items WHERE component_id = ?", [$toolId]);
+    foreach ($bundles as $bundle) {
+        recalculateBundlePrice($bundle['bundle_id']);
+        generateBundleCollage($bundle['bundle_id']);
+    }
+}
+
+/**
+ * Check whether all components of a bundle are available for the requested period.
+ * Returns an error string or null if available.
+ */
+function checkBundleAvailability(int $bundleId, string $dateStart, string $dateEnd, string $timeStart, string $timeEnd): ?string {
+    $components = getBundleItems($bundleId);
+    if (empty($components)) {
+        return 'Bundle ne sadrži alate.';
+    }
+
+    foreach ($components as $component) {
+        if ($component['status'] !== 'available') {
+            return 'Alat "' . $component['name'] . '" iz bundle-a trenutno nije dostupan.';
+        }
+    }
+
+    $toolIds = getBundleToolIds($bundleId);
+    if (empty($toolIds)) {
+        return null;
+    }
+
+    // Check blocked dates for any component
+    $dates = getDatesBetween($dateStart, $dateEnd);
+    if (!empty($dates)) {
+        $idPlaceholders = implode(',', array_fill(0, count($toolIds), '?'));
+        $datePlaceholders = implode(',', array_fill(0, count($dates), '?'));
+        $blocked = db()->fetchAll(
+            "SELECT blocked_date FROM blocked_dates
+             WHERE (tool_id IN ({$idPlaceholders}) OR tool_id IS NULL)
+             AND blocked_date IN ({$datePlaceholders})",
+            array_merge($toolIds, $dates)
+        );
+        if (!empty($blocked)) {
+            return 'Neki od alata u bundle-u nisu dostupni za odabrane datume.';
+        }
+    }
+
+    // Check conflicting reservations for each component
+    $reqStartTs = strtotime($dateStart . ' ' . $timeStart);
+    $reqEndTs = strtotime($dateEnd . ' ' . $timeEnd);
+    $idPlaceholders = implode(',', array_fill(0, count($toolIds), '?'));
+    $conflicts = db()->fetchAll("
+        SELECT r.date_start, r.date_end, r.time_start, r.time_end, t.name as tool_name
+        FROM reservations r
+        JOIN reservation_items ri ON r.id = ri.reservation_id
+        JOIN tools t ON t.id = ri.tool_id
+        WHERE ri.tool_id IN ({$idPlaceholders})
+          AND r.status IN ('pending', 'confirmed', 'rented')
+          AND r.date_end >= ? AND r.date_start <= ?
+    ", array_merge($toolIds, [$dateStart, $dateEnd]));
+
+    foreach ($conflicts as $conflict) {
+        $cTimeStart = $conflict['time_start'] ?? '08:00';
+        $cTimeEnd = $conflict['time_end'] ?? '18:00';
+        $confStartTs = strtotime($conflict['date_start'] . ' ' . $cTimeStart);
+        $confEndTs = strtotime($conflict['date_end'] . ' ' . $cTimeEnd);
+
+        if ($confStartTs < $reqEndTs && $confEndTs > $reqStartTs) {
+            return 'Alat "' . $conflict['tool_name'] . '" iz bundle-a je već rezervisan za deo odabranog termina.';
+        }
+    }
+
+    return null;
+}

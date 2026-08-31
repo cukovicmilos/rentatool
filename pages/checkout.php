@@ -37,12 +37,12 @@ foreach ($cart as $item) {
         $timeStart = $item['time_start'] ?? '08:00';
         $timeEnd = $item['time_end'] ?? '18:00';
         $priceInfo = calculateRentalPrice($item['price_24h'], $dates, $item['date_start'], $item['date_end'], $timeStart, $timeEnd);
-        
+
         $itemBase = $item['price_24h'] * $priceInfo['total_days'];
         $itemMarkup = $priceInfo['weekend_days'] * $item['price_24h'] * WEEKEND_MARKUP;
-        
-        $cartItems[] = [
-            'type' => 'tool',
+
+        $cartItem = [
+            'type' => isset($item['type']) && $item['type'] === 'bundle' ? 'bundle' : 'tool',
             'tool_id' => $item['tool_id'],
             'tool_name' => $item['tool_name'],
             'price_24h' => $item['price_24h'],
@@ -57,10 +57,28 @@ foreach ($cart as $item) {
             'subtotal' => $itemBase,
             'discount' => $priceInfo['discount']
         ];
-        
+
+        if ($cartItem['type'] === 'bundle') {
+            $cartItem['components'] = getBundleItems($item['tool_id']);
+            $cartItem['deposit_total'] = array_sum(array_column($cartItem['components'], 'deposit'));
+        }
+
+        $cartItems[] = $cartItem;
+
         $subtotal += $itemBase;
         $weekendMarkupTotal += $itemMarkup;
         $discountTotal += $priceInfo['discount'];
+    }
+}
+
+// Calculate deposit total for order summary
+$depositTotal = 0;
+foreach ($cartItems as $item) {
+    if ($item['type'] === 'tool' && !empty($item['tool_id'])) {
+        $toolDeposit = db()->fetchColumn("SELECT deposit FROM tools WHERE id = ?", [$item['tool_id']]);
+        $depositTotal += (float) $toolDeposit;
+    } elseif ($item['type'] === 'bundle') {
+        $depositTotal += $item['deposit_total'];
     }
 }
 
@@ -114,12 +132,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($item['type']) && $item['type'] === 'service') {
                 continue;
             }
-            
+
+            if (isset($item['type']) && $item['type'] === 'bundle') {
+                $tool = db()->fetch("SELECT status FROM tools WHERE id = ?", [$item['tool_id']]);
+                if (!$tool || $tool['status'] !== 'available') {
+                    $errors[] = 'Bundle "' . $item['tool_name'] . '" više nije dostupan.';
+                }
+                $availabilityError = checkBundleAvailability(
+                    $item['tool_id'],
+                    $item['date_start'],
+                    $item['date_end'],
+                    $item['time_start'] ?? '08:00',
+                    $item['time_end'] ?? '18:00'
+                );
+                if ($availabilityError) {
+                    $errors[] = $availabilityError;
+                }
+                continue;
+            }
+
             $tool = db()->fetch("SELECT status FROM tools WHERE id = ?", [$item['tool_id']]);
             if (!$tool || $tool['status'] !== 'available') {
                 $errors[] = 'Alat "' . $item['tool_name'] . '" više nije dostupan.';
             }
-            
+
             // Check for conflicting reservations (datetime overlap)
             $reqTimeStart = $item['time_start'] ?? '08:00';
             $reqTimeEnd = $item['time_end'] ?? '18:00';
@@ -127,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $reqEndDT = $item['date_end'] . ' ' . $reqTimeEnd;
             $reqStartTs = strtotime($reqStartDT);
             $reqEndTs = strtotime($reqEndDT);
-            
+
             $conflicts = db()->fetchAll("
                 SELECT r.date_start, r.date_end, r.time_start, r.time_end
                 FROM reservations r
@@ -139,13 +175,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $item['tool_id'],
                 $item['date_start'], $item['date_end']
             ]);
-            
+
             foreach ($conflicts as $conflict) {
                 $cTimeStart = $conflict['time_start'] ?? '08:00';
                 $cTimeEnd   = $conflict['time_end'] ?? '18:00';
                 $confStartDT = $conflict['date_start'] . ' ' . $cTimeStart;
                 $confEndDT = $conflict['date_end'] . ' ' . $cTimeEnd;
-                
+
                 if (strtotime($confStartDT) < $reqEndTs && strtotime($confEndDT) > $reqStartTs) {
                     $errors[] = 'Alat "' . $item['tool_name'] . '" je već rezervisan za odabrani termin.';
                     break;
@@ -227,6 +263,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             'location' => $item['location'],
                             'price' => 0
                         ];
+                    } elseif ($item['type'] === 'bundle') {
+                        // Main bundle line
+                        db()->insert("
+                            INSERT INTO reservation_items (reservation_id, tool_id, tool_name, price_per_day, days, subtotal, item_type)
+                            VALUES (?, ?, ?, ?, ?, ?, 'tool')
+                        ", [
+                            $reservationId,
+                            $item['tool_id'],
+                            $item['tool_name'],
+                            $item['price_24h'],
+                            $item['total_days'],
+                            $item['subtotal']
+                        ]);
+
+                        // Component lines (for inventory tracking)
+                        foreach ($item['components'] as $component) {
+                            db()->insert("
+                                INSERT INTO reservation_items (reservation_id, tool_id, tool_name, price_per_day, days, subtotal, item_type, is_bundle_component)
+                                VALUES (?, ?, ?, 0, ?, 0, 'tool', 1)
+                            ", [
+                                $reservationId,
+                                $component['id'],
+                                $component['name'],
+                                $item['total_days']
+                            ]);
+                        }
+
+                        $telegramItems[] = [
+                            'type' => 'tool',
+                            'tool_name' => $item['tool_name'] . ' (bundle)',
+                            'price' => $item['subtotal']
+                        ];
                     } else {
                         db()->insert("
                             INSERT INTO reservation_items (reservation_id, tool_id, tool_name, price_per_day, days, subtotal, item_type)
@@ -262,7 +330,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'time_start' => $timeStart,
                     'time_end' => $timeEnd,
                     'total_price' => $total,
-                    'deposit_total' => 0,
+                    'deposit_total' => $depositTotal,
                     'notes' => $customerNote
                 ];
                 
@@ -429,6 +497,35 @@ ob_start();
                         <td><?= $item['location'] === 'workshop' ? 'Radionica' : 'Na adresi' ?></td>
                         <td class="text-right"><em>Dogovor</em></td>
                     </tr>
+                    <?php elseif ($item['type'] === 'bundle'): ?>
+                    <tr>
+                        <td>
+                            <strong><?= e($item['tool_name']) ?></strong>
+                            <?php if (!empty($item['components'])): ?>
+                            <br><small class="text-muted">
+                                <?php foreach ($item['components'] as $i => $comp): ?>
+                                    <?= $i > 0 ? ', ' : '' ?><?= e($comp['name']) ?>
+                                <?php endforeach; ?>
+                            </small>
+                            <?php endif; ?>
+                        </td>
+                        <td><?= formatDate($item['date_start']) ?> <?= e($item['time_start'] ?? '') ?>h<br><small>do <?= formatDate($item['date_end']) ?> <?= e($item['time_end'] ?? '') ?>h</small></td>
+                        <td>
+                            <?= $item['total_days'] ?> <?= $item['total_days'] === 1 ? 'dan' : 'dana' ?>
+                            <?php if ($item['regular_days'] > 0 || $item['weekend_days'] > 0): ?>
+                            <br><small>
+                                <?php if ($item['regular_days'] > 0): ?>
+                                    <?= $item['regular_days'] ?> × <?= formatPrice($item['price_24h']) ?>
+                                <?php endif; ?>
+                                <?php if ($item['weekend_days'] > 0): ?>
+                                    <?php if ($item['regular_days'] > 0): ?> + <?php endif; ?>
+                                    <?= $item['weekend_days'] ?> × <?= formatPrice($item['price_24h'] * (1 + WEEKEND_MARKUP)) ?>
+                                <?php endif; ?>
+                            </small>
+                            <?php endif; ?>
+                        </td>
+                        <td class="text-right"><?= formatPrice($item['subtotal'] + ($item['weekend_days'] * $item['price_24h'] * WEEKEND_MARKUP) - $item['discount']) ?></td>
+                    </tr>
                     <?php else: ?>
                     <tr>
                         <td><?= e($item['tool_name']) ?></td>
@@ -467,6 +564,12 @@ ob_start();
                     <tr>
                         <td colspan="3">Popust (7+ dana):</td>
                         <td class="text-right">-<?= formatPrice($discountTotal) ?></td>
+                    </tr>
+                    <?php endif; ?>
+                    <?php if ($depositTotal > 0): ?>
+                    <tr>
+                        <td colspan="3">Depozit (kaucija):</td>
+                        <td class="text-right"><?= formatPrice($depositTotal) ?></td>
                     </tr>
                     <?php endif; ?>
                     <?php if ($hasServices): ?>

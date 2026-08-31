@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS tools (
     price_24h REAL NOT NULL,
     deposit REAL DEFAULT 0,
     status TEXT DEFAULT 'available' CHECK(status IN ('available', 'rented', 'maintenance', 'inactive')),
+    type TEXT DEFAULT 'tool' CHECK(type IN ('tool', 'bundle')),
     featured INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -102,21 +103,21 @@ CREATE TABLE IF NOT EXISTS reservations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     reservation_code TEXT UNIQUE NOT NULL,
     status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'confirmed', 'rented', 'completed', 'cancelled')),
-    
+
     -- Customer info
     customer_name TEXT NOT NULL,
     customer_email TEXT,
     customer_phone TEXT NOT NULL,
     customer_address TEXT,
     customer_note TEXT,
-    
+
     -- Dates
     date_start DATE NOT NULL,
     date_end DATE NOT NULL,
     time_start TEXT DEFAULT '08:00',
     time_end TEXT DEFAULT '18:00',
     total_days INTEGER NOT NULL,
-    
+
     -- Pricing
     subtotal REAL NOT NULL,
     weekend_markup REAL DEFAULT 0,
@@ -124,10 +125,13 @@ CREATE TABLE IF NOT EXISTS reservations (
     delivery_option TEXT DEFAULT 'pickup' CHECK(delivery_option IN ('pickup', 'delivery', 'roundtrip')),
     delivery_fee REAL DEFAULT 0,
     total REAL NOT NULL,
-    
+
     -- Admin notes
     admin_note TEXT,
-    
+
+    -- Google Calendar
+    google_event_id TEXT DEFAULT NULL,
+
     -- Timestamps
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -138,13 +142,41 @@ CREATE TABLE IF NOT EXISTS reservations (
 CREATE TABLE IF NOT EXISTS reservation_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     reservation_id INTEGER NOT NULL,
-    tool_id INTEGER NOT NULL,
+    tool_id INTEGER DEFAULT NULL,
     tool_name TEXT NOT NULL,
     price_per_day REAL NOT NULL,
     days INTEGER NOT NULL,
     subtotal REAL NOT NULL,
+    item_type TEXT DEFAULT 'tool' CHECK(item_type IN ('tool', 'service')),
+    service_description TEXT,
+    service_date DATE,
+    service_location TEXT,
+    is_bundle_component INTEGER DEFAULT 0,
     FOREIGN KEY (reservation_id) REFERENCES reservations(id) ON DELETE CASCADE,
     FOREIGN KEY (tool_id) REFERENCES tools(id) ON DELETE RESTRICT
+);
+
+-- Bundle items (components of a bundle tool)
+CREATE TABLE IF NOT EXISTS bundle_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    bundle_id INTEGER NOT NULL,
+    component_id INTEGER NOT NULL,
+    sort_order INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (bundle_id) REFERENCES tools(id) ON DELETE CASCADE,
+    FOREIGN KEY (component_id) REFERENCES tools(id) ON DELETE RESTRICT,
+    UNIQUE(bundle_id, component_id)
+);
+
+-- Tool jobs (use cases)
+CREATE TABLE IF NOT EXISTS tool_jobs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tool_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    sort_order INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (tool_id) REFERENCES tools(id) ON DELETE CASCADE
 );
 
 -- Static pages
@@ -170,6 +202,13 @@ CREATE TABLE IF NOT EXISTS tool_recommendations (
     FOREIGN KEY (recommended_tool_id) REFERENCES tools(id) ON DELETE CASCADE
 );
 
+-- Migrations tracking
+CREATE TABLE IF NOT EXISTS migrations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    filename TEXT UNIQUE NOT NULL,
+    applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_tools_status ON tools(status);
 CREATE INDEX IF NOT EXISTS idx_tools_slug ON tools(slug);
@@ -183,3 +222,11 @@ CREATE INDEX IF NOT EXISTS idx_reservations_dates ON reservations(date_start, da
 CREATE INDEX IF NOT EXISTS idx_blocked_dates_date ON blocked_dates(blocked_date);
 CREATE INDEX IF NOT EXISTS idx_blocked_dates_tool ON blocked_dates(tool_id);
 CREATE INDEX IF NOT EXISTS idx_pages_slug ON pages(slug);
+CREATE INDEX IF NOT EXISTS idx_tool_jobs_tool_id ON tool_jobs(tool_id);
+CREATE INDEX IF NOT EXISTS idx_tool_jobs_sort_order ON tool_jobs(sort_order);
+CREATE INDEX IF NOT EXISTS idx_reservation_items_reservation ON reservation_items(reservation_id);
+CREATE INDEX IF NOT EXISTS idx_reservation_items_tool ON reservation_items(tool_id);
+CREATE INDEX IF NOT EXISTS idx_reservation_items_type ON reservation_items(item_type);
+CREATE INDEX IF NOT EXISTS idx_reservation_items_bundle_component ON reservation_items(is_bundle_component);
+CREATE INDEX IF NOT EXISTS idx_bundle_items_bundle ON bundle_items(bundle_id);
+CREATE INDEX IF NOT EXISTS idx_bundle_items_component ON bundle_items(component_id);

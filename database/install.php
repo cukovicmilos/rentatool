@@ -111,10 +111,29 @@ try {
     }
     echo "\n";
     
+    // Seed migrations table so migrate.php does not re-apply schema changes
+    echo "Seeding migration tracker...\n";
+    $migrationsDir = __DIR__ . '/migrations';
+    if (is_dir($migrationsDir)) {
+        foreach (glob($migrationsDir . '/*') as $file) {
+            if (is_file($file) && (str_ends_with($file, '.sql') || str_ends_with($file, '.php'))) {
+                $filename = basename($file);
+                $exists = db()->fetchColumn("SELECT COUNT(*) FROM migrations WHERE filename = ?", [$filename]);
+                if (!$exists) {
+                    db()->insert("INSERT INTO migrations (filename) VALUES (?)", [$filename]);
+                    echo "  ✓ Marked migration as applied: {$filename}\n";
+                } else {
+                    echo "  - Migration already tracked: {$filename}\n";
+                }
+            }
+        }
+    }
+    echo "\n";
+
     echo "=== Installation Complete ===\n";
     echo "\nIMPORTANT: Delete this file after installation!\n";
     echo "Change admin password in production!\n";
-    
+
 } catch (Exception $e) {
     echo "ERROR: " . $e->getMessage() . "\n";
     exit(1);
