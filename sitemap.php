@@ -23,11 +23,6 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
         <priority>0.9</priority>
     </url>
     <url>
-        <loc><?= $siteUrl ?>/usluge</loc>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>
-    <url>
         <loc><?= $siteUrl ?>/vodic</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>

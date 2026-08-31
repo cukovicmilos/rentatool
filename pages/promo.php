@@ -120,53 +120,6 @@ ob_start();
     </div>
 </section>
 
-<!-- SERVICES SECTION -->
-<section class="promo-section promo-services" id="sitni-poslovi">
-    <div class="services-content">
-        <h2 class="promo-section-title">Ili me angažujte za sitnije poslove</h2>
-        <p class="services-subtitle">
-            Treba ti izbušiti rupu, iseći metal, spojiti struju, zalepiti nešto? 
-            Raspoložen sam za ove i slične poslove.
-        </p>
-        
-        <div class="services-options">
-            <div class="service-option">
-                <div class="service-option-icon">🔧</div>
-                <h3>Donesi u radionicu</h3>
-                <p>Donesi materijal/stvar kod mene, uradiću posao u svojoj radionici.</p>
-            </div>
-            <div class="service-option">
-                <div class="service-option-icon">🏠</div>
-                <h3>Dolazim kod tebe</h3>
-                <p>Dolazim na tvoju adresu sa potrebnim alatom i opremom.</p>
-            </div>
-        </div>
-        
-        <p class="services-note">
-            <strong>Cena se dogovara unapred</strong> — po poslu, u zavisnosti od obima i složenosti.
-        </p>
-        
-        <button class="btn btn-primary btn-large" id="openServiceModal">
-            Naruči uslugu →
-        </button>
-        <p class="services-more-link">
-            <a href="<?= url('usluge') ?>">Više informacija o uslugama →</a>
-        </p>
-        
-        <div class="services-examples">
-            <h4>Primeri poslova:</h4>
-            <ul>
-                <li>Bušenje rupa u zidu, betonu, drvetu</li>
-                <li>Sečenje metala, drveta, plastike</li>
-                <li>Manji električarski poslovi</li>
-                <li>Lepljenje i popravke</li>
-                <li>Montaža i demontaža</li>
-                <li>I još mnogo toga...</li>
-            </ul>
-        </div>
-    </div>
-</section>
-
 <!-- PRICING SECTION (Featured Tools) -->
 <section class="promo-section promo-pricing" id="pricing">
     <h2 class="promo-section-title">Najtraženiji alati za iznajmljivanje u Subotici</h2>
@@ -403,117 +356,12 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 </script>
 ';
-
-$serviceTypeLabels = [
-    'drilling' => 'Bušenje',
-    'cutting' => 'Sečenje',
-    'assembly' => 'Sastavljanje / Montaža',
-    'gluing' => 'Lepljenje',
-    'repair' => 'Popravka',
-    'other' => 'Ostalo'
-];
-
-$minDate = date('Y-m-d');
 ?>
-
-<?php include TEMPLATES_PATH . '/components/service-modal.php'; ?>
 
 <style>
 .promo-pricing {
     background: var(--color-gray-100);
     padding: var(--spacing-xl) 0;
-}
-
-.promo-services {
-    background: var(--color-gray-100);
-    padding: var(--spacing-xl) 0;
-    text-align: center;
-    max-width: 100%;
-}
-
-.promo-services .services-content {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 0 var(--spacing-md);
-}
-
-.services-subtitle {
-    font-size: var(--font-size-large);
-    color: var(--color-gray-700);
-    margin-bottom: var(--spacing-lg);
-}
-
-.services-options {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--spacing-lg);
-    margin-bottom: var(--spacing-lg);
-}
-
-.service-option {
-    background: var(--color-white);
-    padding: var(--spacing-lg);
-    border-radius: var(--border-radius);
-    border: 2px solid var(--border-color);
-}
-
-.service-option-icon {
-    font-size: 2.5em;
-    margin-bottom: var(--spacing-sm);
-}
-
-.service-option h3 {
-    margin: 0 0 var(--spacing-xs) 0;
-}
-
-.service-option p {
-    margin: 0;
-    font-size: var(--font-size-small);
-    color: var(--color-gray-600);
-}
-
-.services-note {
-    background: #FFF8E1;
-    padding: var(--spacing-md);
-    border-radius: var(--border-radius);
-    margin-bottom: var(--spacing-lg);
-}
-
-.services-more-link {
-    margin-top: var(--spacing-md);
-}
-
-.services-more-link a {
-    color: var(--color-gray-600);
-    text-decoration: underline;
-}
-
-.services-examples {
-    margin-top: var(--spacing-lg);
-    text-align: left;
-    background: var(--color-white);
-    padding: var(--spacing-md);
-    border-radius: var(--border-radius);
-}
-
-.services-examples h4 {
-    margin: 0 0 var(--spacing-sm) 0;
-}
-
-.services-examples ul {
-    margin: 0;
-    padding-left: var(--spacing-lg);
-    columns: 2;
-    list-style: disc;
-}
-
-@media (max-width: 768px) {
-    .services-options {
-        grid-template-columns: 1fr;
-    }
-    .services-examples ul {
-        columns: 1;
-    }
 }
 </style>
 
