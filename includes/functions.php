@@ -580,8 +580,59 @@ function jsonResponse(array $data, int $status = 200): void {
 }
 
 /**
+ * Verify hCaptcha token
+ *
+ * @param string $response hCaptcha response token
+ * @param string|null $remoteIp Optional remote IP address
+ * @return bool True if verification succeeds
+ */
+function verifyHcaptcha(string $response, ?string $remoteIp = null): bool {
+    $secret = HCAPTCHA_SECRET_KEY;
+
+    // If no secret key is configured, fail closed unless explicitly disabled
+    if (empty($secret)) {
+        error_log('hCaptcha verification skipped: secret key not configured');
+        return false;
+    }
+
+    if (empty($response)) {
+        return false;
+    }
+
+    $data = [
+        'secret' => $secret,
+        'response' => $response,
+    ];
+
+    if ($remoteIp) {
+        $data['remoteip'] = $remoteIp;
+    }
+
+    $ch = curl_init('https://hcaptcha.com/siteverify');
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => http_build_query($data),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 10,
+        CURLOPT_SSL_VERIFYPEER => true,
+    ]);
+
+    $result = curl_exec($ch);
+    $error = curl_error($ch);
+    curl_close($ch);
+
+    if ($error) {
+        error_log("hCaptcha verification error: {$error}");
+        return false;
+    }
+
+    $json = json_decode($result, true);
+    return !empty($json['success']);
+}
+
+/**
  * Send Telegram notification
- * 
+ *
  * @param string $message Message to send (supports HTML formatting)
  * @return bool True on success, false on failure
  */

@@ -35,6 +35,7 @@ $pageTitle = $pageTitle ?? 'Admin - ' . SITE_NAME;
                 <a href="<?= url('admin/alati') ?>" class="admin-nav-link">Alati</a>
                 <a href="<?= url('admin/blokirani-datumi') ?>" class="admin-nav-link">Blokirani datumi</a>
                 <a href="<?= url('admin/stranice') ?>" class="admin-nav-link">Stranice</a>
+                <a href="<?= url('admin/early-adopters') ?>" class="admin-nav-link">Zainteresovani</a>
             </nav>
             
             <div class="admin-user">

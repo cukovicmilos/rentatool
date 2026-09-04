@@ -91,6 +91,10 @@ define('TELEGRAM_CHAT_ID', getenv('TELEGRAM_CHAT_ID') ?: '');
 define('GOOGLE_CALENDAR_ID', getenv('GOOGLE_CALENDAR_ID') ?: '');
 define('GOOGLE_CREDENTIALS_PATH', ROOT_PATH . '/credentials');
 
+// hCaptcha (from .env)
+define('HCAPTCHA_SITE_KEY', getenv('HCAPTCHA_SITE_KEY') ?: '');
+define('HCAPTCHA_SECRET_KEY', getenv('HCAPTCHA_SECRET_KEY') ?: '');
+
 // Timezone
 date_default_timezone_set('Europe/Belgrade');
 

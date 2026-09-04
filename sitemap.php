@@ -27,6 +27,11 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
     </url>
+    <url>
+        <loc><?= $siteUrl ?>/iznajmi-svoj-alat</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
 <?php
 $categories = db()->fetchAll("SELECT slug FROM categories WHERE active = 1 ORDER BY sort_order, name");
 foreach ($categories as $cat):

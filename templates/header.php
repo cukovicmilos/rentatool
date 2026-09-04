@@ -105,6 +105,7 @@ $menuCategories = db()->fetchAll("
                 <?php endif; ?>
                 <li><a href="<?= url('vodic') ?>" class="nav-link">Vodiči</a></li>
                 <li><a href="<?= url('stranica/o-nama') ?>" class="nav-link">O servisu</a></li>
+                <li><a href="<?= url('iznajmi-svoj-alat') ?>" class="nav-link">Iznajmi svoj alat i zaradi</a></li>
                 <li><a href="<?= url('stranica/kontakt') ?>" class="nav-link">Kontakt</a></li>
             </ul>
         </nav>

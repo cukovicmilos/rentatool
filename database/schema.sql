@@ -168,6 +168,15 @@ CREATE TABLE IF NOT EXISTS bundle_items (
     UNIQUE(bundle_id, component_id)
 );
 
+-- Early adopters for "rent your tool" feature
+CREATE TABLE IF NOT EXISTS early_adopters (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE NOT NULL,
+    ip_address TEXT,
+    user_agent TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Tool jobs (use cases)
 CREATE TABLE IF NOT EXISTS tool_jobs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -230,3 +239,5 @@ CREATE INDEX IF NOT EXISTS idx_reservation_items_type ON reservation_items(item_
 CREATE INDEX IF NOT EXISTS idx_reservation_items_bundle_component ON reservation_items(is_bundle_component);
 CREATE INDEX IF NOT EXISTS idx_bundle_items_bundle ON bundle_items(bundle_id);
 CREATE INDEX IF NOT EXISTS idx_bundle_items_component ON bundle_items(component_id);
+CREATE INDEX IF NOT EXISTS idx_early_adopters_created_at ON early_adopters(created_at);
+CREATE INDEX IF NOT EXISTS idx_early_adopters_email ON early_adopters(email);
