@@ -752,6 +752,18 @@ function formatReservationTelegramMessage(array $reservation, array $items): str
 }
 
 /**
+ * Format early-adopter signup for Telegram notification
+ */
+function formatEarlyAdopterTelegramMessage(string $email, int $totalCount): string {
+    $safeEmail = htmlspecialchars($email, ENT_QUOTES, 'UTF-8');
+    $message = "<b>📢 Nova prijava: Iznajmi svoj alat!</b>\n\n";
+    $message .= "<b>Email:</b> {$safeEmail}\n";
+    $message .= "<b>Ukupno prijavljenih:</b> {$totalCount}\n";
+    $message .= "\n<i>Pregled: /admin/early-adopters</i>";
+    return $message;
+}
+
+/**
  * Get Serbian label for reservation status
  */
 function reservationStatusLabel(string $status): string {

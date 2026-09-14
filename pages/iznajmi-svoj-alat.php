@@ -47,6 +47,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
                 $success = true;
                 $submittedEmail = '';
+                $totalAdopters = (int) db()->fetchColumn("SELECT COUNT(*) FROM early_adopters");
+                sendTelegramNotification(formatEarlyAdopterTelegramMessage(
+                    mb_strtolower($email, 'UTF-8'),
+                    $totalAdopters
+                ));
             } catch (PDOException $e) {
                 if (str_contains($e->getMessage(), 'UNIQUE constraint failed')) {
                     $errors[] = 'Ova email adresa je već prijavljena. Hvala na interesovanju!';
