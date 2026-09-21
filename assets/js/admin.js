@@ -64,9 +64,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const imagePreview = document.getElementById('imagePreview');
     
     if (imageInput && imagePreview) {
+        const maxSize = 5 * 1024 * 1024;
+
+        function oversizedFiles(files) {
+            return Array.from(files).filter(function(file) {
+                return file.size > maxSize;
+            });
+        }
+
         imageInput.addEventListener('change', function() {
             imagePreview.innerHTML = '';
-            
+
+            const tooBig = oversizedFiles(this.files);
+            if (tooBig.length) {
+                alert('Slika je veća od 5MB: ' + tooBig.map(function(f) { return f.name; }).join(', '));
+                this.value = '';
+                return;
+            }
+
             Array.from(this.files).forEach(function(file) {
                 if (!file.type.startsWith('image/')) return;
                 
@@ -80,6 +95,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 reader.readAsDataURL(file);
             });
         });
+
+        if (imageInput.form) {
+            imageInput.form.addEventListener('submit', function(e) {
+                const tooBig = oversizedFiles(imageInput.files);
+                if (tooBig.length) {
+                    e.preventDefault();
+                    alert('Slika je veća od 5MB: ' + tooBig.map(function(f) { return f.name; }).join(', '));
+                }
+            });
+        }
     }
     
     // Dynamic jobs
