@@ -205,6 +205,33 @@ function formatPrice(float $price): string {
 }
 
 /**
+ * Get setting value from settings table
+ */
+function getSetting(string $key, ?string $default = null): ?string {
+    $value = db()->fetchColumn("SELECT setting_value FROM settings WHERE setting_key = ?", [$key]);
+    return $value === false || $value === null ? $default : $value;
+}
+
+/**
+ * Save setting value (insert or update)
+ */
+function setSetting(string $key, string $value): void {
+    db()->execute(
+        "INSERT INTO settings (setting_key, setting_value) VALUES (?, ?)
+         ON CONFLICT(setting_key) DO UPDATE SET setting_value = excluded.setting_value, updated_at = CURRENT_TIMESTAMP",
+        [$key, $value]
+    );
+}
+
+/**
+ * Format price converted to RSD using EUR rate from settings
+ */
+function formatPriceRsd(float $price): string {
+    $rate = (float) getSetting('eur_rate', '118');
+    return number_format(round($price * $rate), 0, ',', '.') . ' RSD';
+}
+
+/**
  * Format date for display
  */
 function formatDate(string $date): string {

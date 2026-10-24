@@ -73,6 +73,7 @@ try {
         ['max_rental_days', '10'],
         ['max_advance_days', '30'],
         ['min_cancel_days', '2'],
+        ['eur_rate', '118'],
     ];
     
     foreach ($settings as $setting) {

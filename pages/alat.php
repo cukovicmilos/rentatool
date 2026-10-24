@@ -353,17 +353,20 @@ ob_start();
                 <div class="price-main">
                     <span class="price-label">Cena:</span>
                     <span class="price-value"><?= formatPrice($tool['price_24h']) ?></span>
+                    <span class="price-rsd">(<?= formatPriceRsd($tool['price_24h']) ?>)</span>
                     <span class="price-period">/ 24h</span>
                 </div>
                 <div class="price-weekend">
                     <span class="price-label">Vikend cena:</span>
                     <span class="price-value"><?= formatPrice($weekendPrice) ?></span>
+                    <span class="price-rsd">(<?= formatPriceRsd($weekendPrice) ?>)</span>
                     <span class="price-note">(+<?= WEEKEND_MARKUP * 100 ?>%)</span>
                 </div>
                 <?php if (!isBundle($tool) && $tool['deposit'] > 0): ?>
                 <div class="price-deposit">
                     <span class="price-label">Depozit:</span>
                     <span class="price-value"><?= formatPrice($tool['deposit']) ?></span>
+                    <span class="price-rsd">(<?= formatPriceRsd($tool['deposit']) ?>)</span>
                 </div>
                 <?php endif; ?>
                 <div class="price-discount">
@@ -893,6 +896,12 @@ ob_start();
 
 .price-label {
     margin-right: var(--spacing-sm);
+}
+
+.price-rsd {
+    font-size: var(--font-size-small);
+    color: var(--color-gray-500);
+    margin-left: var(--spacing-xs);
 }
 
 .price-note {
