@@ -152,6 +152,7 @@ CREATE TABLE IF NOT EXISTS reservation_items (
     service_date DATE,
     service_location TEXT,
     is_bundle_component INTEGER DEFAULT 0,
+    fixed_price REAL DEFAULT NULL,
     FOREIGN KEY (reservation_id) REFERENCES reservations(id) ON DELETE CASCADE,
     FOREIGN KEY (tool_id) REFERENCES tools(id) ON DELETE RESTRICT
 );

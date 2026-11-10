@@ -108,6 +108,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'izmeni') {
     $newToolIds = post('new_tool_ids', []);
     if (!is_array($newToolIds)) $newToolIds = [];
 
+    $fixedPriceInputs = post('fixed_price', []);
+    if (!is_array($fixedPriceInputs)) $fixedPriceInputs = [];
+
+    $newToolFixedInputs = post('new_tool_fixed', []);
+    if (!is_array($newToolFixedInputs)) $newToolFixedInputs = [];
+
+    $parseFixedPrice = function ($value) use (&$errors) {
+        $value = str_replace(',', '.', trim((string) $value));
+        if ($value === '') return null;
+        if (!is_numeric($value) || (float) $value < 0) {
+            $errors[] = 'Fiksna cena mora biti broj veći ili jednak nuli.';
+            return null;
+        }
+        return round((float) $value, 2);
+    };
+
+    $fixedPrices = [];
+    foreach ($fixedPriceInputs as $itemId => $value) {
+        $fixedPrices[(int) $itemId] = $parseFixedPrice($value);
+    }
+
+    $newFixedPrices = [];
+    foreach ($newToolFixedInputs as $toolId => $value) {
+        $newFixedPrices[(int) $toolId] = $parseFixedPrice($value);
+    }
+
     if (empty($errors)) {
         db()->beginTransaction();
         try {
@@ -130,6 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'izmeni') {
             }
 
             $subtotal = 0;
+            $autoSubtotal = 0;
             $weekendMarkup = 0;
             $discount = 0;
 
@@ -138,13 +165,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'izmeni') {
                     db()->execute("DELETE FROM reservation_items WHERE id = ?", [$item['id']]);
                     continue;
                 }
+                $fixedPrice = $fixedPrices[(int) $item['id']] ?? null;
+                if ($fixedPrice !== null) {
+                    db()->execute(
+                        "UPDATE reservation_items SET days = ?, subtotal = ?, fixed_price = ? WHERE id = ?",
+                        [$totalDays, $fixedPrice, $fixedPrice, $item['id']]
+                    );
+                    $subtotal += $fixedPrice;
+                    continue;
+                }
                 $itemSubtotal = $item['price_per_day'] * $totalDays;
                 $itemMarkup = $weekendCount * $item['price_per_day'] * WEEKEND_MARKUP;
                 db()->execute(
-                    "UPDATE reservation_items SET days = ?, subtotal = ? WHERE id = ?",
+                    "UPDATE reservation_items SET days = ?, subtotal = ?, fixed_price = NULL WHERE id = ?",
                     [$totalDays, $itemSubtotal, $item['id']]
                 );
                 $subtotal += $itemSubtotal;
+                $autoSubtotal += $itemSubtotal;
                 $weekendMarkup += $itemMarkup;
             }
 
@@ -155,6 +192,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'izmeni') {
                 $tool = db()->fetch("SELECT id, name, price_24h FROM tools WHERE id = ?", [$toolId]);
                 if (!$tool) continue;
 
+                $toolFixedPrice = $newFixedPrices[$toolId] ?? null;
+                if ($toolFixedPrice !== null) {
+                    db()->execute("
+                        INSERT INTO reservation_items (reservation_id, tool_id, tool_name, price_per_day, days, subtotal, item_type, fixed_price)
+                        VALUES (?, ?, ?, ?, ?, ?, 'tool', ?)
+                    ", [
+                        $resId, $tool['id'], $tool['name'], $tool['price_24h'], $totalDays, $toolFixedPrice, $toolFixedPrice
+                    ]);
+                    $subtotal += $toolFixedPrice;
+                    continue;
+                }
+
                 $toolSubtotal = $tool['price_24h'] * $totalDays;
                 $toolMarkup = $weekendCount * $tool['price_24h'] * WEEKEND_MARKUP;
                 db()->execute("
@@ -164,11 +213,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'izmeni') {
                     $resId, $tool['id'], $tool['name'], $tool['price_24h'], $totalDays, $toolSubtotal
                 ]);
                 $subtotal += $toolSubtotal;
+                $autoSubtotal += $toolSubtotal;
                 $weekendMarkup += $toolMarkup;
             }
 
             if ($totalDays >= 7) {
-                $discount = ($subtotal + $weekendMarkup) * WEEKLY_DISCOUNT;
+                $discount = ($autoSubtotal + $weekendMarkup) * WEEKLY_DISCOUNT;
             }
 
             $total = $subtotal + $weekendMarkup - $discount + $deliveryFee;
@@ -462,7 +512,12 @@ $currentMonthNum = (int)date('m');
                 <td><?= e($item['tool_name']) ?></td>
                 <td><?= formatPrice($item['price_per_day']) ?></td>
                 <td><?= $item['days'] ?></td>
-                <td><?= formatPrice($item['subtotal']) ?></td>
+                <td>
+                    <?= formatPrice($item['subtotal']) ?>
+                    <?php if ($item['fixed_price'] !== null): ?>
+                    <br><small class="text-muted">fiksna cena</small>
+                    <?php endif; ?>
+                </td>
             </tr>
             <?php endforeach; ?>
         </tbody>
@@ -487,6 +542,10 @@ $currentMonthNum = (int)date('m');
     $displayMarkup = 0;
     foreach ($reservationItems as $item) {
         if ($item['item_type'] === 'service') continue;
+        if ($item['fixed_price'] !== null) {
+            $displayBase += (float)$item['fixed_price'];
+            continue;
+        }
         $displayBase += $item['price_per_day'] * $item['days'];
         $displayMarkup += $displayWeekendCount * $item['price_per_day'] * WEEKEND_MARKUP;
     }
@@ -651,6 +710,7 @@ $formData = [
                     <th>Cena/dan</th>
                     <th>Dana</th>
                     <th>Ukupno</th>
+                    <th>Fiksna cena</th>
                     <th class="actions">Ukloni</th>
                 </tr>
             </thead>
@@ -662,6 +722,14 @@ $formData = [
                     <td><?= formatPrice($item['price_per_day']) ?></td>
                     <td><?= $item['days'] ?></td>
                     <td><?= formatPrice($item['subtotal']) ?></td>
+                    <td>
+                        <?php if (empty($item['is_bundle_component'])): ?>
+                        <input type="number" name="fixed_price[<?= $item['id'] ?>]" class="form-control"
+                               min="0" step="0.01" style="max-width: 140px;"
+                               value="<?= $item['fixed_price'] !== null ? e((string) $item['fixed_price']) : '' ?>"
+                               placeholder="<?= e((string) round($item['price_per_day'] * $item['days'], 2)) ?>">
+                        <?php endif; ?>
+                    </td>
                     <td class="actions">
                         <label class="btn btn-danger btn-small" style="cursor: pointer;">
                             <input type="checkbox" name="remove_items[]" value="<?= $item['id'] ?>"
@@ -678,6 +746,7 @@ $formData = [
                     <td><em><?= e($item['tool_name']) ?></em></td>
                     <td colspan="2"><small><?= e($item['service_description']) ?></small></td>
                     <td><em>Dogovor</em></td>
+                    <td></td>
                     <td class="actions">
                         <label class="btn btn-danger btn-small" style="cursor: pointer;">
                             <input type="checkbox" name="remove_items[]" value="<?= $item['id'] ?>"
@@ -689,6 +758,9 @@ $formData = [
                 <?php endforeach; ?>
             </tbody>
         </table>
+        <p class="text-muted" style="margin-top: var(--spacing-sm);"><small>
+            Fiksna cena je ukupan iznos za stavku (bez vikend doplate i popusta za 7+ dana). Ostavite prazno za automatsko računanje.
+        </small></p>
 
         <div class="form-row" style="margin-top: var(--spacing-lg); align-items: flex-end;">
             <div class="form-group">
@@ -754,6 +826,8 @@ function addToolItem() {
         <span style="flex: 1; padding: 6px 8px; background: var(--color-gray-100); border-radius: var(--border-radius);">
             <strong>${toolName}</strong>
         </span>
+        <input type="number" name="new_tool_fixed[${toolId}]" class="form-control" min="0" step="0.01"
+               placeholder="Fiksna cena" style="max-width: 140px;">
         <button type="button" class="btn btn-danger btn-small" onclick="this.closest('.spec-row').remove()">&times;</button>
     `;
     container.appendChild(div);
